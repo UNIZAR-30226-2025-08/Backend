@@ -7,6 +7,8 @@ class Game {
       id: player.id,
       role: player.role,
       alive: true,
+      usedPotionHeal: player.role === 'bruja' ? false : undefined, // Si la bruja usó su poción de vida
+      usedPotionKill: player.role === 'bruja' ? false : undefined, // Si la bruja usó su poción de muerte
     }));
     this.chat = []; // Mensajes de chat (día: global, noche: solo lobos)
     this.votes = {}; // Votos de los jugadores durante el día
@@ -15,6 +17,12 @@ class Game {
     this.eliminationQueue = []; // Cola de eliminación al final del turno
   }
 
+  // Precondición: antes de llamar a este método, se deben de aplicar las eliminaciones del turno actual
+  // y comprobar si la partida ha terminado o no.
+  // Para ello se debería de llamar antes al método applyEliminations() de esta misma clase Game.
+  // Si applyEliminations() detecta que la partida terminó, no se llama a nextTurn().
+  // Solo si la partida sigue en curso, entonces se ejecuta nextTurn().
+  // Método para cambiar turnos
   nextTurn() {
     this.applyEliminations(); // Ejecutar eliminaciones pendientes
     this.turn = this.turn === 'night' ? 'day' : 'night';
@@ -48,6 +56,20 @@ class Game {
     if (!player || !player.alive || player.role !== 'lobo') return;
 
     this.nightVotes[playerId] = targetId;
+  }
+
+  // Método para que la bruja use sus pociones
+  useWitchPotion(playerId, type, targetId) {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player || !player.alive || player.role !== 'bruja') return;
+    
+    if (type === 'heal' && !player.usedPotionHeal) {
+      player.usedPotionHeal = true;
+      this.eliminationQueue = this.eliminationQueue.filter(id => id !== targetId); // Cancela la muerte de los lobos
+    } else if (type === 'kill' && !player.usedPotionKill) {
+      player.usedPotionKill = true;
+      this.queueElimination(targetId); // Se elimina al final del turno
+    }
   }
 
   // Resolver votos del día
@@ -132,5 +154,39 @@ class Game {
       }
     });
     this.eliminationQueue = []; // Reiniciar la cola
+
+    // Comprobar si hay un ganador y devolver el resultado
+    return this.checkVictory();
   }
+
+  // Verifica si la partida ha terminado. Y en caso de terminar devuelve quién ganó
+  checkVictory() {
+    const aliveWolves = this.players.filter(p => p.alive && p.role === 'lobo').length;
+    const aliveVillagers = this.players.filter(p => p.alive && p.role !== 'lobo').length;
+
+    // Ganan los aldeanos cuando no quedan lobos vivos
+    if (aliveWolves === 0 && aliveVillagers !== 0) {
+      this.status = 'completed';
+      return 'Los aldeanos han ganado la partida.';
+      // Podemos emitir el estado de la partida devolviendo un objeto con el estado y un mensaje
+      // return { winner: 'aldeanos', message: 'Los aldeanos han ganado la partida.' };
+    }
+
+    // Ganan los lobos cuando no quedan aldeanos vivos
+    if (aliveVillagers === 0 && aliveWolves !== 0) { 
+      this.status = 'completed';
+      return 'Los lobos han ganado la partida.';
+      // return { winner: 'lobos', message: 'Los lobos han ganado la partida.' };
+    }
+
+    // Empate si todos los jugadores están muertos
+    if(aliveVillagers === 0 && aliveWolves === 0) {
+      this.status = 'completed';
+      return 'Empate, no hay ganadores.';
+      // return { winner: 'empate', message: 'Empate, no hay ganadores.' };
+    }
+
+    return null; // La partida sigue en curso
+  }
+
 }
