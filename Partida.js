@@ -7,11 +7,15 @@ class Game {
       id: player.id,
       role: player.role,
       alive: true,
+      isSheriff: false, // ¿Es alguacil?
       usedPotionHeal: player.role === 'bruja' ? false : undefined, // Si la bruja usó su poción de vida
       usedPotionKill: player.role === 'bruja' ? false : undefined, // Si la bruja usó su poción de muerte
+      hasSeen: player.role === 'vidente' ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
     }));
     this.chat = []; // Mensajes de chat (día: global, noche: solo lobos)
+    this.sheriffVotes = {}; // Votos para elegir al alguacil
     this.votes = {}; // Votos de los jugadores durante el día
+    this.sheriffRepeatVote = false; // Para empates en elección de alguacil
     this.repeatVote = false; // Controla si hubo un empate previo en las votaciones del día
     this.nightVotes = {}; // Votos de los lobos durante la noche
     this.eliminationQueue = []; // Cola de eliminación al final del turno
@@ -24,10 +28,20 @@ class Game {
   // Solo si la partida sigue en curso, entonces se ejecuta nextTurn().
   // Método para cambiar turnos
   nextTurn() {
-    this.applyEliminations(); // Ejecutar eliminaciones pendientes
+    // !!!! this.applyEliminations(); // Ejecutar eliminaciones pendientes !!!! PONER PARA LOS TEST
     this.turn = this.turn === 'night' ? 'day' : 'night';
     this.votes = {}; // Reiniciar votos en el día
     this.nightVotes = {}; // Reiniciar votos de los lobos en la noche
+    this.sheriffVotes = {}; // Reiniciar votos para elegir alguacil !!!!!!!!!!!! NO SÉ SI ES NECESARIO !!!!!!!!!!!!
+
+    // Reiniciar la habilidad de la vidente cuando comienza una nueva noche
+    if (this.turn === 'night') {
+      this.players.forEach(player => {
+        if (player.role === 'vidente') {
+          player.hasSeen = false;
+        }
+      });
+    }
   }
 
   // Método para registrar un mensaje en el chat
@@ -40,13 +54,62 @@ class Game {
     }
   }
 
+  // Método para elegir al alguacil
+  electSheriff() {
+    const voteCounts = {};
+    for (const voter in this.sheriffVotes) {
+      const voted = this.sheriffVotes[voter];
+      voteCounts[voted] = (voteCounts[voted] || 0) + 1;
+    }
+
+    let maxVotes = 0;
+    let candidates = [];
+
+    for (const playerId in voteCounts) {
+      if (voteCounts[playerId] > maxVotes) {
+        maxVotes = voteCounts[playerId];
+        candidates = [playerId];
+      } else if (voteCounts[playerId] === maxVotes) {
+        candidates.push(playerId);
+      }
+    }
+
+    if (candidates.length === 1) {
+      this.players.forEach(p => (p.isSheriff = false)); // Asegurarse de que ningún jugador sea alguacil
+      const sheriff = this.players.find(p => p.id === candidates[0]);
+      if (sheriff) sheriff.isSheriff = true;
+      this.sheriffRepeatVote = false; // Reiniciar flag de repetición
+      return `El jugador ${candidates[0]} ha sido elegido como alguacil.`;
+    } else {
+      if (this.sheriffRepeatVote) {
+        return 'Segundo empate consecutivo, no se elige alguacil.';
+      } else {
+        this.sheriffRepeatVote = true;
+        this.sheriffVotes = {}; // Resetear votos para repetir elección
+        return 'Empate en la elección del alguacil, se repiten las votaciones.';
+      }
+    }
+  }
+
+  // Método para votar al alguacil
+  voteSheriff(playerId, targetId) {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player || !player.alive) return;
+
+    this.sheriffVotes[playerId] = targetId;
+  }
+
   // Método para manejar las votaciones de los jugadores durante el día
+  // El voto del alguacil cuenta como dos
   vote(playerId, targetId) {
     if (this.turn !== 'day') return;
     const player = this.players.find(p => p.id === playerId);
     if (!player || !player.alive) return;
 
     this.votes[playerId] = targetId;
+    if (player.isSheriff) {
+      this.votes[`sheriff_${playerId}`] = targetId; // Doble voto (voto extra del alguacil)
+    }
   }
 
   // Votación de los lobos en la noche
@@ -56,6 +119,21 @@ class Game {
     if (!player || !player.alive || player.role !== 'lobo') return;
 
     this.nightVotes[playerId] = targetId;
+  }
+
+  // La vidente obtiene el rol de un jugador
+  seerReveal(playerId, targetId) {
+    if (this.turn !== 'night') return 'No es de noche.';
+    const player = this.players.find(p => p.id === playerId);
+    if (!player || !player.alive || player.role !== 'vidente' || player.hasSeen) return 'No puedes usar esta habilidad.';
+
+    const target = this.players.find(p => p.id === targetId);
+    if (!target || !target.alive) 
+      return 'Solo puedes ver el rol de un jugador vivo.';
+
+    player.hasSeen = true; // La vidente solo puede ver un jugador por noche
+    
+    return `El jugador ${targetId} es ${target.role}.`;
   }
 
   // Método para que la bruja use sus pociones
@@ -190,3 +268,5 @@ class Game {
   }
 
 }
+
+module.exports = Game; // exportar la clase
