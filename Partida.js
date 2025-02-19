@@ -1,4 +1,12 @@
+/**
+ * Representa una partida del juego.
+ */
 class Partida {
+  /**
+   * Crea una nueva partida.
+   * @param {number} idPartida - Identificador único de la partida.
+   * @param {Array<Object>} jugadores - Lista de jugadores con sus respectivos roles.
+   */
   constructor(idPartida, jugadores) {
     this.idPartida = idPartida;
     this.estado = 'en_curso'; // Estado de la partida ('en_curso', 'completada')
@@ -40,7 +48,11 @@ class Partida {
     }
   }
 
-  // Método para cambiar turnos
+
+/**
+ * (Método de server) Método interno para cambiar turnos, cambia de día a noche y de noche a 
+ * día. Reinicia el uso de habilidad de la vidente.
+ */
   siguienteTurno() {
     this.turno = this.turno === 'noche' ? 'dia' : 'noche';
     this.votos = {}; // Reiniciar votos en el día
@@ -57,7 +69,11 @@ class Partida {
     }
   }
 
-  // Método para registrar un mensaje en el chat
+  /**
+   * Agrega un mensaje al chat de la partida.
+   * @param {number} idJugador - ID del jugador que envía el mensaje.
+   * @param {string} mensaje - Contenido del mensaje.
+   */
   agregarMensajeChat(idJugador, mensaje) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
@@ -67,7 +83,15 @@ class Partida {
     }
   }
 
-  // Método para elegir al alguacil
+  /**
+   * (Método de server) Elige al alguacil basándose en los votos de los jugadores.
+   * En caso de empate, se repiten las votaciones una vez.
+   * 
+   * @returns {string} Mensaje con el resultado de la elección.
+   * - Si hay un ganador claro: "El jugador X ha sido elegido como alguacil."
+   * - Si hay empate en la primera votación: "Empate en la elección del alguacil, se repiten las votaciones."
+   * - Si hay empate en la segunda votación: "Segundo empate consecutivo, no se elige alguacil."
+   */
   elegirAlguacil() {
     const conteoVotos = {};
     for (const votante in this.votosAlguacil) {
@@ -104,7 +128,12 @@ class Partida {
     }
   }
 
-  // Método para votar al alguacil
+  /**
+   * Registra el voto de un jugador para la elección del alguacil.
+   * 
+   * @param {string} idJugador - ID del jugador que vota.
+   * @param {string} idObjetivo - ID del jugador por el que vota.
+   */
   votaAlguacil(idJugador, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
@@ -112,8 +141,14 @@ class Partida {
     this.votosAlguacil[idJugador] = idObjetivo;
   }
 
-  // Método para manejar las votaciones de los jugadores durante el día
-  // El voto del alguacil cuenta como dos
+  /**
+   * Registra el voto de un jugador durante el día.
+   * El voto del alguacil cuenta doble.
+   * 
+   * @param {string} idJugador - ID del jugador que vota.
+   * @param {string} idObjetivo - ID del jugador al que vota.
+   */
+
   vota(idJugador, idObjetivo) {
     if (this.turno !== 'dia') return;
     const jugador = this.jugadores.find(j => j.id === idJugador);
@@ -125,7 +160,13 @@ class Partida {
     }
   }
 
-  // Votación de los lobos en la noche
+  /**
+   * Registra el voto de un lobo durante la fase nocturna.
+   * Solo los jugadores con el rol de lobo pueden votar en esta fase.
+   * 
+   * @param {string} idJugador - ID del jugador lobo que vota.
+   * @param {string} idObjetivo - ID del jugador al que vota.
+   */
   votaNoche(idJugador, idObjetivo) {
     if (this.turno !== 'noche') return;
     const jugador = this.jugadores.find(j => j.id === idJugador);
@@ -134,7 +175,17 @@ class Partida {
     this.votosNoche[idJugador] = idObjetivo;
   }
 
-  // La vidente obtiene el rol de un jugador
+  /**
+   * Permite a la vidente revelar el rol de un jugador durante la noche.
+   * Solo puede usarse una vez por noche y solo en jugadores vivos.
+   * 
+   * @param {string} idJugador - ID del jugador vidente.
+   * @param {string} idObjetivo - ID del jugador cuyo rol se quiere revelar.
+   * @returns {string} Mensaje con el rol revelado o una advertencia si la acción no es válida.
+   * - Si el jugador seleccionado esta muerto : 'Solo puedes ver el rol de un jugador vivo.'
+   * - Si el jugador no puede realizar dicha acción: 'No puedes usar esta habilidad.'
+   * - Si la acción es correcta: `El jugador ID es ROL' Siendo ROL el rol del jugador seleccionado
+   */
   videnteRevela(idJugador, idObjetivo) {
     if (this.turno !== 'noche') return 'No es de noche.';
     const jugador = this.jugadores.find(j => j.id === idJugador);
@@ -149,7 +200,14 @@ class Partida {
     return `El jugador ${idObjetivo} es ${objetivo.rol}.`;
   }
 
-  // Método para que la bruja use sus pociones
+  /**
+   * Permite a la bruja usar una de sus pociones.
+   * Puede curar a un jugador o eliminar a otro.
+   * 
+   * @param {string} idJugador - ID del jugador bruja.
+   * @param {string} tipo - Tipo de poción a usar ('curar' o 'matar').
+   * @param {string} idObjetivo - ID del jugador afectado por la poción.
+   */
   usaPocionBruja(idJugador, tipo, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (!jugador || !jugador.estaVivo || jugador.rol !== 'bruja') return;
@@ -163,7 +221,13 @@ class Partida {
     }
   }
 
-  // Método del cazador para elegir a su víctima
+  /**
+   * Permite al cazador disparar a un jugador si muere.
+   * Solo puede usar esta habilidad al momento de su eliminación.
+   * 
+   * @param {string} idJugador - ID del cazador.
+   * @param {string} idObjetivo - ID del jugador al que dispara.
+   */
   cazadorDispara(idJugador, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (!jugador || jugador.rol !== 'cazador') return 'No puedes usar esta habilidad.';
@@ -172,7 +236,12 @@ class Partida {
     this.colaDeEliminacion(idObjetivo); // Se elimina al final del turno
   }
 
-  // Método del alguacil para elegir a su sucesor
+  /**
+   * Permite al alguacil elegir a su sucesor antes de morir.
+   * 
+   * @param {string} idJugador - ID del alguacil actual.
+   * @param {string} idObjetivo - ID del jugador que será el nuevo alguacil.
+   */
   elegirSucesor(idJugador, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (!jugador || !jugador.esAlguacil) return 'No puedes usar esta habilidad.';
@@ -182,7 +251,15 @@ class Partida {
     idObjetivo.esAlguacil = true;
   }
 
-  // Resolver votos del día
+  /**
+   * Resuelve la votación del día, determinando qué jugador será eliminado.
+   * En caso de empate, se repiten las votaciones una vez.
+   * 
+   * @returns {string} Mensaje con el resultado de la votación.
+   * - Si hay un ganador: "El jugador X será eliminado al final del día."
+   * - Si hay empate en la primera votación: "Empate, se repiten las votaciones."
+   * - Si hay empate en la segunda votación: "Segundo empate consecutivo, nadie es eliminado."
+   */
   resolverVotosDia() {
     const conteoVotos = {};
     
@@ -219,7 +296,14 @@ class Partida {
     }
   }
 
-  // Resolver la decisión de los lobos (se elimina al final del turno)
+  /**
+   * Resuelve la votación nocturna de los lobos.
+   * Solo se elimina a un jugador si todos los lobos votan por la misma persona.
+   * 
+   * @returns {string} Mensaje con el resultado de la votación nocturna.
+   * - Si hay unanimidad: "Los lobos atacaron al jugador X. Será eliminado al final de la noche."
+   * - Si no hay acuerdo: "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
+   */
   resolverVotosNoche() {
     const conteoVotos = {};
     
@@ -245,7 +329,11 @@ class Partida {
     }
   }
 
-  // Cola de eliminación para el final del turno
+  /**
+   * Agrega un jugador a la cola de eliminación, marcándolo para ser eliminado al final del turno.
+   * 
+   * @param {string} idJugador - ID del jugador que será eliminado.
+   */
   agregarAColaDeEliminacion(idJugador) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
     if (jugador && jugador.estaVivo) {
@@ -253,7 +341,13 @@ class Partida {
     }
   }
 
-  // Aplicar eliminaciones al final del turno
+  /**
+   * Ejecuta las eliminaciones pendientes al final del turno.
+   * @returns {string|null} Mensaje indicando el estado de la partida o null si sigue en curso.
+   * - Si han ganado los aldeanos : 'Los aldeanos han ganado la partida.'
+   * - Si han ganado los lobos : 'Los lobos han ganado la partida.'
+   * - Si ha habido empate : 'Empate, no hay ganadores.'
+   */
   aplicarEliminaciones() {
     console.log("Aplicando eliminaciones a:", this.colaEliminaciones);
     this.colaEliminaciones.forEach(idJugador => {
@@ -269,7 +363,13 @@ class Partida {
     return this.comprobarVictoria();
   }
 
-  // Verifica si la partida ha terminado. Y en caso de terminar devuelve quién ganó
+  /**
+   * Verifica si la partida ha terminado y determina el ganador.
+   * @returns {string|null} Mensaje con el resultado de la partida o null si sigue en curso.
+   * - Si han ganado los aldeanos : 'Los aldeanos han ganado la partida.'
+   * - Si han ganado los lobos : 'Los lobos han ganado la partida.'
+   * - Si ha habido empate : 'Empate, no hay ganadores.'
+   */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(j => j.estaVivo && j.rol === 'lobo').length;
     const aldeanosVivos = this.jugadores.filter(j => j.estaVivo && j.rol !== 'lobo').length;
