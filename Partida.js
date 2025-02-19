@@ -21,14 +21,27 @@ class Partida {
     this.colaEliminaciones = []; // Cola de eliminación al final del turno
   }
 
-  // Precondición: antes de llamar a este método, se deben de aplicar las eliminaciones del turno actual
-  // y comprobar si la partida ha terminado o no.
-  // Para ello se debería de llamar antes al método aplicarEliminaciones() de esta misma clase Partida.
-  // Si aplicarEliminaciones() detecta que la partida terminó, no se llama a siguienteTurno().
-  // Solo si la partida sigue en curso, entonces se ejecuta siguienteTurno().
+/**
+ * Gestiona el cambio de turno en la partida.
+ * Aplica las eliminaciones pendientes y verifica si la partida ha terminado.
+ * Si la partida sigue en curso, cambia al siguiente turno.
+ * 
+ * @returns {string} Mensaje indicando si el turno ha cambiado o si la partida ha finalizado.
+ */
+  gestionarTurno() {
+    const resultado = this.aplicarEliminaciones(); // Ejecutar eliminaciones pendientes
+
+    // Comprobar si la partida ha terminado o no
+    if (resultado === null) {
+      this.siguienteTurno(); // la partida sigue en curso, cambiar de turno
+      return 'El turno ha cambiado.';
+    } else {
+      return resultado; // la partida terminó, indicar quién ganó la partida
+    }
+  }
+
   // Método para cambiar turnos
   siguienteTurno() {
-    // this.aplicarEliminaciones(); // Ejecutar eliminaciones pendientes !!!! PONER PARA LOS TEST !!!!
     this.turno = this.turno === 'noche' ? 'dia' : 'noche';
     this.votos = {}; // Reiniciar votos en el día
     this.votosNoche = {}; // Reiniciar votos de los lobos en la noche
