@@ -30,7 +30,7 @@ describe('Clase Partida', () => {
   });
 
   test('cambiar el turno de noche a día', () => {
-    partida.siguienteTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'dia'
     expect(partida.turno).toBe('dia');
   });
 
@@ -47,7 +47,7 @@ describe('Clase Partida', () => {
     partida.votaNoche('4', '2'); // El jugador 4 (no es lobo) intenta votar por el jugador 2. No puede votar. 
     partida.votaNoche('5', '2'); // El jugador 5 (no es lobo) intenta votar por el jugador 2. No puede votar. 
     partida.resolverVotosNoche(); // Se eliminará al jugador 3 al cambiar de turno
-    partida.siguienteTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'dia'
     partida.agregarMensajeChat('3', 'Hola a todos');
     expect(partida.turno).toBe('dia');
     expect(partida.jugadores.find(j => j.id === '3').estaVivo).toBe(false);
@@ -55,7 +55,7 @@ describe('Clase Partida', () => {
   });
 
   test('realizar una votación correctamente, eliminando a un jugador tras alcanzar una mayoría', () => {
-    partida.siguienteTurno(); 
+    partida.gestionarTurno(); 
     // Cambia a 'dia'
     expect(partida.turno).toBe('dia');
     partida.vota('1', '3'); // El jugador 1 vota por el jugador 3
@@ -70,12 +70,12 @@ describe('Clase Partida', () => {
     expect(partida.votos['5']).toBe('2');
     partida.resolverVotosDia();
     expect(partida.colaEliminaciones).toContain('2');
-    partida.siguienteTurno(); // Cambia a 'noche'
+    partida.gestionarTurno(); // Cambia a 'noche'
     expect(partida.jugadores.find(j => j.id === '2').estaVivo).toBe(false);
   });
 
   test('hacer la votación del Alguacil dando empate durante el dia', () => {
-    partida.siguienteTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'dia'
     partida.votaAlguacil('1', '2'); // Jugador 1 vota por jugador 2
     partida.votaAlguacil('3', '2'); // Jugador 3 vota por jugador 2
     partida.votaAlguacil('4', '3'); // Jugador 4 vota por jugador 3
@@ -108,7 +108,7 @@ describe('Clase Partida', () => {
     console.log(partida.repiteVote); // Ver si la bandera de empate sigue activa
     console.log(resultado); // Ver qué mensaje devuelve resolverVotosDia()
     expect(resultado).toBe('El jugador 3 será eliminado al final del día.');
-    partida.siguienteTurno(); // Cambia a 'noche'
+    partida.gestionarTurno(); // Cambia a 'noche'
     expect(partida.jugadores.find(j => j.id === '3').estaVivo).toBe(false);
   });
 
@@ -127,7 +127,7 @@ describe('Clase Partida', () => {
     expect(partida.colaEliminaciones).toContain('3');
     partida.usaPocionBruja('3', 'curar', '3'); // La bruja intenta sanarse así misma
     expect(partida.colaEliminaciones).not.toContain('3');
-    partida.siguienteTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'dia'
     expect(partida.turno).toBe('dia');
     expect(partida.jugadores.find(j => j.id === '3').estaVivo).toBe(true);
   });
@@ -139,7 +139,7 @@ describe('Clase Partida', () => {
     partida.usaPocionBruja('3', 'matar', '1'); // La bruja intenta matar al jugador 1
     expect(partida.colaEliminaciones).toContain('4');
     expect(partida.colaEliminaciones).toContain('1');
-    partida.siguienteTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'dia'
     expect(partida.turno).toBe('dia');
     expect(partida.jugadores.find(j => j.id === '4').estaVivo).toBe(false);
     expect(partida.jugadores.find(j => j.id === '1').estaVivo).toBe(false);
@@ -151,8 +151,8 @@ describe('Clase Partida', () => {
     partida.votaNoche('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
     partida.resolverVotosNoche(); // Se eliminará al jugador 4 al cambiar de turno
     expect(partida.colaEliminaciones).toContain('3');
-    partida.siguienteTurno(); // Cambia a 'dia'
-    partida.siguienteTurno(); // Cambia a 'noche'
+    partida.gestionarTurno(); // Cambia a 'dia'
+    partida.gestionarTurno(); // Cambia a 'noche'
     expect(partida.turno).toBe('noche');
     expect(partida.jugadores.find(j => j.id === '3').estaVivo).toBe(false);
     result = partida.videnteRevela('4', '3'); // La vidente intenta ver el rol del jugador 3
