@@ -201,26 +201,57 @@ class Partida {
   }
 
   /**
+   * Devuelve la lista de jugadores que están en la cola de eliminaciones.
+   * @returns {Array<string>} - Lista de IDs de jugadores en la cola de eliminaciones.
+   */
+  obtenerJugadoresEnColaEliminacion() {
+    return this.colaEliminaciones;
+  }
+
+  /**
    * Permite a la bruja usar una de sus pociones.
-   * Puede curar a un jugador o eliminar a otro.
+   * Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones.
    * 
    * @param {string} idJugador - ID del jugador bruja.
    * @param {string} tipo - Tipo de poción a usar ('curar' o 'matar').
    * @param {string} idObjetivo - ID del jugador afectado por la poción.
+   * @returns {Object} - Mensaje de éxito o error.
    */
   usaPocionBruja(idJugador, tipo, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
-    if (!jugador || !jugador.estaVivo || jugador.rol !== 'bruja') return;
-    
-    if (tipo === 'curar' && !jugador.pocionCuraUsada) {
+    const objetivo = this.jugadores.find(j => j.id === idObjetivo);
+
+    if (!jugador || !jugador.estaVivo || jugador.rol !== 'bruja' || this.turno !== 'noche') {
+      return { error: "Acción no permitida. No eres la bruja, no es de noche o estás muerto." };
+    }
+
+    if (tipo === 'curar') {
+      if (jugador.pocionCuraUsada) {
+        return { error: "Ya has usado la poción de curación." };
+      }
+      if (!this.colaEliminaciones.includes(idObjetivo)) {
+        return { error: `No puedes curar a ${idObjetivo} porque no está a punto de morir.` };
+      }
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(id => id !== idObjetivo); // Cancela la muerte de los lobos
-    } else if (tipo === 'matar' && !jugador.pocionMatarUsada) {
+      return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
+    }
+  
+    if (tipo === 'matar') {
+      if (jugador.pocionMatarUsada) {
+        return { error: "Ya has usado la poción de muerte." };
+      }
+      if (!objetivo || !objetivo.estaVivo) {
+        return { error: `No puedes matar a ${idObjetivo} porque ya está muerto.` };
+      }
       jugador.pocionMatarUsada = true;
       this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
+      return { mensaje: `La bruja ha usado su poción de muerte con ${idObjetivo}.` };
     }
+  
+    return { error: "Tipo de poción inválido." };
   }
-
+  
   /**
    * Permite al cazador disparar a un jugador si muere.
    * Solo puede usar esta habilidad al momento de su eliminación.
