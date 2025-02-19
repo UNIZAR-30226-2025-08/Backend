@@ -1,164 +1,164 @@
-// game.test.js
-const Game = require('./Game');
+// juego.test.js
+const Juego = require('./Juego');
 
 // Función para crear jugadores
-function createPlayers() {
+function crearJugadores() {
   return [
-    { id: '1', role: 'lobo' },
-    { id: '2', role: 'lobo' },
-    { id: '3', role: 'bruja' },
-    { id: '4', role: 'vidente' },
-    { id: '5', role: 'aldeano' }
+    { id: '1', rol: 'lobo' },
+    { id: '2', rol: 'lobo' },
+    { id: '3', rol: 'bruja' },
+    { id: '4', rol: 'vidente' },
+    { id: '5', rol: 'aldeano' }
   ];
 }
 
-describe('Game class', () => {
+describe('Juego class', () => {
 
-  let game;
+  let juego;
 
   beforeEach(() => {
     // Inicializa un nuevo juego antes de cada test
-    const players = createPlayers();
-    game = new Game('game1', players);
+    const jugadores = crearJugadores();
+    juego = new Juego('juego1', jugadores);
   });
 
-  test('should initialize the game correctly', () => {
-    expect(game.gameId).toBe('game1');
-    expect(game.status).toBe('ongoing');
-    expect(game.turn).toBe('night');
-    expect(game.players.length).toBe(5);
+  test('deberia iniciar el juego correctamente', () => {
+    expect(juego.juegoId).toBe('juego1');
+    expect(juego.estado).toBe('en_curso');
+    expect(juego.turno).toBe('noche');
+    expect(juego.jugadores.length).toBe(5);
   });
 
-  test('should change turn from night to day', () => {
-    game.nextTurn(); // Cambia a 'day'
-    expect(game.turn).toBe('day');
+  test('debería cambiar el turno de noche a día', () => {
+    juego.sigTurno(); // Cambia a 'dia'
+    expect(juego.turno).toBe('dia');
   });
 
-  test('should add a chat message during the day', () => {
-    game.addChatMessage('1', 'Hola a todos');
-    expect(game.chat.length).toBe(1);
-    expect(game.chat[0].message).toBe('Hola a todos');
+  test('debería añadir un mensaje al chat durante el día', () => {
+    juego.addChatMensaje('1', 'Hola a todos');
+    expect(juego.chat.length).toBe(1);
+    expect(juego.chat[0].message).toBe('Hola a todos');
   });
 
-  test('should not allow dead players to send chat messages', () => {
-    game.voteNight('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
-    game.voteNight('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
-    game.voteNight('3', '2'); // El jugador 3 (no es lobo) intenta votar por el jugador 2. No puede votar. 
-    game.voteNight('4', '2'); // El jugador 4 (no es lobo) intenta votar por el jugador 2. No puede votar. 
-    game.voteNight('5', '2'); // El jugador 5 (no es lobo) intenta votar por el jugador 2. No puede votar. 
-    game.resolveNightVotes(); // Se eliminará al jugador 3 al cambiar de turno
-    game.nextTurn(); // Cambia a 'day'
-    game.addChatMessage('3', 'Hola a todos');
-    expect(game.turn).toBe('day');
-    expect(game.players.find(p => p.id === '3').alive).toBe(false);
-    expect(game.chat.length).toBe(0); // No debe agregar el mensaje
+  test('no debería permitir a los jugadores eliminados enviar mensaje', () => {
+    juego.VotaNoche('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
+    juego.VotaNoche('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
+    juego.VotaNoche('3', '2'); // El jugador 3 (no es lobo) intenta votar por el jugador 2. No puede votar. 
+    juego.VotaNoche('4', '2'); // El jugador 4 (no es lobo) intenta votar por el jugador 2. No puede votar. 
+    juego.VotaNoche('5', '2'); // El jugador 5 (no es lobo) intenta votar por el jugador 2. No puede votar. 
+    juego.resolverNocheVotos(); // Se eliminará al jugador 3 al cambiar de turno
+    juego.sigTurno(); // Cambia a 'dia'
+    juego.addChatMensaje('3', 'Hola a todos');
+    expect(juego.turno).toBe('dia');
+    expect(juego.jugadores.find(p => p.id === '3').vivo).toBe(false);
+    expect(juego.chat.length).toBe(0); // No debe agregar el mensaje
   });
 
-  test('should correctly vote for a target during the day and should resolve day votes and eliminate the player with most votes', () => {
-    game.nextTurn(); 
-    // Cambia a 'day'
-    expect(game.turn).toBe('day');
-    game.vote('1', '3'); // El jugador 1 vota por el jugador 3
-    game.vote('2', '3'); // El jugador 2 vota por el jugador 3
-    game.vote('3', '2'); // El jugador 3 vota por el jugador 2
-    game.vote('4', '2'); // El jugador 4 vota por el jugador 2
-    game.vote('5', '2'); // El jugador 5 vota por el jugador 2
-    expect(game.votes['1']).toBe('3');
-    expect(game.votes['2']).toBe('3');
-    expect(game.votes['3']).toBe('2');
-    expect(game.votes['4']).toBe('2');
-    expect(game.votes['5']).toBe('2');
-    game.resolveDayVotes();
-    expect(game.eliminationQueue).toContain('2');
-    game.nextTurn(); // Cambia a 'night'
-    expect(game.players.find(p => p.id === '2').alive).toBe(false);
+  test('debería realizar una votación correctamente, eliminando a un jugador tras alcanzar una mayoría', () => {
+    juego.sigTurno(); 
+    // Cambia a 'dia'
+    expect(juego.turno).toBe('dia');
+    juego.vota('1', '3'); // El jugador 1 vota por el jugador 3
+    juego.vota('2', '3'); // El jugador 2 vota por el jugador 3
+    juego.vota('3', '2'); // El jugador 3 vota por el jugador 2
+    juego.vota('4', '2'); // El jugador 4 vota por el jugador 2
+    juego.vota('5', '2'); // El jugador 5 vota por el jugador 2
+    expect(juego.votos['1']).toBe('3');
+    expect(juego.votos['2']).toBe('3');
+    expect(juego.votos['3']).toBe('2');
+    expect(juego.votos['4']).toBe('2');
+    expect(juego.votos['5']).toBe('2');
+    juego.resolverDiaVotos();
+    expect(juego.colaEliminaciones).toContain('2');
+    juego.sigTurno(); // Cambia a 'noche'
+    expect(juego.jugadores.find(p => p.id === '2').vivo).toBe(false);
   });
 
-  test('should handle the election of the sheriff and should handle tie votes during the day', () => {
-    game.nextTurn(); // Cambia a 'day'
-    game.voteSheriff('1', '2'); // Jugador 1 vota por jugador 2
-    game.voteSheriff('3', '2'); // Jugador 3 vota por jugador 2
-    game.voteSheriff('4', '3'); // Jugador 4 vota por jugador 3
-    game.voteSheriff('5', '3'); // Jugador 5 vota por jugador 3
-    resultado = game.electSheriff();
+  test('debería hacer la votación del Alguacil y debería dar empate duante el dia', () => {
+    juego.sigTurno(); // Cambia a 'dia'
+    juego.votarAlguacil('1', '2'); // Jugador 1 vota por jugador 2
+    juego.votarAlguacil('3', '2'); // Jugador 3 vota por jugador 2
+    juego.votarAlguacil('4', '3'); // Jugador 4 vota por jugador 3
+    juego.votarAlguacil('5', '3'); // Jugador 5 vota por jugador 3
+    resultado = juego.elegirAlguacil();
     expect(resultado).toBe('Empate en la elección del alguacil, se repiten las votaciones.');
-    game.voteSheriff('1', '2'); // Jugador 1 vota por jugador 2
-    game.voteSheriff('2', '3'); // Jugador 2 vota por jugador 3
-    game.voteSheriff('3', '2'); // Jugador 3 vota por jugador 2
-    game.voteSheriff('4', '3'); // Jugador 4 vota por jugador 3
-    game.voteSheriff('5', '3'); // Jugador 5 vota por jugador 3
-    resultado = game.electSheriff();
+    juego.votarAlguacil('1', '2'); // Jugador 1 vota por jugador 2
+    juego.votarAlguacil('2', '3'); // Jugador 2 vota por jugador 3
+    juego.votarAlguacil('3', '2'); // Jugador 3 vota por jugador 2
+    juego.votarAlguacil('4', '3'); // Jugador 4 vota por jugador 3
+    juego.votarAlguacil('5', '3'); // Jugador 5 vota por jugador 3
+    resultado = juego.elegirAlguacil();
     expect(resultado).toBe('El jugador 3 ha sido elegido como alguacil.');
-    expect(game.players.find(p => p.id === '1').isSheriff).toBe(false);
-    expect(game.players.find(p => p.id === '2').isSheriff).toBe(false);
-    expect(game.players.find(p => p.id === '3').isSheriff).toBe(true);
-    expect(game.players.find(p => p.id === '4').isSheriff).toBe(false);
-    expect(game.players.find(p => p.id === '5').isSheriff).toBe(false);
-    game.vote('1', '3'); // El jugador 1 vota por el jugador 3
-    game.vote('3', '2'); // El jugador 3 vota por el jugador 2
-    game.vote('4', '3'); // El jugador 4 vota por el jugador 3
-    resultado = game.resolveDayVotes();
+    expect(juego.jugadores.find(p => p.id === '1').isSheriff).toBe(false);
+    expect(juego.jugadores.find(p => p.id === '2').isSheriff).toBe(false);
+    expect(juego.jugadores.find(p => p.id === '3').isSheriff).toBe(true);
+    expect(juego.jugadores.find(p => p.id === '4').isSheriff).toBe(false);
+    expect(juego.jugadores.find(p => p.id === '5').isSheriff).toBe(false);
+    juego.vota('1', '3'); // El jugador 1 vota por el jugador 3
+    juego.vota('3', '2'); // El jugador 3 vota por el jugador 2
+    juego.vota('4', '3'); // El jugador 4 vota por el jugador 3
+    resultado = juego.resolverDiaVotos();
     expect(resultado).toBe('Empate, se repiten las votaciones.');
-    game.vote('1', '3'); // El jugador 1 vota por el jugador 3
-    game.vote('3', '2'); // El jugador 3 vota por el jugador 2
-    game.vote('4', '3'); // El jugador 4 vota por el jugador 3
-    game.vote('5', '3'); // El jugador 5 vota por el jugador 3
-    console.log(game.votes); // Ver los votos registrados
-    resultado = game.resolveDayVotes();
-    console.log(game.repeatVote); // Ver si la bandera de empate sigue activa
-    console.log(resultado); // Ver qué mensaje devuelve resolveDayVotes()
+    juego.vota('1', '3'); // El jugador 1 vota por el jugador 3
+    juego.vota('3', '2'); // El jugador 3 vota por el jugador 2
+    juego.vota('4', '3'); // El jugador 4 vota por el jugador 3
+    juego.vota('5', '3'); // El jugador 5 vota por el jugador 3
+    console.log(juego.votos); // Ver los votos registrados
+    resultado = juego.resolverDiaVotos();
+    console.log(juego.repiteVote); // Ver si la bandera de empate sigue activa
+    console.log(resultado); // Ver qué mensaje devuelve resolverDiaVotos()
     expect(resultado).toBe('El jugador 3 será eliminado al final del día.');
-    game.nextTurn(); // Cambia a 'night'
-    expect(game.players.find(p => p.id === '3').alive).toBe(false);
+    juego.sigTurno(); // Cambia a 'noche'
+    expect(juego.jugadores.find(p => p.id === '3').vivo).toBe(false);
   });
 
-  test('should not eliminate a werewolf target if no unanimity during night', () => {
-    game.voteNight('1', '2');
-    game.voteNight('2', '3'); // Los lobos no se ponen de acuerdo
-    const result = game.resolveNightVotes();
+  test('no debería eliminar al objetivo si no hay consenso entre los lobos durante la noche', () => {
+    juego.VotaNoche('1', '2');
+    juego.VotaNoche('2', '3'); // Los lobos no se ponen de acuerdo
+    const result = juego.resolverNocheVotos();
     expect(result).toBe('Los lobos no se pusieron de acuerdo, no hay víctima esta noche.');
-    expect(game.eliminationQueue).toEqual([]);
+    expect(juego.colaEliminaciones).toEqual([]);
   });
 
-  test('should use witch healing potion correctly', () => {
-    game.voteNight('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
-    game.voteNight('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
-    game.resolveNightVotes(); // Se eliminará al jugador 3 al cambiar de turno
-    expect(game.eliminationQueue).toContain('3');
-    game.useWitchPotion('3', 'heal', '3'); // La bruja intenta sanarse así misma
-    expect(game.eliminationQueue).not.toContain('3');
-    game.nextTurn(); // Cambia a 'day'
-    expect(game.turn).toBe('day');
-    expect(game.players.find(p => p.id === '3').alive).toBe(true);
+  test('debería usar la poción de la bruja correctamente', () => {
+    juego.VotaNoche('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
+    juego.VotaNoche('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
+    juego.resolverNocheVotos(); // Se eliminará al jugador 3 al cambiar de turno
+    expect(juego.colaEliminaciones).toContain('3');
+    juego.usaPocionBruja('3', 'curar', '3'); // La bruja intenta sanarse así misma
+    expect(juego.colaEliminaciones).not.toContain('3');
+    juego.sigTurno(); // Cambia a 'dia'
+    expect(juego.turno).toBe('dia');
+    expect(juego.jugadores.find(p => p.id === '3').vivo).toBe(true);
   });
 
-  test('should use witch kill potion correctly', () => {
-    game.voteNight('1', '4'); // El jugador 1 (lobo) vota por el jugador 4
-    game.voteNight('2', '4'); // El jugador 2 (lobo) vota por el jugador 4
-    game.resolveNightVotes(); // Se eliminará al jugador 4 al cambiar de turno
-    game.useWitchPotion('3', 'kill', '1'); // La bruja intenta matar al jugador 1
-    expect(game.eliminationQueue).toContain('4');
-    expect(game.eliminationQueue).toContain('1');
-    game.nextTurn(); // Cambia a 'day'
-    expect(game.turn).toBe('day');
-    expect(game.players.find(p => p.id === '4').alive).toBe(false);
-    expect(game.players.find(p => p.id === '1').alive).toBe(false);
+  test('debería usar la poción de matar de la bruja correctamente', () => {
+    juego.VotaNoche('1', '4'); // El jugador 1 (lobo) vota por el jugador 4
+    juego.VotaNoche('2', '4'); // El jugador 2 (lobo) vota por el jugador 4
+    juego.resolverNocheVotos(); // Se eliminará al jugador 4 al cambiar de turno
+    juego.usaPocionBruja('3', 'matar', '1'); // La bruja intenta matar al jugador 1
+    expect(juego.colaEliminaciones).toContain('4');
+    expect(juego.colaEliminaciones).toContain('1');
+    juego.sigTurno(); // Cambia a 'dia'
+    expect(juego.turno).toBe('dia');
+    expect(juego.jugadores.find(p => p.id === '4').vivo).toBe(false);
+    expect(juego.jugadores.find(p => p.id === '1').vivo).toBe(false);
   });
 
-  test('should prevent the seer from seeing a dead player\'s role', () => {
-    game.voteNight('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
-    game.voteNight('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
-    game.resolveNightVotes(); // Se eliminará al jugador 4 al cambiar de turno
-    expect(game.eliminationQueue).toContain('3');
-    game.nextTurn(); // Cambia a 'day'
-    game.nextTurn(); // Cambia a 'night'
-    expect(game.turn).toBe('night');
-    expect(game.players.find(p => p.id === '3').alive).toBe(false);
-    result = game.seerReveal('4', '3'); // La vidente intenta ver el rol del jugador 3
+  test('debería prevenir a la vidente de ver el rol de un jugador muerto\'s rol', () => {
+    juego.VotaNoche('1', '3'); // El jugador 1 (lobo) vota por el jugador 3
+    juego.VotaNoche('2', '3'); // El jugador 2 (lobo) vota por el jugador 3
+    juego.resolverNocheVotos(); // Se eliminará al jugador 4 al cambiar de turno
+    expect(juego.colaEliminaciones).toContain('3');
+    juego.sigTurno(); // Cambia a 'dia'
+    juego.sigTurno(); // Cambia a 'noche'
+    expect(juego.turno).toBe('noche');
+    expect(juego.jugadores.find(p => p.id === '3').vivo).toBe(false);
+    result = juego.videnteRevela('4', '3'); // La vidente intenta ver el rol del jugador 3
     expect(result).toBe('Solo puedes ver el rol de un jugador vivo.');
-    result = game.seerReveal('4', '1'); // La vidente intenta ver el rol del jugador 1
+    result = juego.videnteRevela('4', '1'); // La vidente intenta ver el rol del jugador 1
     expect(result).toBe('El jugador 1 es lobo.');
-    result = game.seerReveal('4', '2'); // La vidente intenta ver el rol del jugador 2
+    result = juego.videnteRevela('4', '2'); // La vidente intenta ver el rol del jugador 2
     expect(result).toBe('No puedes usar esta habilidad.');
   });
 });
