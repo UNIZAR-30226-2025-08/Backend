@@ -42,7 +42,7 @@ CREATE TABLE Amistad (
 CREATE TABLE Juega (
   idUsuario INT NOT NULL,
   idPartida INT NOT NULL,
-  rolJugado roles NOT NULL VARCHAR(20), /* Rol que está jugando el usuario */
+  rolJugado roles NOT NULL, /* Rol que está jugando el usuario */
   resultado resultadoPartida, /* El resultado de la partida puede tener los valores 'ganada' o 'perdida' */
   PRIMARY KEY (idUsuario, idPartida), /* Clave primaria compuesta de idUsuario e idPartida */
   FOREIGN KEY (idUsuario) REFERENCES Usuario(idUsuario) /* Clave foránea que referencia a la tabla Usuario */
