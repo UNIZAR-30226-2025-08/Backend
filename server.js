@@ -1,22 +1,21 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const Partida = require("./Partida"); // Importar la clase Partida
-
-
-const http = require("http"); // !!! POSIBLE ERROR
+const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
 const { Server } = require("socket.io");
+
+const Partida = require("./Partida"); // Importar la clase Partida
 
 const UsuarioDAO = require("./dao/UsuarioDao");
 const PartidaDAO = require("./dao/PartidaDao");
+const SolicitudAmistadDAO = require("./dao/SolicitudAmistadDao");
 const AmistadDAO = require("./dao/AmistadDao");
 const JuegaDAO = require("./dao/JuegaDao");
-const SolicitudAmistadDAO = require("./dao/SolicitudAmistadDao");
-const redisClient = require("./redisClient");
+//const redisClient = require("./redisClient");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const server = http.createServer(app); // !!! POSIBLE ERROR
+//const PORT = process.env.PORT || 5000;
+const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const partidasActivas = {}; // Almacén en memoria para partidas activas
@@ -67,6 +66,7 @@ app.post("/api/usuario/crear", async (req, res) => {
  * @returns {Object} Datos del usuario autenticado o error.
  */
 app.post("/api/usuario/login", async (req, res) => {
+  console.log(req.body);
   const { email, contrasena } = req.body;
   try {
     const usuario = await UsuarioDAO.validarCredenciales(email, contrasena);
@@ -184,7 +184,7 @@ io.on("connection", (socket) => {
     const partida = partidasActivas[idPartida];
     if (!partida) return;
 
-    const result = partida.applyEliminations();
+    const result = partida.applyEliminations(); // revisar !!!
     if (result) {
       io.to(`partida_${idPartida}`).emit("partida_finalizada", result);
       delete partidasActivas[idPartida];
@@ -295,7 +295,7 @@ app.post("/api/solicitud/responder", async (req, res) => {
  * Inicia el servidor Express y WebSocket.
  * @function
  */
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
 });
 
