@@ -9,7 +9,7 @@ class Partida {
    */
   constructor(idPartida, jugadores) {
     this.idPartida = idPartida;
-    this.estado = 'en_curso'; // Estado de la partida ('en_curso', 'completada')
+    this.estado = 'en_curso'; // Estado de la partida ('en_curso', 'terminada')
     this.turno = 'noche'; // Fase actual: 'dia' o 'noche'. La partida empieza en la noche
     this.jugadores = jugadores.map(jugador => ({ // Array de jugadores con sus roles
       id: jugador.id,
@@ -407,7 +407,7 @@ class Partida {
 
     // Ganan los aldeanos cuando no quedan lobos vivos
     if (lobosVivos === 0 && aldeanosVivos !== 0) {
-      this.estado = 'completada';
+      this.estado = 'terminada';
       return 'Los aldeanos han ganado la partida.';
       // Podemos emitir el estado de la partida devolviendo un objeto con el estado y un mensaje !!!
       // return { ganador: 'aldeanos', mensaje: 'Los aldeanos han ganado la partida.' };
@@ -415,14 +415,14 @@ class Partida {
 
     // Ganan los lobos cuando no quedan aldeanos vivos
     if (aldeanosVivos === 0 && lobosVivos !== 0) { 
-      this.estado = 'completada';
+      this.estado = 'terminada';
       return 'Los lobos han ganado la partida.';
       // return { ganador: 'lobos', mensaje: 'Los lobos han ganado la partida.' }; !!!
     }
 
     // Empate si todos los jugadores están muertos
     if(aldeanosVivos === 0 && lobosVivos === 0) {
-      this.estado = 'completada';
+      this.estado = 'terminada';
       return 'Empate, no hay ganadores.';
       // return { ganador: 'empate', mensaje: 'Empate, no hay ganadores.' }; !!!
     }
