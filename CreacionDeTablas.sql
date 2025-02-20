@@ -3,7 +3,7 @@ CREATE TYPE tipo_partida AS ENUM ('publica', 'privada');
 CREATE TYPE estado_partida AS ENUM ('en_curso', 'terminada', 'cancelada');
 CREATE TYPE bando_ganador AS ENUM ('lobos', 'aldeanos', 'empate');
 CREATE TYPE resultado_partida AS ENUM ('ganada', 'perdida');
-CREATE TYPE estado_solicitud AS ENUM ('pendiente', 'aceptada', 'rechazada');
+
 
 -- Tabla Usuario
 CREATE TABLE Usuario (
@@ -54,7 +54,6 @@ CREATE TABLE Juega (
 CREATE TABLE SolicitudAmistad (
   idUsuarioEmisor INT NOT NULL, /*El usuario que envía la solicitud*/
   idUsuarioReceptor INT NOT NULL, /*El usuario que recibe la solicitud*/
-  estado estado_solicitud NOT NULL DEFAULT 'pendiente', /*El estado de la solicitud puede ser 'pendiente' (default), 'aceptada' o 'rechazada'*/
   fecha_solicitud TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /*No sé si haría falta*/
   PRIMARY KEY (idUsuarioEmisor, idUsuarioReceptor), /*Clave compuesta de los id de usuario que se mandan la solicitud*/
   FOREIGN KEY (idUsuarioEmisor) REFERENCES Usuario(idUsuario) /*Clave foránea que referencia a la tabla Usuario*/
