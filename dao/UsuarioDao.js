@@ -51,16 +51,16 @@ class UsuarioDAO {
   static async validarCredenciales(correo, contrasena) {
     try {
       const { rows } = await pool.query(
-        "SELECT idUsuario, nombre, correo, avatar, fechaCreacion, hashContrasena FROM Usuario WHERE correo = $1",
+        'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
         [correo]
       );
       const usuario = rows[0];
       if (!usuario) return null;
       console.log("Usuario encontrado:", usuario);
-
+  
       const valid = await bcrypt.compare(contrasena, usuario.hashContrasena);
       if (!valid) return null;
-
+  
       // Devolver el usuario sin la contraseña
       const { hashContrasena, ...usuarioSinPassword } = usuario;
       return usuarioSinPassword;
@@ -68,7 +68,7 @@ class UsuarioDAO {
       console.error("Error al validar credenciales:", error);
       throw new Error("Error al validar credenciales");
     }
-  }
+  }  
 }
 
 module.exports = UsuarioDAO;
