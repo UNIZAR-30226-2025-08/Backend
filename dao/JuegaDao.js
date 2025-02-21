@@ -17,7 +17,7 @@ class JuegaDAO {
 
     try {
       // Insertar usuario en la partida
-      const insertQuery = `INSERT INTO Juega (idUsuario, idPartida, rolJugado) VALUES ($1, $2, $3) RETURNING *`;
+      const insertQuery = `INSERT INTO "Juega" ("idUsuario", "idPartida2", "rolJugado") VALUES ($1, $2, $3) RETURNING *`;
       const { rows } = await client.query(insertQuery, [idUsuario, idPartida, rolJugado]);
 
       return rows[0];
@@ -39,11 +39,11 @@ class JuegaDAO {
   static async obtenerPartidasDeUsuario(idUsuario) {
     try {
       const query = `
-        SELECT p.idPartida, p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
-               j.rolJugado, j.resultado
-        FROM Juega j
-        JOIN Partida p ON j.idPartida = p.idPartida
-        WHERE j.idUsuario = $1
+        SELECT "p.idPartida", p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
+               "j.rolJugado", j.resultado
+        FROM "Juega" j
+        JOIN "Partida" p ON "j.idPartida" = "p.idPartida"
+        WHERE "j.idUsuario" = $1
         ORDER BY p.fecha DESC`;
 
       const { rows } = await pool.query(query, [idUsuario]);
