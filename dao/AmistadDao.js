@@ -23,7 +23,7 @@ class AmistadDAO {
         : [idUsuario2, idUsuario1];
 
       // Verificar si ya son amigos
-      const checkQuery = `SELECT * FROM Amistad WHERE idUsuario1 = $1 AND idUsuario2 = $2`;
+      const checkQuery = `SELECT * FROM "Amistad" WHERE "idUsuario1" = $1 AND "idUsuario2" = $2`;
       const { rows: existingFriends } = await connection.query(checkQuery, [idUsuarioMenor, idUsuarioMayor]);
 
       if (existingFriends.length > 0) {
@@ -31,7 +31,7 @@ class AmistadDAO {
       }
 
       // Insertar la amistad
-      const insertQuery = `INSERT INTO Amistad (idUsuario1, idUsuario2) VALUES ($1, $2) RETURNING *`;
+      const insertQuery = `INSERT INTO "Amistad" ("idUsuario1", "idUsuario2") VALUES ($1, $2) RETURNING *`;
       const { rows } = await connection.query(insertQuery, [idUsuarioMenor, idUsuarioMayor]);
 
       return rows[0];
@@ -57,7 +57,7 @@ class AmistadDAO {
       ? [idUsuario1, idUsuario2] 
       : [idUsuario2, idUsuario1];
 
-      const query = `DELETE FROM Amistad WHERE idUsuario1 = $1 AND idUsuario2 = $2`;
+      const query = `DELETE FROM "Amistad" WHERE "idUsuario1" = $1 AND "idUsuario2" = $2`;
       const { rowCount } = await pool.query(query, [idUsuarioMenor, idUsuarioMayor]);
 
       if (rowCount === 0) {
