@@ -22,7 +22,7 @@ class PartidaDAO {
       }
 
       const query = `
-        INSERT INTO "Partida" (nombre, tipo, contrasena)
+        INSERT INTO "Partida" (nombre, tipo, "hashContrasena")
         VALUES ($1, $2, $3) 
         RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
       const { rows } = await pool.query(query, [nombre, tipo, hashContrasena]);
