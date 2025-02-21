@@ -22,9 +22,9 @@ class PartidaDAO {
       }
 
       const query = `
-        INSERT INTO Partida (nombre, tipo, contrasena)
+        INSERT INTO "Partida" (nombre, tipo, contrasena)
         VALUES ($1, $2, $3) 
-        RETURNING idPartida, nombre, tipo, fecha, estado, ganadores`;
+        RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
       const { rows } = await pool.query(query, [nombre, tipo, hashContrasena]);
 
       return rows[0];
@@ -47,8 +47,8 @@ class PartidaDAO {
       }
 
       const query = `
-        UPDATE Partida SET estado = $1 WHERE idPartida = $2 
-        RETURNING idPartida, nombre, tipo, fecha, estado, ganadores`;
+        UPDATE "Partida" SET estado = $1 WHERE "idPartida" = $2 
+        RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
       const { rows } = await pool.query(query, [estado, idPartida]);
 
       if (rows.length === 0) {
@@ -70,8 +70,8 @@ class PartidaDAO {
   static async obtenerPartida(idPartida) {
     try {
       const query = `
-          SELECT idPartida, nombre, tipo, fecha, estado, ganadores 
-          FROM Partida WHERE idPartida = $1`;
+          SELECT "idPartida", nombre, tipo, fecha, estado, ganadores 
+          FROM Partida WHERE "idPartida" = $1`;
       const { rows } = await pool.query(query, [idPartida]);
       return rows[0] || null;
     } catch (error) {
@@ -88,7 +88,7 @@ class PartidaDAO {
    */
   static async verificarContrasena(idPartida, contrasena) {
     try {
-      const query = `SELECT hashContrasena FROM Partida WHERE idPartida = $1 AND tipo = 'privada'`;
+      const query = `SELECT "hashContrasena" FROM Partida WHERE "idPartida" = $1 AND tipo = 'privada'`;
       const { rows } = await pool.query(query, [idPartida]);
 
       if (rows.length === 0 || !rows[0].contrasena) {

@@ -27,7 +27,7 @@ app.use(express.json()); // Permitir recibir JSON en las peticiones
 /// !!!! TEST !!!!
 // Ruta de prueba
 app.get("/api/saludo", (req, res) => {
-  res.json({ mensaje: "¡Hola desde el backendo!" });
+  res.json({ mensaje: "¡Hola desde el backend!" });
 });
 
 
