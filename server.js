@@ -6,23 +6,35 @@ const { Server } = require("socket.io");
 
 const Partida = require("./Partida"); // Importar la clase Partida
 
-const UsuarioDAO = require("./dao/UsuarioDao");
-const PartidaDAO = require("./dao/PartidaDao");
-const SolicitudAmistadDAO = require("./dao/SolicitudAmistadDao");
-const AmistadDAO = require("./dao/AmistadDao");
-const JuegaDAO = require("./dao/JuegaDao");
-//const redisClient = require("./redisClient");
+//const redisClient = require("./redisClient"); !!!
+//const PORT = process.env.PORT || 5000; !!!
 
 const app = express();
-//const PORT = process.env.PORT || 5000;
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const partidasActivas = {}; // Almacén en memoria para partidas activas
 
+// Middlewares
 app.use(cors()); // Permitir solicitudes desde el frontend
 app.use(express.json()); // Permitir recibir JSON en las peticiones
 
+// Importar rutas
+const usuarioRoutes = require("./routes/UsuarioRoutes");
+const partidaRoutes = require("./routes/PartidaRoutes");
+const solicitudAmistadRoutes = require("./routes/SolicitudAmistadRoutes");
+const amistadRoutes = require("./routes/AmistadRoutes");
+const juegaRoutes = require("./routes/JuegaRoutes");
+
+// Usar rutas
+app.use("/api/usuario", usuarioRoutes);
+app.use("/api/partida", partidaRoutes);
+app.use("/api/solicitud", solicitudAmistadRoutes);
+app.use("/api/amistad", amistadRoutes);
+app.use("/api/juega", juegaRoutes);
+
+// WebSockets
+// require("./websockets/partidas")(io); !!!
 
 /// !!!! TEST !!!!
 // Ruta de prueba
@@ -30,101 +42,18 @@ app.get("/api/saludo", (req, res) => {
   res.json({ mensaje: "¡Hola desde el backend!" });
 });
 
-
-
 /**
- * @module API Usuarios
- * @description Endpoints para la gestión de usuarios.
+ * Inicia el servidor Express y WebSocket.
+ * @function
  */
-
-
-/**
- * Crea un nuevo usuario.
- * @route POST /api/usuario/crear
- * @param {string} req.body.nombre - Nombre del usuario.
- * @param {string} req.body.email - Correo electrónico del usuario.
- * @param {string} req.body.contrasena - Contraseña del usuario.
- * @param {string} [req.body.avatar] - URL del avatar del usuario (opcional).
- * @returns {Object} Usuario creado o mensaje de error.
- */
-app.post("/api/usuario/crear", async (req, res) => {
-  const { nombre, email, contrasena, avatar } = req.body;
-  try {
-    const usuario = await UsuarioDAO.crearUsuario(nombre, email, contrasena, avatar);
-    res.json({ mensaje: "Usuario creado", usuario });
-  } catch (error) {
-    res.status(500).json({ error: "Error al crear usuario" });
-  }
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
 
-/**
- * Inicia sesión validando credenciales.
- * @route POST /api/usuario/login
- * @param {string} req.body.email - Correo electrónico del usuario.
- * @param {string} req.body.contrasena - Contraseña del usuario.
- * @returns {Object} Datos del usuario autenticado o error.
- */
-app.post("/api/usuario/login", async (req, res) => {
-  console.log(req.body);
-  const { email, contrasena } = req.body;
-  try {
-    const usuario = await UsuarioDAO.validarCredenciales(email, contrasena);
-    if (!usuario) {
-      return res.status(401).json({ error: "Credenciales incorrectas" });
-    }
-    res.json({ mensaje: "Inicio de sesión exitoso", usuario });
-  } catch (error) {
-    res.status(500).json({ error: "Error al iniciar sesión" });
-  }
-});
-
-/**
- * @module API Partidas
- * @description Endpoints REST para la gestión de partidas.
- */
-
-/**
- * Crea una nueva partida.
- * @route POST /api/partida/crear
- * @param {string} req.body.nombre - Nombre de la partida.
- * @param {string} req.body.tipo - Tipo de la partida ('publica' o 'privada').
- * @param {string} [req.body.contrasena] - Contraseña de la partida (si es privada).
- * @returns {Object} Partida creada o mensaje de error.
- */
-app.post("/api/partida/crear", async (req, res) => {
-  const { nombre, tipo, contrasena } = req.body;
-  try {
-    const partida = await PartidaDAO.crearPartida(nombre, tipo, contrasena);
-    res.json({ mensaje: "Partida creada", partida });
-  } catch (error) {
-    res.status(500).json({ error: "Error al crear la partida" });
-  }
-});
-
-
-/**
- * Obtiene el estado de una partida.
- * @route GET /api/partida/:id
- * @param {number} req.params.id - ID de la partida.
- * @returns {Object} Datos de la partida o mensaje de error.
- */
-app.get("/api/partida/:id", async (req, res) => {
-  try {
-    const partida = await PartidaDAO.obtenerPartida(req.params.id);
-    if (!partida) {
-      return res.status(404).json({ error: "Partida no encontrada" });
-    }
-    res.json(partida);
-  } catch (error) {
-    res.status(500).json({ error: "Error al obtener la partida" });
-  }
-});
-
-
-
-//-------------------------------------------------------------------------------------------
-
+// SOCKETS
+//----------------------------------------------------------------------------------
 /**
  * @module WebSockets Partidas
  * @description Gestión de partidas en tiempo real con Socket.io.
@@ -220,82 +149,3 @@ io.on("connection", (socket) => {
     console.log(`Usuario desconectado: ${socket.id}`);
   });
 });
-
-
-
-
-//----------------------------------------------------------------------------------
-
-/**
- * @module API Amistades
- * @description Endpoints para gestión de amistades.
- */
-
-/**
- * Agrega un amigo a la lista de amistades.
- * @route POST /api/amistad/agregar
- * @param {number} req.body.idUsuario1 - ID del usuario que agrega.
- * @param {number} req.body.idUsuario2 - ID del usuario agregado.
- * @returns {Object} Relación de amistad o mensaje de error.
- */
-app.post("/api/amistad/agregar", async (req, res) => {
-  const { idUsuario1, idUsuario2 } = req.body;
-  try {
-    const amistad = await AmistadDAO.agregarAmigo(idUsuario1, idUsuario2);
-    res.json({ mensaje: "Amistad creada", amistad });
-  } catch (error) {
-    res.status(500).json({ error: "Error al agregar amigo" });
-  }
-});
-
-/**
- * @module API Solicitudes de Amistad
- * @description Endpoints para gestionar solicitudes de amistad.
- */
-
-/**
- * Envía una solicitud de amistad.
- * @route POST /api/solicitud/enviar
- * @param {number} req.body.idEmisor - ID del usuario que envía la solicitud.
- * @param {number} req.body.idReceptor - ID del usuario que recibe la solicitud.
- * @returns {Object} Solicitud enviada o error.
- */
-app.post("/api/solicitud/enviar", async (req, res) => {
-  const { idEmisor, idReceptor } = req.body;
-  try {
-    const solicitud = await SolicitudAmistadDAO.enviarSolicitud(idEmisor, idReceptor);
-    res.json({ mensaje: "Solicitud enviada", solicitud });
-  } catch (error) {
-    res.status(500).json({ error: "Error al enviar solicitud" });
-  }
-});
-
-/**
- * Cambia el estado de una solicitud de amistad.
- * @route POST /api/solicitud/responder
- * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
- * @param {number} req.body.idReceptor - ID del usuario que recibió la solicitud.
- * @param {string} req.body.estado - Estado nuevo ('aceptada' o 'rechazada').
- * @returns {Object} Mensaje de éxito o error.
- */
-app.post("/api/solicitud/responder", async (req, res) => {
-  const { idEmisor, idReceptor, estado } = req.body;
-  try {
-    await SolicitudAmistadDAO.actualizarEstadoSolicitud(idEmisor, idReceptor, estado);
-    res.json({ mensaje: "Solicitud actualizada" });
-  } catch (error) {
-    res.status(500).json({ error: "Error al actualizar solicitud" });
-  }
-});
-
-
-//----------------------------------------------------------------------------------
-
-/**
- * Inicia el servidor Express y WebSocket.
- * @function
- */
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
-});
-

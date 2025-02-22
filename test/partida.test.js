@@ -1,5 +1,5 @@
 // partida.test.js
-const Partida = require('./Partida');
+const Partida = require('../Partida');
 
 // Función para crear jugadores
 function crearJugadores() {
