@@ -1,3 +1,17 @@
+-- Eliminar las tablas (si ya existen) en el orden correcto para evitar errores de dependencias
+DROP TABLE IF EXISTS "SolicitudAmistad";
+DROP TABLE IF EXISTS "Juega";
+DROP TABLE IF EXISTS "Amistad";
+DROP TABLE IF EXISTS "Partida";
+DROP TABLE IF EXISTS "Usuario";
+
+-- Eliminar los tipos ENUM (si ya existen)
+DROP TYPE IF EXISTS tipoPartida;
+DROP TYPE IF EXISTS estadoPartida;
+DROP TYPE IF EXISTS bandoGanador;
+DROP TYPE IF EXISTS resultadoPartida;
+DROP TYPE IF EXISTS roles;
+
 -- Tipos de enumumerados
 CREATE TYPE tipoPartida AS ENUM ('publica', 'privada');
 CREATE TYPE estadoPartida AS ENUM ('en_curso', 'terminada');
