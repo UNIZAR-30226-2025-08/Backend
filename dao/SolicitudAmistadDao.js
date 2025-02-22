@@ -1,4 +1,4 @@
-const pool = require("../db");
+const pool = require("../config/db");
 const AmistadDAO = require("./AmistadDao");
 
 class SolicitudAmistadDAO {
