@@ -7,7 +7,6 @@ const { Server } = require("socket.io");
 const Partida = require("./Partida"); // Importar la clase Partida
 
 //const redisClient = require("./redisClient"); !!!
-//const PORT = process.env.PORT || 5000; !!!
 
 const app = express();
 const server = createServer(app);
@@ -36,18 +35,12 @@ app.use("/api/juega", juegaRoutes);
 // WebSockets
 // require("./websockets/partidas")(io); !!!
 
-/// !!!! TEST !!!!
-// Ruta de prueba
-app.get("/api/saludo", (req, res) => {
-  res.json({ mensaje: "¡Hola desde el backend!" });
-});
-
 /**
  * Inicia el servidor Express y WebSocket.
  * @function
  */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
@@ -92,7 +85,7 @@ io.on("connection", (socket) => {
    * @param {number} data.idLider - ID del líder de la sala.
    */
   socket.on("iniciar_partida", async ({ idSala, idLider }) => {
-    const partida = await PartidaDAO.iniciarPartida(idSala, idLider);
+    const partida = await PartidaDAO.iniciarPartida(idSala, idLider); // no existe !!!
     if (partida.error) {
       socket.emit("error", partida.error);
       return;
@@ -113,7 +106,7 @@ io.on("connection", (socket) => {
     const partida = partidasActivas[idPartida];
     if (!partida) return;
 
-    const result = partida.applyEliminations(); // revisar !!!
+    const result = partida.applyEliminations(); // revisar !!! se haría con gestionarTurno
     if (result) {
       io.to(`partida_${idPartida}`).emit("partida_finalizada", result);
       delete partidasActivas[idPartida];
@@ -139,13 +132,5 @@ io.on("connection", (socket) => {
 
     partida.chat.push({ idJugador, mensaje, timestamp: Date.now() });
     io.to(`partida_${idPartida}`).emit("chat_actualizado", partida.chat);
-  });
-
-  /**
-   * Maneja la desconexión de un usuario.
-   * @event disconnect
-   */
-  socket.on("disconnect", () => {
-    console.log(`Usuario desconectado: ${socket.id}`);
   });
 });
