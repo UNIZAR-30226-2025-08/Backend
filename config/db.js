@@ -5,9 +5,9 @@ const { Pool } = require("pg"); // Importa la librería pg para conexiones a Pos
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // URL de conexión de Neon 
 
- /* ssl: {
+  connectionTimeoutMillisssl: {
     rejectUnauthorized: false, // Especificación necesaria para Neon en producción
-  },*/
+  },
 });
 
 // Función para probar la conexión con la base de datos

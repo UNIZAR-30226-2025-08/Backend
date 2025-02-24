@@ -25,20 +25,36 @@ router.post("/enviar", async (req, res) => {
 });
 
 /**
- * Cambia el estado de una solicitud de amistad.
- * @route POST /api/solicitud/responder
+ * Acepta una solicitud de amistad.
+ * @route POST /api/solicitud/aceptar
  * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
- * @param {number} req.body.idReceptor - ID del usuario que recibió la solicitud.
- * @param {string} req.body.estado - Estado nuevo ('aceptada' o 'rechazada').
+ * @param {number} req.body.idReceptor - ID del usuario que recibe y acepta la solicitud.
  * @returns {Object} Mensaje de éxito o error.
  */
-router.post("/responder", async (req, res) => {
-  const { idEmisor, idReceptor, estado } = req.body;
+router.post("/aceptar", async (req, res) => {
+  const { idEmisor, idReceptor } = req.body;
   try {
-    await SolicitudAmistadDAO.actualizarEstadoSolicitud(idEmisor, idReceptor, estado);
-    res.json({ mensaje: "Solicitud actualizada" });
+    await SolicitudAmistadDAO.aceptarSolicitud(idEmisor, idReceptor);
+    res.json({ mensaje: "Solicitud de amistad aceptada y amistad creada." });
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar solicitud" });
+    res.status(500).json({ error: "Error al aceptar la solicitud de amistad." });
+  }
+});
+
+/**
+ * Rechaza una solicitud de amistad.
+ * @route POST /api/solicitud/rechazar
+ * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
+ * @param {number} req.body.idReceptor - ID del usuario que recibe y rechaza la solicitud.
+ * @returns {Object} Mensaje de éxito o error.
+ */
+router.post("/rechazar", async (req, res) => {
+  const { idEmisor, idReceptor } = req.body;
+  try {
+    await SolicitudAmistadDAO.rechazarSolicitud(idEmisor, idReceptor);
+    res.json({ mensaje: "Solicitud de amistad rechazada." });
+  } catch (error) {
+    res.status(500).json({ error: "Error al rechazar la solicitud de amistad." });
   }
 });
 
