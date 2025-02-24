@@ -91,7 +91,7 @@ class PartidaDAO {
       const query = `SELECT "hashContrasena" FROM Partida WHERE "idPartida" = $1 AND tipo = 'privada'`;
       const { rows } = await pool.query(query, [idPartida]);
 
-      if (rows.length === 0 || !rows[0].contrasena) {
+      if (rows.length === 0 || !rows[0].hashContrasena) {
           throw new Error("Partida no encontrada o no es privada.");
       }
 
