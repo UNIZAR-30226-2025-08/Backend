@@ -27,6 +27,24 @@ router.post("/crear", async (req, res) => {
   }
 });
 
+/**
+ * Obtiene un usuario por correo.
+ * @route GET /api/usuario/:correo
+ * @param {string} req.params.correo - Correo del usuario a buscar.
+ * @returns {Object} Datos del usuario o mensaje de error.
+ */
+router.get("/:correo", async (req, res) => {
+  const { correo } = req.params; // el correo es un parámetro de ruta dinámico
+  try {
+    const usuario = await UsuarioDAO.obtenerUsuarioPorCorreo(correo);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.json({ usuario });
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuario" });
+  }
+});
 
 /**
  * Inicia sesión validando credenciales.
@@ -36,7 +54,6 @@ router.post("/crear", async (req, res) => {
  * @returns {Object} Datos del usuario autenticado o error.
  */
 router.post("/login", async (req, res) => {
-  console.log(req.body);
   const { email, contrasena } = req.body;
   try {
     const usuario = await UsuarioDAO.validarCredenciales(email, contrasena);
