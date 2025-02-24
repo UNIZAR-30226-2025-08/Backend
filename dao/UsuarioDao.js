@@ -56,7 +56,6 @@ class UsuarioDAO {
       );
       const usuario = rows[0];
       if (!usuario) return null;
-      console.log("Usuario encontrado:", usuario);
   
       const valid = await bcrypt.compare(contrasena, usuario.hashContrasena);
       if (!valid) return null;
