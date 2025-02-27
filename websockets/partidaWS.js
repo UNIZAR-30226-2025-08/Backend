@@ -6,12 +6,76 @@ const { crearPartida, finalizarPartida } = require("../dao/PartidaDao");
 const io = new Server({ cors: { origin: "*" } });
 const redisClient = redis.createClient();
 
-const salas = {}; // Estructura temporal en memoria
+const salas = {
+    // Ejemplo de como serían las salas en memoria:
+  // "sala123": {
+  //   id: "sala123",
+  //   jugadores: [
+  //     { id: "user1", socketId: "socket123", desconectado: false },
+  //     { id: "user2", socketId: "socket456", desconectado: false }
+  //   ]
+  // }
+}; // Estructura temporal en memoria
+/*Tiempo de reconexión 10 seg? */
+const reconexionTimeout = 10000; // Tiempo en milisegundos para esperar reconexión (ej. 10 segundos)
 
 // Creación, unión, inicio, actualización y finalización de partidas
 const partidaWS = (socket) => {
-//io.on("connection",
-    console.log(`Usuario conectado: ${socket.id}`);
+
+    io.on("connection", (socket) => {
+        console.log(`Usuario conectado: ${socket.id}`);
+      
+        // Evento para manejar reconexiones: desde el cliente nos tienen enviar su id de usuario y la sala a la que pertenecía.
+        socket.on("reconectar", ({ userId, idSala }) => {
+          const sala = salas[idSala];
+          if (sala) {
+            const usuario = sala.jugadores.find(j => j.id === userId);
+            // Si el usuario existe y está marcado como desconectado
+            if (usuario) {
+              // Actualiza el socketId y marca al usuario como reconectado
+              usuario.socketId = socket.id;
+              usuario.desconectado = false;
+              socket.join(idSala);
+              io.to(idSala).emit("actualizarSala", sala);
+              console.log(`Usuario ${userId} se reconectó a la sala ${idSala}`);
+            }
+          }
+        });
+      
+        /**
+         * Maneja la desconexión de un usuario.
+         * @event disconnect
+         */
+        socket.on("disconnect", () => {
+          console.log(`Usuario desconectado: ${socket.id}`);
+      
+          // Buscar en todas las salas si existe un usuario con ese socketId
+          for (const idSala in salas) {
+            const sala = salas[idSala];
+            const usuario = sala.jugadores.find(j => j.socketId === socket.id);
+            if (usuario) {
+              // Marcar al usuario como desconectado
+              usuario.desconectado = true;
+      
+              // Establecemos un tiempo de espera (10seg?) para confirmar la desconexión definitiva
+              setTimeout(() => {
+                // Si el usuario sigue marcado como desconectado, eliminarlo de la sala
+                if (usuario.desconectado) {
+                  sala.jugadores = sala.jugadores.filter(j => j.socketId !== socket.id);
+                  io.to(idSala).emit("actualizarSala", sala);
+                  console.log(`Usuario ${usuario.id} eliminado de la sala ${idSala} por reconexión fallida.`);
+                  //Si la sala queda vacía, eliminamos la sala? Lo he puesto pero si quereis lo quitamos
+                  if (sala.jugadores.length === 0) {
+                    delete salas[idSala];
+                  }
+                }
+              }, reconexionTimeout);
+      
+              break; // Se encontró la sala, salimos del bucle
+            }
+          }
+        });
+      });
 
     // Crear sala
     socket.on("crearSala", async ({ nombreSala, tipo, contrasena, maxJugadores, maxRolesEspeciales }) => {
@@ -88,13 +152,19 @@ const partidaWS = (socket) => {
     });
 
     // Terminar la partida
-    socket.on("terminarPartida", async ({ idPartida, resultado }) => {
+    socket.on("terminarPartida", async ({ idPartida, resultado, resultadosJugadores }) => {
         let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
         if (partida) {
             // Guardar resultados en PostgreSQL
             await finalizarPartida(idPartida, 'terminada', resultado); // !!!
 
-            /* ACTUALIZAR RESULTADOS DE LA TABLA JUEGA PARA CADA JUGADOR !!!!!!!!!! */
+            // Actualizar la tabla JUEGA para cada jugador
+            //'resultadosJugadores' será un array de objetos del tipo:
+            // [{ idUsuario: 1, resultado: 'ganada' }, { idUsuario: 2, resultado: 'perdida' }, ...]
+            const JuegaDAO = require("../dao/JuegaDao");
+            for (const jugador of resultadosJugadores) {
+                await JuegaDAO.actualizarResultado(jugador.idUsuario, idPartida, jugador.resultado);
+            }
 
             // Eliminar de Redis para liberar memoria
             await redisClient.del(`partida_${idPartida}`);
