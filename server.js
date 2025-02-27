@@ -2,17 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
-const { Server } = require("socket.io");
+//const { Server } = require("socket.io");
 
-const Partida = require("./Partida"); // Importar la clase Partida !!!
+//const Partida = require("./Partida"); // Importar la clase Partida !!!
 
 //const redisClient = require("./redisClient"); !!!
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+//const io = new Server(server, { cors: { origin: "*" } });
 
-const partidasActivas = {}; // Almacén en memoria para partidas activas
+//const partidasActivas = {}; // Almacén en memoria para partidas activas
 
 // Middlewares
 app.use(cors()); // Permitir solicitudes desde el frontend
@@ -33,7 +33,10 @@ app.use("/api/amistad", amistadRoutes);
 app.use("/api/juega", juegaRoutes);
 
 // WebSockets
-require("./websockets/partidaWS")(io);
+const partidaWS = require("./websockets/partidaWS");
+
+// Inicializar WebSockets
+const io = partidaWS(server);
 
 /**
  * Inicia el servidor Express y WebSocket.
@@ -42,6 +45,7 @@ require("./websockets/partidaWS")(io);
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`WebSockets escuchando en ws://localhost:${PORT}`);
 });
 
 
