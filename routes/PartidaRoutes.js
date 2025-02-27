@@ -26,19 +26,43 @@ router.post("/crear", async (req, res) => {
 });
 
 /**
- * Actualiza el estado de una partida.
- * @route PUT /api/partida/actualizar-estado
+ * Actualiza el estado y los ganadores de una partida al finalizarla.
+ * @route PUT /api/partida/finalizar-partida
  * @param {number} req.body.idPartida - ID de la partida.
- * @param {string} req.body.estado - Nuevo estado ('en_curso' o 'terminada').
- * @returns {Object} Partida actualizada o mensaje de error.
+ * @param {string} req.body.estado - Nuevo estado ('terminada').
+ * @param {string} req.body.ganadores - Bando ganador (lobos o aldeanos).
+ * @returns {Object} Partida finalizada o mensaje de error.
  */
-router.put("/actualizar-estado", async (req, res) => {
-  const { idPartida, estado } = req.body;
+router.put("/finalizar-partida", async (req, res) => {
+  const { idPartida, estado, ganadores } = req.body;
+
+  // Validaciones
+  if (!idPartida || !estado || !ganadores) {
+    return res.status(400).json({ error: "Faltan parámetros en la solicitud" });
+  }
+
+  // Validar estado
+  if (estado !== "terminada") {
+    return res.status(400).json({ error: "El estado debe ser 'terminada' para finalizar la partida" });
+  }
+
+  // Validar bando ganador
+  if (!['lobos', 'aldeanos'].includes(ganadores)) {
+    return res.status(400).json({ error: "El bando ganador debe ser 'lobos' o 'aldeanos'" });
+  }
+
   try {
-    const partida = await PartidaDAO.actualizarEstado(idPartida, estado);
-    res.json({ mensaje: "Estado de la partida actualizado", partida });
+    const partida = await PartidaDAO.finalizarPartida(idPartida, estado, ganadores);
+
+    // Si no se encontró la partida, devolvemos un error
+    if (!partida) {
+      return res.status(404).json({ error: "Partida no encontrada" });
+    }
+
+    // Retornamos el mensaje de éxito con la partida finalizada
+    res.json({ mensaje: "Partida finalizada", partida });
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar el estado de la partida" });
+    res.status(500).json({ error: "Error al finalizar la partida" });
   }
 });
 
