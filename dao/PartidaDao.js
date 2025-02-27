@@ -35,21 +35,27 @@ class PartidaDAO {
   }
 
   /**
-   * Cambia el estado de una partida.
+   * Finaliza una partida.
    * @param {number} idPartida - ID de la partida.
-   * @param {string} estado - Nuevo estado ('en_curso', 'terminada').
-   * @returns {Promise<Object>} Partida actualizada.
+   * @param {string} estado - Nuevo estado ('terminada').
+   * @param {string} ganadores - Bando ganador (lobos o aldeanos).
+   * @returns {Promise<Object>} Partida finalizada o mensaje de error.
    */
-  static async actualizarEstado(idPartida, estado) {
+  static async finalizarPartida(idPartida, estado, ganadores) {
     try {
-      if (!['en_curso', 'terminada'].includes(estado)) {
-        throw new Error("Estado inválido. Debe ser 'en_curso' o 'terminada'.");
+      // Verificamos si se proporcionaron los datos necesarios
+      if (!idPartida || estado !== "terminada" || !ganadores) {
+        throw new Error(
+          "Debe proporcionar el identificador de la partida, " + 
+          "el estado de la partida debe ser 'terminada' y " + 
+          "debe proporcionar el bando ganador"
+        );
       }
 
       const query = `
-        UPDATE "Partida" SET estado = $1 WHERE "idPartida" = $2 
+        UPDATE "Partida" SET estado = $1, ganadores = $2 WHERE "idPartida" = $3 
         RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
-      const { rows } = await pool.query(query, [estado, idPartida]);
+      const { rows } = await pool.query(query, [estado, ganadores, idPartida]);
 
       if (rows.length === 0) {
         throw new Error("Partida no encontrada.");
@@ -57,8 +63,8 @@ class PartidaDAO {
 
       return rows[0];
     } catch (error) {
-      console.error("Error al actualizar estado de la partida:", error);
-      throw new Error("No se pudo actualizar el estado de la partida.");
+      console.error("Error al finalizar la partida:", error);
+      throw new Error("No se pudo finalizar la partida.");
     }
   }
 
