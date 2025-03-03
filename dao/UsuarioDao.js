@@ -1,5 +1,4 @@
 const pool = require("../config/db");
-const bcrypt = require("bcrypt");
 
 class UsuarioDAO {
   /**
@@ -12,11 +11,10 @@ class UsuarioDAO {
    */
   static async crearUsuario(nombre, correo, contrasena, avatar = null) {
     try {
-      const hashContrasena = await bcrypt.hash(contrasena, 10);
       const query = `
         INSERT INTO "Usuario" (nombre, correo, "hashContrasena", avatar)
         VALUES ($1, $2, $3, $4) RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion"`;
-      const { rows } = await pool.query(query, [nombre, correo, hashContrasena, avatar]);
+      const { rows } = await pool.query(query, [nombre, correo, contrasena, avatar]);
       return rows[0]; // Retorna los datos del usuario sin la contraseña encriptada.
     } catch (error) {
       console.error("Error al crear usuario:", error);
@@ -57,8 +55,8 @@ class UsuarioDAO {
       const usuario = rows[0];
       if (!usuario) return null;
   
-      const valid = await bcrypt.compare(contrasena, usuario.hashContrasena);
-      if (!valid) return null;
+      // Comparar hash con hash
+      if (contrasena !== usuario.hashContrasena) return null;
   
       // Devolver el usuario sin la contraseña
       const { hashContrasena, ...usuarioSinPassword } = usuario;
