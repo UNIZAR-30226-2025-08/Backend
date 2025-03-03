@@ -33,7 +33,13 @@ router.post("/asignar", async (req, res) => {
  */
 router.get("/usuario/:idUsuario", async (req, res) => {
   try {
-    const partidas = await JuegaDAO.obtenerPartidasDeUsuario(req.params.idUsuario); // el id del usuario es un parámetro de ruta dinámico
+    const idUsuario = parseInt(req.params.idUsuario, 10); // Convertir a número
+
+    if (isNaN(idUsuario)) {
+      return res.status(400).json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    const partidas = await JuegaDAO.obtenerPartidasDeUsuario(idUsuario);
     res.json(partidas);
   } catch (error) {
     res.status(500).json({ error: error.message });

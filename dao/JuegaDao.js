@@ -9,6 +9,7 @@ class JuegaDAO {
    * @returns {Promise<Object>} Registro de la relación.
    */
   static async asignarUsuarioAPartida(idUsuario, idPartida, rolJugado) {
+
     const rolesValidos = ["lobo", "aldeano", "vidente", "bruja", "cazador"];
 
     if (!rolesValidos.includes(rolJugado)) {
@@ -17,15 +18,17 @@ class JuegaDAO {
 
     try {
       // Insertar usuario en la partida
-      const insertQuery = `INSERT INTO "Juega" ("idUsuario", "idPartida2", "rolJugado") VALUES ($1, $2, $3) RETURNING *`;
-      const { rows } = await client.query(insertQuery, [idUsuario, idPartida, rolJugado]);
+      const insertQuery = `INSERT INTO "Juega" ("idUsuario", "idPartida", "rolJugado") VALUES ($1, $2, $3) RETURNING *`;
+      const { rows } = await pool.query(insertQuery, [idUsuario, idPartida, rolJugado]);
 
       return rows[0];
     } catch (error) {
       if (error.code === "23505") { // Código de error para clave duplicada en PostgreSQL
         throw new Error("El usuario ya está registrado en esta partida.");
       }
-
+      if (error.code === "23503") { // Código de error para clave duplicada en PostgreSQL
+        throw new Error("Error en la clave foránea.");
+      }
       console.error("Error al asignar usuario a la partida:", error);
       throw new Error("No se pudo asignar el usuario a la partida.");
     }
@@ -39,18 +42,18 @@ class JuegaDAO {
   static async obtenerPartidasDeUsuario(idUsuario) {
     try {
       const query = `
-        SELECT "p.idPartida", p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
-               "j.rolJugado", j.resultado
+        SELECT p."idPartida", p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
+               j."rolJugado", j.resultado
         FROM "Juega" j
-        JOIN "Partida" p ON "j.idPartida" = "p.idPartida"
-        WHERE "j.idUsuario" = $1
+        JOIN "Partida" p ON j."idPartida" = p."idPartida"
+        WHERE j."idUsuario" = $1
         ORDER BY p.fecha DESC`;
 
       const { rows } = await pool.query(query, [idUsuario]);
       return rows;
     } catch (error) {
       console.error("Error al obtener partidas del usuario:", error);
-      throw new Error("No se pudieron obtener las partidas del usuario.");
+      throw new Error("No se pudieron obtener las partidas del usuario");
     }
   }
 
