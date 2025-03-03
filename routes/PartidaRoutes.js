@@ -66,6 +66,8 @@ router.put("/finalizar-partida", async (req, res) => {
   }
 });
 
+
+
 /**
  * Obtiene el estado de una partida.
  * @route GET /api/partida/:id
@@ -74,7 +76,13 @@ router.put("/finalizar-partida", async (req, res) => {
  */
 router.get("/:id", async (req, res) => {
   try {
-    const partida = await PartidaDAO.obtenerPartida(req.params.id); // el id de la partida es un parámetro de ruta dinámico
+    const idPartida = parseInt(req.params.id, 10); // Convertir a número
+
+    if (isNaN(idPartida)) {
+      return res.status(400).json({ error: "El ID de la partida debe ser un número válido." });
+    }
+
+    const partida = await PartidaDAO.obtenerPartida(idPartida); // el id de la partida es un parámetro de ruta dinámico
     if (!partida) {
       return res.status(404).json({ error: "Partida no encontrada" });
     }

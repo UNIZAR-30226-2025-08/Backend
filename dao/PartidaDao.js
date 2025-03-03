@@ -77,7 +77,7 @@ class PartidaDAO {
     try {
       const query = `
           SELECT "idPartida", nombre, tipo, fecha, estado, ganadores 
-          FROM Partida WHERE "idPartida" = $1`;
+          FROM "Partida" WHERE "idPartida" = $1`;
       const { rows } = await pool.query(query, [idPartida]);
       return rows[0] || null;
     } catch (error) {
@@ -94,7 +94,7 @@ class PartidaDAO {
    */
   static async verificarContrasena(idPartida, contrasena) {
     try {
-      const query = `SELECT "hashContrasena" FROM Partida WHERE "idPartida" = $1 AND tipo = 'privada'`;
+      const query = `SELECT "hashContrasena" FROM "Partida" WHERE "idPartida" = $1 AND tipo = 'privada'`;
       const { rows } = await pool.query(query, [idPartida]);
 
       if (rows.length === 0 || !rows[0].hashContrasena) {

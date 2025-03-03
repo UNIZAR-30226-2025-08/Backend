@@ -32,13 +32,13 @@ class UsuarioDAO {
   static async obtenerUsuarioPorCorreo(correo) {
     try {
       const { rows } = await pool.query(
-        "SELECT idUsuario, nombre, correo, avatar, fechaCreacion FROM Usuario WHERE correo = $1",
+        `SELECT "idUsuario", nombre, correo, avatar, "fechaCreacion" FROM "Usuario" WHERE correo = $1`,
         [correo]
       );
       return rows[0] || null;
     } catch (error) {
       console.error("Error al buscar usuario por correo:", error);
-      throw new Error("Error al buscar usuario");
+      throw new Error(error.message);
     }
   }
 
