@@ -66,6 +66,36 @@ class UsuarioDAO {
       throw new Error("Error al validar credenciales");
     }
   }  
+
+  /**
+  * Actualizaciones de Perfil de los Usuarios
+  * Parámetros modificables: Nombre y Avatar
+  * (Se podría cambira también la contraseña pero no creo que sea algo imprescindible)
+  * @param {number} idUsuario - ID del usuario que envía la solicitud de modificación
+  * @param {Object} datos - Objeto que contiene los datos a actualizar.
+  * @param {string} [datos.nombre] - Nuevo nombre del usuario.
+  * @param {string} [datos.avatar] - Nueva URL del avatar.
+  * @returns {Promise<Object>} Datos del usuario actualizado.
+  */
+  static async actualizarPerfil(idUsuario, { nombre, avatar }) {
+    /*COALESCE se utiliza para que si solo se actualiza el nombre y no el avatar
+      o viceversa, el parámetro que no se actualiza mantiene el valor que tenia antes
+      Funcionamiento: Si en $1 el valor es null, el valor que se quedará será el de nombre */
+    try {
+      const query = `
+        UPDATE "Usuario"
+        SET nombre = COALESCE($1, nombre),
+            avatar = COALESCE($2, avatar)
+        WHERE "idUsuario" = $3
+        RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion"
+      `;
+      const { rows } = await pool.query(query, [nombre, avatar, idUsuario]);
+      return rows[0];
+    } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+      throw new Error("No se pudo actualizar el perfil del usuario");
+    }
+  }
 }
 
 module.exports = UsuarioDAO;
