@@ -72,4 +72,24 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * Actualiza el perfil del usuario.
+ * Parámetros modificables: Nombre y Avatar.
+ * @route PUT /api/usuario/actualizar
+ * @param {number} req.body.idUsuario - ID del usuario que se va a actualizar.
+ * @param {string} [req.body.nombre] - Nuevo nombre del usuario.
+ * @param {string} [req.body.avatar] - Nueva URL del avatar del usuario.
+ * @returns {Object} Datos del usuario actualizado o mensaje de error.
+ */
+router.put("/actualizar", async (req, res) => {
+  const { idUsuario, nombre, avatar } = req.body;
+  try {
+    const usuarioActualizado = await UsuarioDAO.actualizarPerfil(idUsuario, { nombre, avatar });
+    res.status(200).json({ mensaje: "Perfil actualizado exitosamente", usuario: usuarioActualizado });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 module.exports = router;
