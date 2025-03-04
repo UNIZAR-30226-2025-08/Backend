@@ -1,4 +1,5 @@
 -- Eliminar las tablas (si ya existen) en el orden correcto para evitar errores de dependencias
+DROP TABLE IF EXISTS "Sugerencias";
 DROP TABLE IF EXISTS "SolicitudAmistad";
 DROP TABLE IF EXISTS "Juega";
 DROP TABLE IF EXISTS "Amistad";
@@ -75,4 +76,14 @@ CREATE TABLE "SolicitudAmistad" (
     ON DELETE CASCADE, /* Si se elimina la fila del usuario emisor, se eliminarán también todas las solicitudes de amistad de ese usuario */
   FOREIGN KEY ("idUsuarioReceptor") REFERENCES "Usuario"("idUsuario")
     ON DELETE CASCADE /* Si se elimina la fila del usuario receptor, se eliminarán también todas las solicitudes de amistad de ese usuario */
+);
+
+-- Tabla para almacenar las Sugerencias de los usuarios
+CREATE TABLE "Sugerencias" (
+  "idSugerencia" SERIAL PRIMARY KEY, /*IdSugerencia que sea autoincrementa automáticamente */
+  "idUsuario" INT NOT NULL, /* Id de el usuario que esta realizando la sugerencia*/
+  contenido TEXT NOT NULL, /*Texto de la sugerencia que realiza el usuario*/
+  "fechaSugerencia" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /*Fecha en la que se ha realizado dicha sugerencia */
+  FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario")
+    ON DELETE CASCADE
 );
