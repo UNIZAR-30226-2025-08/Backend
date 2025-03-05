@@ -4,7 +4,6 @@ const cors = require("cors");
 const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
 //const { Server } = require("socket.io");
 
-//const Partida = require("./Partida"); // Importar la clase Partida !!!
 
 //const redisClient = require("./redisClient"); !!!
 
@@ -35,10 +34,10 @@ app.use("/api/juega", juegaRoutes);
 app.use("/api/sugerencias", sugerenciasRoutes);
 app.use("/api/ranking", rankingRoutes);
 // WebSockets
-const partidaWS = require("./websockets/partidaWS");
+const servidorWS = require("./websockets/servidorWS");
 
 // Inicializar WebSockets
-const io = partidaWS(server);
+const io = servidorWS(server);
 
 /**
  * Inicia el servidor Express y WebSocket.
