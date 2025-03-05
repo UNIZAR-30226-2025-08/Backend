@@ -106,7 +106,7 @@ const manejarConexionSalas = (socket, io) => {
 
 
 // Maneja la desconexión de salas
-const manejarDesconexionSalas = (socket, io) => {
+const manejarDesconexionSalas = (socket, io) => { // !!! FALTA TESTEAR
   for (const idSala in salas) {
     const sala = salas[idSala];
     const jugador = sala.jugadores.find(j => j.socketId === socket.id);
