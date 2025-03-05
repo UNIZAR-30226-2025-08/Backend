@@ -5,7 +5,7 @@ const usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socke
 const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
 
 // Maneja la reconexión de un usuario
-const manejarReconectarUsuarios = (socket, usuariosConectados, io) => {
+const manejarReconexionUsuarios = (socket, usuariosConectados, io) => {
     // Evento para manejar reconexiones: desde el cliente nos tienen enviar su id de usuario
     // y la sala a la que pertenecía
     socket.on("reconectar", async ({ idUsuario, idSala }) => {
@@ -131,4 +131,4 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
     });
 };
 
-module.exports = { manejarConexionUsuarios, manejarDesconexionUsuarios };
+module.exports = { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios };
