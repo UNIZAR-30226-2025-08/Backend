@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const redis = require("redis");
 const { crearPartida, finalizarPartida } = require("../dao/PartidaDao");
+//const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/invitaciones"); // !!!!
 //const { obtenerJugadoresSala, asignarRoles } = require("./gameLogic"); // !!!
 
 //const io = new Server({ cors: { origin: "*" } });
@@ -31,6 +32,7 @@ const partidaWS = (server) => {
   // Crear un nuevo servidor Socket.IO usando el servidor HTTP
   const io = new Server(server, { cors: { origin: "*" } });
   console.log("Servidor WebSocket inicializado");
+
   io.on("connection", (socket) => {
     console.log(`Usuario conectado: ${socket.id}`);
   
@@ -90,46 +92,52 @@ const partidaWS = (server) => {
 
     // Crear sala
     socket.on("crearSala", async ({ nombreSala, tipo, contrasena, maxJugadores, maxRolesEspeciales }) => {
-      const idPartida = await crearPartida(nombreSala, tipo, contrasena); // !!! igual no deberíamos de crear la partida en la BBDD hasta que todos jugadores se hayan unido en la sala 
-      
+      //const idPartida = await crearPartida(nombreSala, tipo, contrasena); // !!! igual no deberíamos de crear la partida en la BBDD hasta que todos jugadores se hayan unido en la sala 
+      const idSala = `sala_${Date.now()}`; // !!!!
+      if(tipo === "privada") {
+        const codigoInvitacion = generarCodigoInvitacion();
+      }
+
       // Guardar sala en memoria
       salas[idPartida] = {
-          id: idPartida,
+          id: idSala,
           nombre: nombreSala,
           tipo,
           contrasena,
           maxJugadores,
           maxRolesEspeciales,
           jugadores: [],
+          codigoInvitacion,
       };
+
       socket.join(idPartida);
       io.to(idPartida).emit("salaCreada", salas[idPartida]);
     });
 
     // Unirse a la sala
-    socket.on("unirseSala", ({ idPartida, usuario, contrasena }) => {
-    if (salas[idPartida]) {
-        // Si la sala tiene una contraseña, verificamos si la contraseña es correcta
-        if (salas[idPartida].contrasena && salas[idPartida].contrasena !== contrasena) {
-          socket.emit("error", "Contraseña incorrecta");
-          return;
-        }
+    socket.on("unirseSala", ({ idPartida, usuario, contrasena, codigoInvitacion }) => {
+      const sala = salas[idPartida];
+      if (!sala) return socket.emit("error", "Sala inexistente");
 
-        // Verificar si la sala tiene espacio para más jugadores
-        if (salas[idPartida].jugadores.length < salas[idPartida].maxJugadores) {
-          salas[idPartida].jugadores.push(usuario);
-          socket.join(idPartida);
-          io.to(idPartida).emit("actualizarSala", salas[idPartida]);
+      // Si la sala es privada, verificamos si la contraseña es correcta o si el código de invitación es válido
+      if (sala.tipo === "privada" && sala.contrasena && sala.contrasena !== contrasena && !validarCodigoInvitacion(sala, codigoInvitacion)) {
+        socket.emit("error", "Acceso denegado");
+        return;
+      }
 
-          // Si el número de jugadores alcanza el máximo, iniciar la partida
-          if (salas[idPartida].jugadores.length === salas[idPartida].maxJugadores) {
-            io.to(idPartida).emit("iniciarPartida");
-          }
-        } else {
-          socket.emit("error", "Sala llena");
-        }
-      } else {
-        socket.emit("error", "Sala inexistente");
+      // Verificar si la sala tiene espacio para más jugadores
+      if (sala.jugadores.length >= sala.maxJugadores) {
+        return socket.emit("error", "Sala llena");
+      }
+
+      // Agregar jugador a la sala
+      sala.jugadores.push(usuario);
+      socket.join(idPartida);
+      io.to(idPartida).emit("actualizarSala", sala);
+
+      // Si el número de jugadores alcanza el máximo, iniciar la partida
+      if (sala.jugadores.length === sala.maxJugadores) {
+        io.to(idPartida).emit("iniciarPartida");
       }
     });
 
