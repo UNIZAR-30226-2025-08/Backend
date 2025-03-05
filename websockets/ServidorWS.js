@@ -1,7 +1,7 @@
 const { Server } = require("socket.io");
 const redis = require("redis");
 //const redisClient = redis.createClient();
-const { manejarConexionUsuarios, manejarDesconexionUsuarios} = require("./UsuarioWS");
+const { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios} = require("./UsuarioWS");
 const { manejarConexionSalas, manejarDesconexionSalas } = require("./SalaWS");
 //const { manejarConexionPartidas, manejarDesconexionPartidas } = require("./PartidaWS");
 
@@ -19,6 +19,7 @@ const ServidorWS = (server) => {
     console.log(`Usuario conectado: ${socket.id}`);
 
     // Delegar la lógica de usuarios, salas y partidas a sus respectivos módulos
+    manejarReconexionUsuarios(socket, usuariosConectados, io);
     manejarConexionUsuarios(socket, io);
     manejarConexionSalas(socket, io);
     //manejarConexionPartidas(socket, io);
