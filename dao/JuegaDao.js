@@ -43,7 +43,7 @@ class JuegaDAO {
     try {
       const query = `
         SELECT p."idPartida", p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
-               j."rolJugado", j.resultado
+               j."rolJugado"
         FROM "Juega" j
         JOIN "Partida" p ON j."idPartida" = p."idPartida"
         WHERE j."idUsuario" = $1
@@ -57,38 +57,7 @@ class JuegaDAO {
     }
   }
 
-  /**
-   * Actualiza el resultado de un usuario en una partida tras finalizarla.
-   * @param {number} idUsuario - ID del usuario.
-   * @param {number} idPartida - ID de la partida.
-   * @param {string} resultado - El resultado de la partida ('ganada' o 'perdida').
-   * @returns {Promise<Object>} Registro de la relación actualizada.
-   */
-  static async actualizarResultado(idUsuario, idPartida, resultado) {
-    const resultadosValidos = ["ganada", "perdida"];
 
-    if (!resultadosValidos.includes(resultado)) {
-      throw new Error(`Resultado inválido. Debe ser uno de: ${resultadosValidos.join(", ")}`);
-    }
-
-    try {
-      // Actualizar el resultado en la tabla "Juega"
-      const updateQuery = `UPDATE "Juega" 
-                           SET "resultado" = $1 
-                           WHERE "idUsuario" = $2 AND "idPartida" = $3 
-                           RETURNING *`;
-      const { rows } = await pool.query(updateQuery, [resultado, idUsuario, idPartida]);
-
-      if (rows.length === 0) {
-        throw new Error("No se encontró la relación 'Juega' entre el usuario y la partida.");
-      }
-
-      return rows[0];
-    } catch (error) {
-      console.error("Error al actualizar el resultado de la partida:", error);
-      throw new Error("No se pudo actualizar el resultado de la partida.");
-    }
-  }
 }
 
 module.exports = JuegaDAO;
