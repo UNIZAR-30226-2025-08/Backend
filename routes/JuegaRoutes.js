@@ -46,23 +46,5 @@ router.get("/usuario/:idUsuario", async (req, res) => {
   }
 });
 
-/**
- * Actualiza el resultado de un usuario en una partida tras finalizarla.
- * @route PUT /api/juega/actualizar-resultado
- * @param {number} req.body.idUsuario - ID del usuario.
- * @param {number} req.body.idPartida - ID de la partida.
- * @param {string} req.body.resultado - El resultado de la partida ('ganada' o 'perdida').
- * @returns {Object} Relación de la partida con el resultado actualizado o mensaje de error.
- */
-router.put("/actualizar-resultado", async (req, res) => {
-  const { idUsuario, idPartida, resultado } = req.body;
-
-  try {
-    const juega = await JuegaDAO.actualizarResultado(idUsuario, idPartida, resultado);
-    res.json({ mensaje: "Resultado actualizado correctamente", juega });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 module.exports = router;
