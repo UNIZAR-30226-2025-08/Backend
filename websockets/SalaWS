@@ -1,6 +1,6 @@
 const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/Invitaciones");
 
-const salas = {
+let salas = {
     // Ejemplo de como serían las salas en memoria:
     // "sala123": {
     //   id: "sala123",
@@ -44,12 +44,14 @@ const manejarConexionSalas = (socket, io) => {
         if (!sala) return socket.emit("error", "Sala inexistente");
 
         // Si la sala es privada, verificamos si la contraseña es correcta o si el código de invitación es válido
-        if (sala.tipo === "privada" && sala.contrasena && sala.contrasena !== contrasena && !validarCodigoInvitacion(sala, codigoInvitacion)) {
+        if (sala.tipo === "privada" && sala.contrasena !== contrasena && !validarCodigoInvitacion(sala, codigoInvitacion)) {
+            console.log("No se pudo unir a la sala: no dispones de una contraseña o código de invitación válidos.");
             return socket.emit("error", "Acceso denegado");
         }
 
         // Verificar si la sala tiene espacio para más jugadores
         if (sala.jugadores.length >= sala.maxJugadores) {
+            console.log("Sala llena.");
             return socket.emit("error", "Sala llena");
         }
 
@@ -75,7 +77,12 @@ const manejarConexionSalas = (socket, io) => {
         const sala = salas[idSala];
         if (!sala || sala.lider !== idLider) return; // Sala no encontrada o el usuario que solicita la expulsión no es el líder
         sala.jugadores = sala.jugadores.filter(j => j.id !== idExpulsado);
+
+        // Emitir evento de actualización de la sala
         io.to(idSala).emit("actualizarSala", sala);
+
+        // Emitir evento de expulsión
+        io.to(idSala).emit("expulsadoDeSala", { idExpulsado, idSala });
     });
 
     // Salir de la sala
@@ -89,7 +96,11 @@ const manejarConexionSalas = (socket, io) => {
         } else if (sala.lider === idUsuario) {
             sala.lider = sala.jugadores[0].id; // Asignar un nuevo líder si el actual sale
         }
+        // Emitir evento de actualización de la sala
         io.to(idSala).emit("actualizarSala", sala);
+
+        // Emitir evento de que el jugador ha salido
+        io.to(idSala).emit("jugadorSalio", { idUsuario, idSala });
     });
 };
 
@@ -108,4 +119,4 @@ const manejarDesconexionSalas = (socket, io) => {
   }
 };
 
-module.exports = { manejarConexionSalas, manejarDesconexionSalas };
+module.exports = { manejarConexionSalas, manejarDesconexionSalas, salas };

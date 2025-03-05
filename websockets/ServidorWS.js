@@ -1,8 +1,8 @@
 const { Server } = require("socket.io");
 const redis = require("redis");
 //const redisClient = redis.createClient();
-const { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios} = require("./UsuarioWS");
-const { manejarConexionSalas, manejarDesconexionSalas } = require("./SalaWS");
+const { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios, usuariosConectados} = require("./UsuarioWS");
+const { manejarConexionSalas, manejarDesconexionSalas, salas } = require("./SalaWS");
 //const { manejarConexionPartidas, manejarDesconexionPartidas } = require("./PartidaWS");
 
 const ServidorWS = (server) => {

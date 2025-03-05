@@ -1,5 +1,5 @@
 const { obtenerAmigos } = require("../dao/AmistadDao"); // Función para obtener amigos de un usuario
-const usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
+let usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
 
 /* Tiempo de reconexión 20 seg */
 const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
@@ -131,4 +131,4 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
     });
 };
 
-module.exports = { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios };
+module.exports = { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios, usuariosConectados };
