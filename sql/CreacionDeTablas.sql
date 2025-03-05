@@ -28,7 +28,8 @@ CREATE TABLE "Usuario" (
   "hashContrasena" VARCHAR(255) NOT NULL,
   correo VARCHAR(100) NOT NULL UNIQUE, /* El correo debe ser único */
   /* Fecha de creación de usuario, se pondrá automáticamente al insertar un usuario en la tabla */
-  "fechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "fechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  rol_favorito roles
 );
 
 -- Tabla Partida
@@ -58,7 +59,6 @@ CREATE TABLE "Juega" (
   "idUsuario" INT NOT NULL,
   "idPartida" INT NOT NULL,
   "rolJugado" roles NOT NULL, /* Rol que está jugando el usuario */
-  resultado resultadoPartida, /* El resultado de la partida puede tener los valores 'ganada' o 'perdida' */
   PRIMARY KEY ("idUsuario", "idPartida"), /* Clave primaria compuesta de idUsuario e idPartida */
   FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario") /* Clave foránea que referencia a la tabla Usuario */
     ON DELETE CASCADE, /* Si se elimina la fila del usuario, se eliminarán también todas las filas de Juega que tenga ese usuario */

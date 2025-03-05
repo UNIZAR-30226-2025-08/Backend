@@ -1,0 +1,21 @@
+nombre,avatar,hashContrasena,correo,fechaCreacion,rol_favorito
+Carlos Martínez,http://example.com/avatars/carlos.png,pass123,carlos.martinez@example.com,2023-01-15 08:23:45,lobo
+Lucía García,http://example.com/avatars/lucia.png,clave,carlos.garcia@example.com,2023-02-10 14:12:30,lobo
+Miguel Hernández,http://example.com/avatars/miguel.png,1234,miguel.hernandez@example.com,2023-03-05 09:45:12,lobo
+Ana Rodríguez,http://example.com/avatars/ana.png,abc123,ana.rodriguez@example.com,2023-04-20 16:30:00,lobo
+Javier López,http://example.com/avatars/javier.png,qwerty,javier.lopez@example.com,2023-05-12 11:10:05,lobo
+Sofía Sánchez,http://example.com/avatars/sofia.png,letmein,sofia.sanchez@example.com,2023-06-03 13:25:50,lobo
+Diego Pérez,http://example.com/avatars/diego.png,iloveyou,diego.perez@example.com,2023-07-18 07:55:33,vidente
+María Gómez,http://example.com/avatars/maria.png,monkey,maria.gomez@example.com,2023-08-09 19:40:21,vidente
+Álvaro Díaz,http://example.com/avatars/alvaro.png,dragon,alvaro.diaz@example.com,2023-09-14 10:05:47,vidente
+Elena Morales,http://example.com/avatars/elena.png,sunshine,elena.morales@example.com,2023-10-01 12:34:56,vidente
+Manuel Ruiz,http://example.com/avatars/manuel.png,football,manuel.ruiz@example.com,2023-11-22 18:20:10,bruja
+Isabel Castro,http://example.com/avatars/isabel.png,baseball,isabel.castro@example.com,2023-12-05 21:15:30,bruja
+Raúl Romero,http://example.com/avatars/raul.png,starwars,raul.romero@example.com,2024-01-17 06:40:55,bruja
+Carmen Navarro,http://example.com/avatars/carmen.png,iloveyou2,carmen.navarro@example.com,2024-02-28 14:55:15,cazador
+Pablo Muñoz,http://example.com/avatars/pablo.png,trustno1,pablo.munoz@example.com,2024-03-12 09:30:00,cazador
+Sara Vega,http://example.com/avatars/sara.png,password,sara.vega@example.com,2024-04-23 17:05:45,cazador
+Jorge Molina,http://example.com/avatars/jorge.png,secret,jorge.molina@example.com,2024-05-30 11:50:20,cazador
+Teresa Rojas,http://example.com/avatars/teresa.png,welcome,teresa.rojas@example.com,2024-06-15 15:35:10,cazador
+Andrés Figueroa,http://example.com/avatars/andres.png,admin,andres.figueroa@example.com,2024-07-09 08:15:00,cazador
+Natalia Cabrera,http://example.com/avatars/natalia.png,pass,natalia.cabrera@example.com,2024-08-25 20:00:05,cazador
