@@ -1,7 +1,8 @@
 const { Server } = require("socket.io");
 const redis = require("redis");
 const { crearPartida, finalizarPartida } = require("../dao/PartidaDao");
-//const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/invitaciones"); // !!!!
+const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/invitaciones");
+const { obtenerAmigos } = require("../dao/AmistadDao"); // Función para obtener amigos de un usuario
 //const { obtenerJugadoresSala, asignarRoles } = require("./gameLogic"); // !!!
 
 //const io = new Server({ cors: { origin: "*" } });
@@ -19,10 +20,11 @@ const salas = {
   // }
 };// Estructura temporal en memoria
 
-/* Tiempo de reconexión 10 seg */
-const reconexionTimeout = 10000; // Tiempo en milisegundos para esperar reconexión (ej. 10 segundos)
+const usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
 
-// Creación, unión, inicio, actualización y finalización de partidas
+/* Tiempo de reconexión 20 seg */
+const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
+
 const partidaWS = (server) => {
   if (!server) {
     console.error("Error: el servidor HTTP no está definido.");
@@ -36,6 +38,32 @@ const partidaWS = (server) => {
   io.on("connection", (socket) => {
     console.log(`Usuario conectado: ${socket.id}`);
   
+    // Registrar usuario en línea y notificar a sus amigos
+    /*socket.on("registrarUsuario", async ({ idUsuario }) => {
+      usuariosConectados[idUsuario] = socket.id;
+
+      // Obtener amigos del usuario
+      const amigos = await obtenerAmigos(idUsuario);
+
+      // Notificar a los amigos del usuario sobre su conexión
+      amigos.forEach((idAmigo) => {
+        if (usuariosConectados[idAmigo]) {
+          io.to(usuariosConectados[idAmigo]).emit("estadoAmigo", { idUsuario, en_linea: true });
+        }
+      });
+    });
+
+    // Un usuario solicita el estado de sus amigos
+    socket.on("solicitarEstadoAmigos", async ({ idUsuario }) => {
+      const amigos = await obtenerAmigos(idUsuario);
+      const estadoAmigos = amigos.map(idAmigo => ({
+        idUsuario: idAmigo,
+        en_linea: !!usuariosConectados[idAmigo]
+      }));
+
+      socket.emit("estadoAmigos", estadoAmigos);
+    });*/
+
     // Evento para manejar reconexiones: desde el cliente nos tienen enviar su id de usuario y la sala a la que pertenecía
     socket.on("reconectar", ({ idUsuario, idSala }) => {
       const sala = salas[idSala];
@@ -75,54 +103,58 @@ const partidaWS = (server) => {
             // Si el usuario sigue marcado como desconectado, eliminarlo de la sala
             if (usuario.desconectado) {
               sala.jugadores = sala.jugadores.filter(j => j.socketId !== socket.id);
-              io.to(idSala).emit("actualizarSala", sala);
-              console.log(`Usuario ${usuario.id} eliminado de la sala ${idSala} por reconexión fallida.`);
-              
+
               // Si la sala queda vacía, eliminamos la sala
               if (sala.jugadores.length === 0) {
                 delete salas[idSala];
+                console.log(`Sala ${idSala} eliminada por falta de jugadores`);
+              } else if (sala.lider === usuario.id) {
+                // Si el líder de la sala se desconecta, asignar un nuevo líder
+                sala.lider = sala.jugadores[0].id;
+                console.log(`Lider ${usuario.id} eliminado de la sala ${idSala}. Nuevo líder asignado: ${sala.lider}`);
               }
+              io.to(idSala).emit("actualizarSala", sala);
+              console.log(`Usuario ${usuario.id} eliminado de la sala ${idSala} por desconexión.`);
             }
           }, reconexionTimeout);
-  
+
           break; // Se encontró la sala, salimos del bucle
         }
       }
     });
 
     // Crear sala
-    socket.on("crearSala", async ({ nombreSala, tipo, contrasena, maxJugadores, maxRolesEspeciales }) => {
+    socket.on("crearSala", async ({ nombreSala, tipo, contrasena, maxJugadores, maxRolesEspeciales, usuario }) => {
       //const idPartida = await crearPartida(nombreSala, tipo, contrasena); // !!! igual no deberíamos de crear la partida en la BBDD hasta que todos jugadores se hayan unido en la sala 
-      const idSala = `sala_${Date.now()}`; // !!!!
-      if(tipo === "privada") {
-        const codigoInvitacion = generarCodigoInvitacion();
-      }
-
+      const idSala = `sala_${crypto.randomUUID()}`; // Generar un ID único para la sala
+      const codigoInvitacion = tipo === "privada" ? generarCodigoInvitacion() : null;
+      
       // Guardar sala en memoria
-      salas[idPartida] = {
+      salas[idSala] = {
           id: idSala,
           nombre: nombreSala,
           tipo,
           contrasena,
           maxJugadores,
           maxRolesEspeciales,
-          jugadores: [],
+          jugadores: [{ ...usuario, socketId: socket.id }],
+          lider: usuario.id,
           codigoInvitacion,
       };
 
-      socket.join(idPartida);
-      io.to(idPartida).emit("salaCreada", salas[idPartida]);
+      console.log(`Sala creada: ${idSala} (${nombreSala})`);
+      socket.join(idSala);
+      io.to(idSala).emit("salaCreada", salas[idSala]);
     });
 
     // Unirse a la sala
-    socket.on("unirseSala", ({ idPartida, usuario, contrasena, codigoInvitacion }) => {
-      const sala = salas[idPartida];
+    socket.on("unirseSala", ({ idSala, usuario, contrasena, codigoInvitacion }) => {
+      const sala = salas[idSala];
       if (!sala) return socket.emit("error", "Sala inexistente");
 
       // Si la sala es privada, verificamos si la contraseña es correcta o si el código de invitación es válido
       if (sala.tipo === "privada" && sala.contrasena && sala.contrasena !== contrasena && !validarCodigoInvitacion(sala, codigoInvitacion)) {
-        socket.emit("error", "Acceso denegado");
-        return;
+        return socket.emit("error", "Acceso denegado");
       }
 
       // Verificar si la sala tiene espacio para más jugadores
@@ -131,18 +163,46 @@ const partidaWS = (server) => {
       }
 
       // Agregar jugador a la sala
-      sala.jugadores.push(usuario);
-      socket.join(idPartida);
-      io.to(idPartida).emit("actualizarSala", sala);
+      sala.jugadores.push({ ...usuario, socketId: socket.id });
+      socket.join(idSala);
+      io.to(idSala).emit("actualizarSala", sala);
+    });
 
-      // Si el número de jugadores alcanza el máximo, iniciar la partida
-      if (sala.jugadores.length === sala.maxJugadores) {
-        io.to(idPartida).emit("iniciarPartida");
+    // Marca el estado de un jugador como listo o no listo dentro de la sala
+    socket.on("marcarEstado", ({ idSala, idUsuario, estado }) => {
+      const sala = salas[idSala];
+      if (!sala) return; // Sala no encontrada
+      const jugador = sala.jugadores.find(j => j.id === idUsuario);
+      if (jugador) { // Marcar al jugador como listo o no listo
+        jugador.listo = estado;
+        io.to(idSala).emit("actualizarSala", sala);
       }
     });
 
+    // Expulsar a un jugador de la sala si el líder lo solicita
+    socket.on("expulsarJugador", ({ idSala, idLider, idExpulsado }) => {
+      const sala = salas[idSala];
+      if (!sala || sala.lider !== idLider) return; // Sala no encontrada o el usuario que solicita la expulsión no es el líder
+      sala.jugadores = sala.jugadores.filter(j => j.id !== idExpulsado);
+      io.to(idSala).emit("actualizarSala", sala);
+    });
+
+    // Salir de la sala
+    socket.on("salirSala", ({ idSala, idUsuario }) => {
+      const sala = salas[idSala];
+      if (!sala) return; // Sala no encontrada
+      sala.jugadores = sala.jugadores.filter(j => j.id !== idUsuario);
+      if (sala.jugadores.length === 0) {
+        delete salas[idSala]; // Eliminar la sala si no hay jugadores
+        console.log(`Sala ${idSala} eliminada por falta de jugadores`);
+      } else if (sala.lider === idUsuario) {
+        sala.lider = sala.jugadores[0].id; // Asignar un nuevo líder si el actual sale
+      }
+      io.to(idSala).emit("actualizarSala", sala);
+    });
+
     // Iniciar la partida
-    socket.on("iniciarPartida", async ({ idPartida }) => {
+    /*socket.on("iniciarPartida", async ({ idPartida }) => {
       if (salas[idPartida]) {
         // Obtener jugadores de la sala
         //const jugadores = obtenerJugadoresSala(idPartida); !!!
@@ -157,21 +217,21 @@ const partidaWS = (server) => {
         
         io.to(idPartida).emit("partidaIniciada", partida);
       }
-    });
+    });*/
 
     // Acción del jugador
-    socket.on("accionJugador", async ({ idPartida, accion }) => {
-      /*let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
+    /*socket.on("accionJugador", async ({ idPartida, accion }) => {
+      let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
       if (partida) {
         partida.estado = accion.estado; // !!!
         //await redisClient.set(`partida_${idPartida}`, JSON.stringify(partida));
         io.to(idPartida).emit("actualizarEstado", partida); // !!!
-      }*/
-    });
+      }
+    });*/
 
     // Terminar la partida
-    socket.on("terminarPartida", async ({ idPartida, resultado, resultadosJugadores }) => {
-      /*let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
+    /*socket.on("terminarPartida", async ({ idPartida, resultado, resultadosJugadores }) => {
+      let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
       if (partida) {
         // Guardar resultados en PostgreSQL
         await finalizarPartida(idPartida, 'terminada', resultado); // !!!
@@ -187,8 +247,8 @@ const partidaWS = (server) => {
         // Eliminar de Redis para liberar memoria
         await redisClient.del(`partida_${idPartida}`);
         io.to(idPartida).emit("partidaTerminada", resultado);
-      }*/
-    });
+      }
+    });*/
   });
   return io;
 };

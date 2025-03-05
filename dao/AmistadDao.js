@@ -68,6 +68,30 @@ class AmistadDAO {
       throw new Error("No se pudo eliminar la amistad.");
     }
   }
+
+  /**
+   * Obtiene la lista de amigos de un usuario.
+   * @param {number} idUsuario - ID del usuario.
+   * @returns {Promise<number[]>} Lista de IDs de amigos.
+   */
+  static async obtenerAmigos(idUsuario) {
+    try {
+      const query = `
+        SELECT CASE 
+          WHEN "idUsuario1" = $1 THEN "idUsuario2"
+          ELSE "idUsuario1"
+        END AS amigo
+        FROM "Amistad"
+        WHERE "idUsuario1" = $1 OR "idUsuario2" = $1`;
+
+      const { rows } = await pool.query(query, [idUsuario]);
+      
+      return rows.map(row => row.amigo); // Devolver solo los IDs de amigos
+    } catch (error) {
+      console.error("Error al obtener amigos:", error);
+      throw new Error("No se pudo obtener la lista de amigos.");
+    }
+  }
 }
 
 module.exports = AmistadDAO;
