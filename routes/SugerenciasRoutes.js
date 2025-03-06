@@ -30,6 +30,21 @@ router.post("/enviar", async (req, res) => {
     }
 });
 
+/**
+ * Obtiene todas las sugerencias
+ * Útil para un rol de administrador que quiera ver todas las sugerencias
+ * @route GET /api/sugerencias/todas
+ * @returns {Array} Lista de todas las sugerencias.
+ */
+router.get("/todas", async (req, res) => {
+  try {
+    const sugerencias = await SugerenciasDAO.obtenerSugerencias();
+    res.json(sugerencias);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 /**
  * Obtiene las sugerencias que han sido enviadas por un usuario en concreto
@@ -52,14 +67,36 @@ router.post("/usuario", async (req, res) => {
 
 
 /**
- * Obtiene todas las sugerencias
- * Útil para un rol de administrador que quiera ver todas las sugerencias
- * @route GET /api/sugerencias/todas
- * @returns {Array} Lista de todas las sugerencias.
+ * Marca si una sugerencia ha sido revisada o no
+ * Perteneciente solo al rol de administrador
+ * @route PUT /api/sugerencias/marcarRevisada
+ * @param {number} req.body.idSugerencia - ID de la sugerencia.
+ * @param {boolean} req.body.revisada - Estado de revisión (true si ha sido revisada).
+ * @returns {Object} La sugerencia actualizada con el nuevo estado.
  */
-router.get("/todas", async (req, res) => {
+router.put("/marcarRevisada", async (req, res) => {
+  const { idSugerencia, revisada } = req.body;
+  if (idSugerencia === undefined || revisada === undefined) {
+    return res.status(400).json({ error: "Se requieren idSugerencia y revisada." });
+  }
   try {
-    const sugerencias = await SugerenciasDAO.obtenerSugerencias();
+    const resultado = await SugerenciasDAO.marcarRevisada(idSugerencia, revisada);
+    res.json({ mensaje: "Sugerencia actualizada", sugerencia: resultado });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+  
+});
+
+/**
+ * Devuelve las sugerencias que no han sido revisadas.
+ * Útil si el administrador quiere ver las sugerencias que aún no ha revisado.
+ * @route GET /api/sugerencias/noRevisadas
+ * @returns {Array} Lista de sugerencias no revisadas.
+ */
+router.get("/noRevisadas", async (req, res) => {
+  try {
+    const sugerencias = await SugerenciasDAO.obtenerSugerenciasNoRevisadas();
     res.json(sugerencias);
   } catch (error) {
     res.status(500).json({ error: error.message });
