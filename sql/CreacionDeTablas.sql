@@ -79,11 +79,14 @@ CREATE TABLE "SolicitudAmistad" (
 );
 
 -- Tabla para almacenar las Sugerencias de los usuarios
+
 CREATE TABLE "Sugerencias" (
   "idSugerencia" SERIAL PRIMARY KEY, /*IdSugerencia que sea autoincrementa automáticamente */
   "idUsuario" INT NOT NULL, /* Id de el usuario que esta realizando la sugerencia*/
   contenido TEXT NOT NULL, /*Texto de la sugerencia que realiza el usuario*/
   "fechaSugerencia" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /*Fecha en la que se ha realizado dicha sugerencia */
+  revisada BOOLEAN NOT NULL DEFAULT FALSE, /*Especifica si la sugerencia ha sido revisada por el administrador o no */
   FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario")
     ON DELETE CASCADE
 );
+
