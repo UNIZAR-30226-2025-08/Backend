@@ -13,7 +13,7 @@ class UsuarioDAO {
     try {
       const query = `
         INSERT INTO "Usuario" (nombre, correo, "hashContrasena", avatar)
-        VALUES ($1, $2, $3, $4) RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion"`;
+        VALUES ($1, $2, $3, $4) RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"`;
       const { rows } = await pool.query(query, [nombre, correo, contrasena, avatar]);
       return rows[0]; // Retorna los datos del usuario sin la contraseña encriptada.
     } catch (error) {
@@ -30,7 +30,7 @@ class UsuarioDAO {
   static async obtenerUsuarioPorCorreo(correo) {
     try {
       const { rows } = await pool.query(
-        `SELECT "idUsuario", nombre, correo, avatar, "fechaCreacion" FROM "Usuario" WHERE correo = $1`,
+        `SELECT "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito" FROM "Usuario" WHERE correo = $1`,
         [correo]
       );
       return rows[0] || null;
@@ -49,7 +49,7 @@ class UsuarioDAO {
   static async validarCredenciales(correo, contrasena) {
     try {
       const { rows } = await pool.query(
-        'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
+        'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "rolFavorito", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
         [correo]
       );
       const usuario = rows[0];
@@ -87,7 +87,7 @@ class UsuarioDAO {
         SET nombre = COALESCE($1, nombre),
             avatar = COALESCE($2, avatar)
         WHERE "idUsuario" = $3
-        RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion"
+        RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"
       `;
       const { rows } = await pool.query(query, [nombre, avatar, idUsuario]);
       return rows[0];
