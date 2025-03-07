@@ -12,7 +12,9 @@
   "license": "MIT",
   "devDependencies": {
     "jest": "^29.7.0",
-    "jsdoc": "^4.0.4"
+    "jsdoc": "^4.0.4",
+    "jsdoc-express-with-swagger": "^0.0.0",
+    "jsdoc-route-plugin": "^0.1.0"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

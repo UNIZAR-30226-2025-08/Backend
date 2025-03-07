@@ -3,13 +3,14 @@ const router = express.Router();
 const AmistadDAO = require("../dao/AmistadDao");
 
 /**
- * @module API Amistades
+ * @file AmistadRoutes.js
  * @description Endpoints para la gestión de amistades.
+ * @module API_Amistades
  */
 
 /**
  * Agrega un amigo a la lista de amistades.
- * @route POST /api/amistad/agregar
+ * @function POST /api/amistad/agregar
  * @param {number} req.body.idUsuario1 - ID del usuario 1
  * @param {number} req.body.idUsuario2 - ID del usuario 2
  * @returns {Object} Relación de amistad o mensaje de error.
@@ -26,7 +27,7 @@ router.post("/agregar", async (req, res) => {
 
 /**
  * Elimina una amistad entre dos usuarios.
- * @route DELETE /api/amistad/eliminar
+ * @function DELETE /api/amistad/eliminar
  * @param {number} req.body.idUsuario1 - ID del usuario 1
  * @param {number} req.body.idUsuario2 - ID del usuario 2
  * @returns {Object} Mensaje de confirmación o error.

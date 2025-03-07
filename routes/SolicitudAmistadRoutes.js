@@ -3,13 +3,14 @@ const router = express.Router();
 const SolicitudAmistadDAO = require("../dao/SolicitudAmistadDao");
 
 /**
- * @module API Solicitudes de Amistad
+ * @file SolicitudAmistadRoutes.js
  * @description Endpoints para gestionar solicitudes de amistad.
+ * @module API_SolicitudAmistad
  */
 
 /**
  * Envía una solicitud de amistad.
- * @route POST /api/solicitud/enviar
+ * @function POST /api/solicitud/enviar
  * @param {number} req.body.idEmisor - ID del usuario que envía la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe la solicitud.
  * @returns {Object} Solicitud enviada o error.
@@ -26,7 +27,7 @@ router.post("/enviar", async (req, res) => {
 
 /**
  * Acepta una solicitud de amistad.
- * @route POST /api/solicitud/aceptar
+ * @function POST /api/solicitud/aceptar
  * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe y acepta la solicitud.
  * @returns {Object} Mensaje de éxito o error.
@@ -43,7 +44,7 @@ router.post("/aceptar", async (req, res) => {
 
 /**
  * Rechaza una solicitud de amistad.
- * @route POST /api/solicitud/rechazar
+ * @function POST /api/solicitud/rechazar
  * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe y rechaza la solicitud.
  * @returns {Object} Mensaje de éxito o error.

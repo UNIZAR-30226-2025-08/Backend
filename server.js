@@ -55,7 +55,7 @@ server.listen(PORT, () => {
 // // SOCKETS
 // //----------------------------------------------------------------------------------
 // /**
-//  * @module WebSockets Partidas
+//  * @file WebSockets Partidas
 //  * @description Gestión de partidas en tiempo real con Socket.io.
 //  */
 // io.on("connection", (socket) => {

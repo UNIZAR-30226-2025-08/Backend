@@ -3,14 +3,15 @@ const router = express.Router();
 const UsuarioDAO = require("../dao/UsuarioDao");
 
 /**
- * @module API Usuarios
+ * @file UsuarioRoutes.js
  * @description Endpoints para la gestión de usuarios.
+ * @module API_Usuario
  */
 
 
 /**
  * Crea un nuevo usuario.
- * @route POST /api/usuario/crear
+ * @function POST /api/usuario/crear
  * @param {string} req.body.nombre - Nombre del usuario.
  * @param {string} req.body.correo - Correo electrónico del usuario.
  * @param {string} req.body.contrasena - Contraseña del usuario.
@@ -29,7 +30,7 @@ router.post("/crear", async (req, res) => {
 
 /**
  * Obtiene un usuario por correo.
- * @route POST /api/usuario/correo
+ * @function POST /api/usuario/correo
  * @param {string} req.body.correo - Correo del usuario a buscar.
  * @returns {Object} Datos del usuario o mensaje de error.
  */
@@ -54,7 +55,7 @@ router.post("/correo", async (req, res) => {
 
 /**
  * Inicia sesión validando credenciales.
- * @route POST /api/usuario/login
+ * @function POST /api/usuario/login
  * @param {string} req.body.correo - Correo electrónico del usuario.
  * @param {string} req.body.contrasena - Contraseña del usuario.
  * @returns {Object} Datos del usuario autenticado o error.
@@ -75,7 +76,7 @@ router.post("/login", async (req, res) => {
 /**
  * Actualiza el perfil del usuario.
  * Parámetros modificables: Nombre y Avatar.
- * @route PUT /api/usuario/actualizar
+ * @function PUT /api/usuario/actualizar
  * @param {number} req.body.idUsuario - ID del usuario que se va a actualizar.
  * @param {string} [req.body.nombre] - Nuevo nombre del usuario.
  * @param {string} [req.body.avatar] - Nueva URL del avatar del usuario.

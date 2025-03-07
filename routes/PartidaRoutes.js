@@ -3,13 +3,14 @@ const router = express.Router();
 const PartidaDAO = require("../dao/PartidaDao");
 
 /**
- * @module API Partidas
+ * @file PartidaRoutes.js
  * @description Endpoints para la gestión de partidas.
+ * @module API_Partida
  */
 
 /**
  * Crea una nueva partida.
- * @route POST /api/partida/crear
+ * @function POST /api/partida/crear
  * @param {string} req.body.nombre - Nombre de la partida.
  * @param {string} req.body.tipo - Tipo de la partida ('publica' o 'privada').
  * @param {string} [req.body.contrasena] - Contraseña de la partida (si es privada).
@@ -27,7 +28,7 @@ router.post("/crear", async (req, res) => {
 
 /**
  * Actualiza el estado y los ganadores de una partida al finalizarla.
- * @route PUT /api/partida/finalizar-partida
+ * @function PUT /api/partida/finalizar-partida
  * @param {number} req.body.idPartida - ID de la partida.
  * @param {string} req.body.estado - Nuevo estado ('terminada').
  * @param {string} req.body.ganadores - Bando ganador (lobos o aldeanos).
@@ -70,7 +71,7 @@ router.put("/finalizar-partida", async (req, res) => {
 
 /**
  * Obtiene el estado de una partida.
- * @route GET /api/partida/:id
+ * @function GET /api/partida/:id
  * @param {number} req.params.id - ID de la partida.
  * @returns {Object} Datos de la partida o mensaje de error.
  */
@@ -94,7 +95,7 @@ router.get("/:id", async (req, res) => {
 
 /**
  * Verifica la contraseña de una partida privada.
- * @route POST /api/partida/verificar-contrasena
+ * @function POST /api/partida/verificar-contrasena
  * @param {number} req.body.idPartida - ID de la partida.
  * @param {string} req.body.contrasena - Contraseña ingresada.
  * @returns {Object} Resultado de la verificación.

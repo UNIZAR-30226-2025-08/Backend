@@ -3,8 +3,9 @@ const router = express.Router();
 const SugerenciasDAO = require("../dao/SugerenciasDao");
 
 /**
- * @module API Sugerencias y Recomendaciones
+ * @file SugerenciasRoutes.js
  * @description Endpoints para gestionar las sugerencias y obtener recomendaciones.
+ * @module API_Sugerencias
  */
 
 
@@ -12,7 +13,7 @@ const SugerenciasDAO = require("../dao/SugerenciasDao");
 /**
  * Envía una nueva sugerencia
  * Se almacena tanto el contenido como el usuario que la envía
- * @route POST /api/sugerencias/enviar
+ * @function POST /api/sugerencias/enviar
  * @param {number} req.body.idUsuario - ID del usuario que envía la sugerencia.
  * @param {string} req.body.contenido - Contenido de la sugerencia.
  * @returns {Object} La sugerencia almacenada o mensaje de error.
@@ -33,7 +34,7 @@ router.post("/enviar", async (req, res) => {
 /**
  * Obtiene todas las sugerencias
  * Útil para un rol de administrador que quiera ver todas las sugerencias
- * @route GET /api/sugerencias/todas
+ * @function GET /api/sugerencias/todas
  * @returns {Array} Lista de todas las sugerencias.
  */
 router.get("/todas", async (req, res) => {
@@ -48,7 +49,7 @@ router.get("/todas", async (req, res) => {
 
 /**
  * Obtiene las sugerencias que han sido enviadas por un usuario en concreto
- * @route POST /api/sugerencias/usuario
+ * @function POST /api/sugerencias/usuario
  * @param {number} req.body.idUsuario - ID del usuario.
  * @returns {Array} Lista de sugerencias del usuario.
  */
@@ -69,7 +70,7 @@ router.post("/usuario", async (req, res) => {
 /**
  * Marca si una sugerencia ha sido revisada o no
  * Perteneciente solo al rol de administrador
- * @route PUT /api/sugerencias/marcarRevisada
+ * @function PUT /api/sugerencias/marcarRevisada
  * @param {number} req.body.idSugerencia - ID de la sugerencia.
  * @param {boolean} req.body.revisada - Estado de revisión (true si ha sido revisada).
  * @returns {Object} La sugerencia actualizada con el nuevo estado.
@@ -91,7 +92,7 @@ router.put("/marcarRevisada", async (req, res) => {
 /**
  * Responde a una sugerencia.
  * El administrador puede responder a las sugerencias de los usuarios.
- * @route PUT /api/sugerencias/responder
+ * @function PUT /api/sugerencias/responder
  * @param {number} req.body.idSugerencia - ID de la sugerencia a responder.
  * @param {string} req.body.respuesta - Respuesta a la sugerencia.
  * @returns {Object} La sugerencia actualizada con la respuesta o mensaje de error.
@@ -112,7 +113,7 @@ router.put("/responder", async (req, res) => {
 /**
  * Devuelve las sugerencias que no han sido revisadas.
  * Útil si el administrador quiere ver las sugerencias que aún no ha revisado.
- * @route GET /api/sugerencias/noRevisadas
+ * @function GET /api/sugerencias/noRevisadas
  * @returns {Array} Lista de sugerencias no revisadas.
  */
 router.get("/noRevisadas", async (req, res) => {

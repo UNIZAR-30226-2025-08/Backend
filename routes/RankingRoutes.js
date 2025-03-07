@@ -3,14 +3,15 @@ const router = express.Router();
 const RankingDAO = require("../dao/RankingDao");
 
 /**
- * @module API Ranking
+ * @file RankingRoutes.js
  * @description Endpoints para la gestión de ranking.
+ * @module API_Ranking
  */
 
 
 /**
  * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
- * @route GET /api/ranking
+ * @function GET /api/ranking
  * @returns {Object} Lista de jugadores con sus victorias o mensaje de error.
  */
 router.get("/ranking", async (req, res) => {

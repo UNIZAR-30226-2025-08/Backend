@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const AdministradorDAO = require("../dao/AdministradorDao");
 
+
 /**
- * @module API Administradores
+ * @file AdministradorRoutes.js
  * @description Endpoints para facilitar la gestión de administradores.
+ * @module API_Administradores
  */
 
 
 /**
  * Asigna el rol de administrador a un usuario.
- * @route POST /api/admin/asignar
+ * @function POST /api/admin/asignar
  * @param {number} req.body.idUsuario - ID del usuario a asignar como administrador.
  * @returns {Object} Datos del administrador asignado o mensaje de error.
  */
@@ -30,7 +32,7 @@ router.post("/asignar", async (req, res) => {
 
 /**
  * Quita el rol de administrador de un usuario.
- * @route POST /api/admin/quitar
+ * @function POST /api/admin/quitar
  * @param {number} req.body.idUsuario - ID del usuario.
  * @returns {Object} Mensaje de confirmación o error.
  */
@@ -50,7 +52,7 @@ router.post("/quitar", async (req, res) => {
 
 /**
  * Verifica si un usuario es administrador.
- * @route POST /api/admin/esAdministrador
+ * @function POST /api/admin/esAdministrador
  * @param {number} req.body.idUsuario - ID del usuario.
  * @returns {Object} { esAdministrador: true/false } o mensaje de error.
  */
@@ -70,7 +72,7 @@ router.post("/esAdministrador", async (req, res) => {
 
 /**
  * Obtiene la lista de todos los administradores y la fecha en la que se les asigno.
- * @route GET /api/admin/todos
+ * @function GET /api/admin/todos
  * @returns {Array} Lista de administradores.
  */
 router.get("/todos", async (req, res) => {

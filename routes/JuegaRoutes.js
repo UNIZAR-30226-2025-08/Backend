@@ -3,13 +3,14 @@ const router = express.Router();
 const JuegaDAO = require("../dao/JuegaDao");
 
 /**
- * @module API Juega
+ * @file JuegaRoutes.js
  * @description Endpoints para la gestión de usuarios en partidas.
+ * @module API_Juega
  */
 
 /**
  * Asigna un usuario a una partida con un rol específico.
- * @route POST /api/juega/asignar
+ * @function POST /api/juega/asignar
  * @param {number} req.body.idUsuario - ID del usuario.
  * @param {number} req.body.idPartida - ID de la partida.
  * @param {string} req.body.rolJugado - Rol del usuario en la partida.
@@ -27,7 +28,7 @@ router.post("/asignar", async (req, res) => {
 
 /**
  * Obtiene todas las partidas en las que ha participado un usuario.
- * @route GET /api/juega/usuario/:idUsuario
+ * @function GET /api/juega/usuario/:idUsuario
  * @param {number} req.params.idUsuario - ID del usuario.
  * @returns {Array} Lista de partidas con detalles.
  */
