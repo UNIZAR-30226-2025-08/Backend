@@ -30,12 +30,12 @@ router.post("/crear", async (req, res) => {
 
 /**
  * Obtiene un usuario por correo.
- * @function POST /api/usuario/correo
+ * @function POST /api/usuario/obtener
  * @param {string} req.body.correo - Correo del usuario a buscar.
  * @returns {Object} Datos del usuario o mensaje de error.
  */
-router.post("/correo", async (req, res) => {
-  const { correo } = req.body; // Ahora obtenemos el correo del body
+router.post("/obtener", async (req, res) => {
+  const { correo } = req.body; // Obtenemos el correo del body
 
   if (!correo) {
     return res.status(400).json({ error: "El correo es requerido." });

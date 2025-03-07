@@ -24,13 +24,13 @@ CREATE TYPE roles AS ENUM ('lobo', 'aldeano', 'vidente', 'bruja', 'cazador');
 -- Tabla Usuario
 CREATE TABLE "Usuario" (
   "idUsuario" SERIAL PRIMARY KEY, /* El idUsuario se irá autoincrementando sin necesidad de hacerlo manualmente */
-  nombre VARCHAR(100) NOT NULL,
+  nombre VARCHAR(100) NOT NULL UNIQUE,
   avatar VARCHAR(255),
   "hashContrasena" VARCHAR(255) NOT NULL,
   correo VARCHAR(100) NOT NULL UNIQUE, /* El correo debe ser único */
   /* Fecha de creación de usuario, se pondrá automáticamente al insertar un usuario en la tabla */
-  "fechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  rol_favorito roles
+  "fechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_DATE,
+  rolFavorito roles DEFAULT 'aldeano' /* Por defecto el rol favorito será aldeano */
 );
 
 -- Tabla Partida
@@ -80,14 +80,13 @@ CREATE TABLE "SolicitudAmistad" (
 );
 
 -- Tabla para almacenar las Sugerencias de los usuarios
-
 CREATE TABLE "Sugerencias" (
-  "idSugerencia" SERIAL PRIMARY KEY, /*IdSugerencia que sea autoincrementa automáticamente */
-  "idUsuario" INT NOT NULL, /* Id de el usuario que esta realizando la sugerencia*/
-  contenido TEXT NOT NULL, /*Texto de la sugerencia que realiza el usuario*/
-  respuesta TEXT DEFAULT NULL, /*Respuesta que da el administrador a la sugerencia*/
-  "fechaSugerencia" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /*Fecha en la que se ha realizado dicha sugerencia */
-  revisada BOOLEAN NOT NULL DEFAULT FALSE, /*Especifica si la sugerencia ha sido revisada por el administrador o no */
+  "idSugerencia" SERIAL PRIMARY KEY, /* IdSugerencia que se autoincrementa automáticamente */
+  "idUsuario" INT NOT NULL, /* Id del usuario que está realizando la sugerencia */
+  contenido TEXT NOT NULL, /* Texto de la sugerencia que realiza el usuario */
+  respuesta TEXT DEFAULT NULL, /* Respuesta que da el administrador a la sugerencia */
+  "fechaSugerencia" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /* Fecha en la que se ha realizado dicha sugerencia */
+  revisada BOOLEAN NOT NULL DEFAULT FALSE, /* Especifica si la sugerencia ha sido revisada por el administrador o no */
   FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario")
     ON DELETE CASCADE
 );
