@@ -170,7 +170,11 @@ class Partida {
   votaNoche(idJugador, idObjetivo) {
     if (this.turno !== 'noche') return;
     const jugador = this.jugadores.find(j => j.id === idJugador);
+    const objetivo = this.jugadores.find(j => j.id === idObjetivo);
+
+    // Verificar si el jugador que vota es lobo y si el objetivo es válido
     if (!jugador || !jugador.estaVivo || jugador.rol !== 'lobo') return;
+    if (!objetivo || !objetivo.estaVivo || objetivo.rol === 'lobo') return;
 
     this.votosNoche[idJugador] = idObjetivo;
   }
@@ -261,10 +265,12 @@ class Partida {
    */
   cazadorDispara(idJugador, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
-    if (!jugador || jugador.rol !== 'cazador') return 'No puedes usar esta habilidad.';
-    if (!idObjetivo || !idObjetivo.estaVivo) return 'Jugador erróneo.';
+    const objetivo = this.jugadores.find(j => j.id === idObjetivo);
 
-    this.colaDeEliminacion(idObjetivo); // Se elimina al final del turno
+    if (!jugador || jugador.rol !== 'cazador') return 'No puedes usar esta habilidad.';
+    if (!objetivo || !objetivo.estaVivo) return 'Jugador erróneo.';
+
+    this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
   }
 
   /**
@@ -275,11 +281,13 @@ class Partida {
    */
   elegirSucesor(idJugador, idObjetivo) {
     const jugador = this.jugadores.find(j => j.id === idJugador);
+    const objetivo = this.jugadores.find(j => j.id === idObjetivo);
+
     if (!jugador || !jugador.esAlguacil) return 'No puedes usar esta habilidad.';
-    if (!idObjetivo || !idObjetivo.estaVivo) return 'Jugador erróneo.';
+    if (!objetivo || !objetivo.estaVivo) return 'Jugador erróneo.';
     
-    jugador.esAlguacil = false;
-    idObjetivo.esAlguacil = true;
+    jugador.esAlguacil = false; // El alguacil deja de serlo
+    objetivo.esAlguacil = true; // El objetivo se convierte en el nuevo alguacil
   }
 
   /**
@@ -380,11 +388,9 @@ class Partida {
    * - Si ha habido empate : 'Empate, no hay ganadores.'
    */
   aplicarEliminaciones() {
-    console.log("Aplicando eliminaciones a:", this.colaEliminaciones);
     this.colaEliminaciones.forEach(idJugador => {
       const jugador = this.jugadores.find(j => j.id === idJugador);
       if (jugador) {
-        console.log(`Eliminando al jugador ${idJugador}`);
         jugador.estaVivo = false;
       }
     });
