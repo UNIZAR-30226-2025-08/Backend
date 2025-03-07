@@ -27,7 +27,7 @@ const testConnection = async () => {
 const carpetaCSV = './csv/'; // Carpeta donde están los archivos CSV
 
 // Orden específico de los archivos CSV
-const ordenCSV = ['Usuario.csv', 'Amistad.csv', 'Partida.csv', 'Juega.csv', 'Sugerencias.csv', 'SolicitudAmistad.csv'];
+const ordenCSV = ['Usuario.csv', 'Amistad.csv', 'Partida.csv', 'Juega.csv', 'Sugerencias.csv', 'SolicitudAmistad.csv','Administrador.csv'];
 
 async function importarCSV(filePath, tableName) {
   const client = await pool.connect();

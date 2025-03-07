@@ -89,6 +89,27 @@ router.put("/marcarRevisada", async (req, res) => {
 });
 
 /**
+ * Responde a una sugerencia.
+ * El administrador puede responder a las sugerencias de los usuarios.
+ * @route PUT /api/sugerencias/responder
+ * @param {number} req.body.idSugerencia - ID de la sugerencia a responder.
+ * @param {string} req.body.respuesta - Respuesta a la sugerencia.
+ * @returns {Object} La sugerencia actualizada con la respuesta o mensaje de error.
+ */
+router.put("/responder", async (req, res) => {
+  const { idSugerencia, respuesta } = req.body;
+  if (!idSugerencia || respuesta === undefined) {
+    return res.status(400).json({ error: "Se requieren idSugerencia y respuesta." });
+  }
+  try {
+    const sugerenciaActualizada = await SugerenciasDAO.responderSugerencia(idSugerencia, respuesta);
+    res.json({ mensaje: "Sugerencia respondida exitosamente", sugerencia: sugerenciaActualizada });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Devuelve las sugerencias que no han sido revisadas.
  * Útil si el administrador quiere ver las sugerencias que aún no ha revisado.
  * @route GET /api/sugerencias/noRevisadas

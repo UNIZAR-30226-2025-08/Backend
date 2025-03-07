@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS "Juega";
 DROP TABLE IF EXISTS "Amistad";
 DROP TABLE IF EXISTS "Partida";
 DROP TABLE IF EXISTS "Usuario";
+DROP TABLE IF EXISTS "Administrador";
 
 -- Eliminar los tipos ENUM (si ya existen)
 DROP TYPE IF EXISTS tipoPartida;
@@ -84,9 +85,18 @@ CREATE TABLE "Sugerencias" (
   "idSugerencia" SERIAL PRIMARY KEY, /*IdSugerencia que sea autoincrementa automáticamente */
   "idUsuario" INT NOT NULL, /* Id de el usuario que esta realizando la sugerencia*/
   contenido TEXT NOT NULL, /*Texto de la sugerencia que realiza el usuario*/
+  respuesta TEXT DEFAULT NULL, /*Respuesta que da el administrador a la sugerencia*/
   "fechaSugerencia" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /*Fecha en la que se ha realizado dicha sugerencia */
   revisada BOOLEAN NOT NULL DEFAULT FALSE, /*Especifica si la sugerencia ha sido revisada por el administrador o no */
   FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario")
     ON DELETE CASCADE
 );
 
+-- Tabla Administrador: almacena los usuarios que tienen rol de administrador
+CREATE TABLE "Administrador" (
+  "idAdmin" SERIAL PRIMARY KEY,
+  "idUsuario" INT NOT NULL UNIQUE,
+  "fechaAsignacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("idUsuario") REFERENCES "Usuario"("idUsuario")
+    ON DELETE CASCADE
+);

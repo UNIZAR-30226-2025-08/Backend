@@ -88,6 +88,30 @@ class SugerenciasDAO{
         throw new Error("Error actualizando el estado de la sugerencia.");
       }
     }
+
+    /**
+    * Responde a una sugerencia
+    * Añade una respuesta para que el usuario tenga un feedback sobre su sugerencia.
+    * @param {number} idSugerencia - ID de la sugerencia a responder.
+    * @param {string} respuesta - Respuesta a la sugerencia.
+    * @returns {Promise<Object>} La sugerencia actualizada con la respuesta.
+    */
+    static async responderSugerencia(idSugerencia, respuesta) {
+      try {
+        const query = `
+          UPDATE "Sugerencias"
+          SET respuesta = $1
+          WHERE "idSugerencia" = $2
+          RETURNING "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada, respuesta
+        `;
+        const { rows } = await pool.query(query, [respuesta, idSugerencia]);
+        return rows[0];
+      } catch (error) {
+        console.error("Error al responder la sugerencia:", error);
+        throw new Error("No se pudo responder la sugerencia.");
+      }
+    }
+
     /**
      * Obtiene las sugerencias que no han sido revisadas.
      * Útil si el administrador solo quiere mirar las no revisadas
