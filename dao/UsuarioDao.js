@@ -75,9 +75,10 @@ class UsuarioDAO {
   * @param {Object} datos - Objeto que contiene los datos a actualizar.
   * @param {string} [datos.nombre] - Nuevo nombre del usuario.
   * @param {string} [datos.avatar] - Nueva URL del avatar.
+  * @param {string} [datos.rolFavorito] - Nuevo rol favorito del usuario.
   * @returns {Promise<Object>} Datos del usuario actualizado.
   */
-  static async actualizarPerfil(idUsuario, { nombre, avatar }) {
+  static async actualizarPerfil(idUsuario, { nombre, avatar, rolFavorito }) {
     /*COALESCE se utiliza para que si solo se actualiza el nombre y no el avatar
       o viceversa, el parámetro que no se actualiza mantiene el valor que tenia antes
       Funcionamiento: Si en $1 el valor es null, el valor que se quedará será el de nombre */
@@ -85,11 +86,12 @@ class UsuarioDAO {
       const query = `
         UPDATE "Usuario"
         SET nombre = COALESCE($1, nombre),
-            avatar = COALESCE($2, avatar)
-        WHERE "idUsuario" = $3
+            avatar = COALESCE($2, avatar),
+            "rolFavorito" = COALESCE($3, "rolFavorito")
+        WHERE "idUsuario" = $4
         RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"
       `;
-      const { rows } = await pool.query(query, [nombre, avatar, idUsuario]);
+      const { rows } = await pool.query(query, [nombre, avatar, rolFavorito, idUsuario]);
       return rows[0];
     } catch (error) {
       console.error("Error al actualizar el perfil:", error);
