@@ -30,7 +30,7 @@ CREATE TABLE "Usuario" (
   correo VARCHAR(100) NOT NULL UNIQUE, /* El correo debe ser único */
   /* Fecha de creación de usuario, se pondrá automáticamente al insertar un usuario en la tabla */
   "fechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_DATE,
-  rolFavorito roles DEFAULT 'aldeano' /* Por defecto el rol favorito será aldeano */
+  "rolFavorito" roles DEFAULT 'aldeano' /* Por defecto el rol favorito será aldeano */
 );
 
 -- Tabla Partida
