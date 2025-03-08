@@ -1,11 +1,11 @@
 -- Eliminar las tablas (si ya existen) en el orden correcto para evitar errores de dependencias
+DROP TABLE IF EXISTS "Administrador";
 DROP TABLE IF EXISTS "Sugerencias";
 DROP TABLE IF EXISTS "SolicitudAmistad";
 DROP TABLE IF EXISTS "Juega";
 DROP TABLE IF EXISTS "Amistad";
 DROP TABLE IF EXISTS "Partida";
 DROP TABLE IF EXISTS "Usuario";
-DROP TABLE IF EXISTS "Administrador";
 
 -- Eliminar los tipos ENUM (si ya existen)
 DROP TYPE IF EXISTS tipoPartida;
