@@ -1,4 +1,4 @@
-nombre,avatar,hashContrasena,correo,fechaCreacion,rol_favorito
+nombre,avatar,hashContrasena,correo,fechaCreacion,rolFavorito
 Carlos Martínez,http://example.com/avatars/carlos.png,pass123,carlos.martinez@example.com,2023-01-15 08:23:45,lobo
 Lucía García,http://example.com/avatars/lucia.png,clave,carlos.garcia@example.com,2023-02-10 14:12:30,lobo
 Miguel Hernández,http://example.com/avatars/miguel.png,1234,miguel.hernandez@example.com,2023-03-05 09:45:12,lobo

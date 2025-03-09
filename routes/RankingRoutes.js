@@ -12,7 +12,20 @@ const RankingDAO = require("../dao/RankingDao");
 /**
  * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
  * @function GET /api/ranking
- * @returns {Object} Lista de jugadores con sus victorias o mensaje de error.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al obtener el ranking global.
+ * 
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de la obtención del ranking.
+ * @param {Object[]} res.ranking - Lista de jugadores en el ranking global.
+ * @param {number} res.ranking[].idUsuario - ID único del usuario en el ranking.
+ * @param {string} res.ranking[].nombre - Nombre del usuario.
+ * @param {number} res.ranking[].victorias - Número de victorias del usuario en partidas públicas.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.get("/ranking", async (req, res) => {
   try {

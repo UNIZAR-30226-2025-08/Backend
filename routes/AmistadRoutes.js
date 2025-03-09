@@ -11,9 +11,25 @@ const AmistadDAO = require("../dao/AmistadDao");
 /**
  * Agrega un amigo a la lista de amistades.
  * @function POST /api/amistad/agregar
- * @param {number} req.body.idUsuario1 - ID del usuario 1
- * @param {number} req.body.idUsuario2 - ID del usuario 2
- * @returns {Object} Relación de amistad o mensaje de error.
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos de la amistad.
+ * @param {number} req.body.idUsuario1 - ID del primer usuario.
+ * @param {number} req.body.idUsuario2 - ID del segundo usuario.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Los datos requeridos están incompletos o no son válidos.
+ * @throws {500} Error interno al agregar la amistad.
+ * 
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de la amistad creada.
+ * @param {Object} res.amistad - Objeto con los datos de la amistad creada.
+ * @param {number} res.amistad.idUsuario1 - ID del primer usuario.
+ * @param {number} res.amistad.idUsuario2 - ID del segundo usuario.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/agregar", async (req, res) => {
   const { idUsuario1, idUsuario2 } = req.body;
@@ -28,9 +44,22 @@ router.post("/agregar", async (req, res) => {
 /**
  * Elimina una amistad entre dos usuarios.
  * @function DELETE /api/amistad/eliminar
- * @param {number} req.body.idUsuario1 - ID del usuario 1
- * @param {number} req.body.idUsuario2 - ID del usuario 2
- * @returns {Object} Mensaje de confirmación o error.
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos de la amistad a eliminar.
+ * @param {number} req.body.idUsuario1 - ID del primer usuario.
+ * @param {number} req.body.idUsuario2 - ID del segundo usuario.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Los datos requeridos están incompletos o no son válidos.
+ * @throws {500} Error interno al eliminar la amistad.
+ * 
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de la amistad eliminada.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.delete("/eliminar", async (req, res) => {
   const { idUsuario1, idUsuario2 } = req.body;
