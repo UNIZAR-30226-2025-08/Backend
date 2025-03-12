@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const AdministradorDAO = require("../dao/AdministradorDao");
 
-
 /**
  * @file AdministradorRoutes.js
  * @description Endpoints para facilitar la gestión de administradores.
@@ -11,22 +10,24 @@ const AdministradorDAO = require("../dao/AdministradorDao");
 
 /**
  * Asigna el rol de administrador a un usuario.
+ *
  * @function POST /api/admin/asignar
- * 
- * @param {Object} req - Objeto de solicitud HTTP.
- * @param {Object} req.body - Cuerpo de la solicitud con los datos necesarios.
- * @param {number} req.body.idUsuario - ID del usuario a asignar como administrador.
  * 
  * @param {Object} res - Objeto de respuesta HTTP.
  * 
- * @throws {400} Si no se proporciona el idUsuario.
+ * @throws {400} Se requiere el idUsuario.
  * @throws {500} Error interno al asignar el rol de administrador.
  * 
  * @param {number} res.status - Código de estado HTTP.
- * @param {string} res.mensaje - Mensaje de confirmación.
- * @param {Object} res.admin - Objeto con los datos del administrador asignado.
+ * @param {string} res.mensaje - Mensaje de confirmación de que el rol fue asignado correctamente.
+ * @param {Object} res.admin - Datos del administrador asignado.
+ * @param {number} res.admin.idAdmin - ID único del administrador.
+ * @param {number} res.admin.idUsuario - ID del usuario que ha sido asignado como administrador.
+ * @param {string} res.admin.fechaAsignacion - Fecha en la que se asignó el rol de administrador.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
-
 router.post("/asignar", async (req, res) => {
     const { idUsuario } = req.body;
     if (!idUsuario) {
@@ -40,22 +41,21 @@ router.post("/asignar", async (req, res) => {
     }
 });
 
-
 /**
  * Quita el rol de administrador de un usuario.
+ *
  * @function POST /api/admin/quitar
- * 
- * @param {Object} req - Objeto de solicitud HTTP.
- * @param {Object} req.body - Cuerpo de la solicitud.
- * @param {number} req.body.idUsuario - ID del usuario del que se quitará el rol de administrador.
  * 
  * @param {Object} res - Objeto de respuesta HTTP.
  * 
- * @throws {400} Si no se proporciona el idUsuario.
+ * @throws {400} Se requiere el idUsuario.
  * @throws {500} Error interno al quitar el rol de administrador.
  * 
  * @param {number} res.status - Código de estado HTTP.
- * @param {string} res.mensaje - Mensaje de confirmación de la eliminación del rol.
+ * @param {string} res.mensaje - Mensaje de confirmación de que el rol fue eliminado correctamente.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/quitar", async (req, res) => {
     const { idUsuario } = req.body;
@@ -70,23 +70,22 @@ router.post("/quitar", async (req, res) => {
     }
 });
 
-
 /**
  * Verifica si un usuario es administrador.
+ *
  * @function POST /api/admin/esAdministrador
- * 
- * @param {Object} req - Objeto de solicitud HTTP.
- * @param {Object} req.body - Cuerpo de la solicitud.
- * @param {number} req.body.idUsuario - ID del usuario a verificar.
  * 
  * @param {Object} res - Objeto de respuesta HTTP.
  * 
- * @throws {400} Si no se proporciona el idUsuario.
+ * @throws {400} Se requiere el idUsuario.
  * @throws {500} Error interno al verificar el rol de administrador.
  * 
  * @param {number} res.status - Código de estado HTTP.
  * @param {Object} res - Objeto que indica si el usuario es administrador.
  * @param {boolean} res.esAdministrador - Valor booleano que indica si el usuario es administrador.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/esAdministrador", async (req, res) => {
     const { idUsuario } = req.body;
@@ -101,27 +100,32 @@ router.post("/esAdministrador", async (req, res) => {
     }
 });
 
-
 /**
  * Obtiene la lista de todos los administradores y la fecha en la que se les asignó el rol.
+ *
  * @function GET /api/admin/todos
- * 
- * @param {Object} req - Objeto de solicitud HTTP.
  * 
  * @param {Object} res - Objeto de respuesta HTTP.
  * 
  * @throws {500} Error interno al obtener la lista de administradores.
  * 
  * @param {number} res.status - Código de estado HTTP.
- * @param {Array<Object>} res - Lista de administradores con sus datos y la fecha de asignación.
+ * @param {string} res.mensaje - Mensaje de confirmación de la obtención de administradores.
+ * @param {Object[]} res.administradores - Lista de administradores.
+ * @param {number} res.administradores[].idAdmin - ID único del administrador.
+ * @param {number} res.administradores[].idUsuario - ID del usuario que es administrador.
+ * @param {string} res.administradores[].fechaAsignacion - Fecha en la que se asignó el rol en formato ISO.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
  */
 router.get("/todos", async (req, res) => {
     try {
       const administradores = await AdministradorDAO.obtenerAdministradores();
-      res.json(administradores);
+      res.json({ mensaje: "Administradores obtenidos", administradores });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
 });
   
-  module.exports = router;
+module.exports = router;
