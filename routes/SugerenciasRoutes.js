@@ -8,16 +8,26 @@ const SugerenciasDAO = require("../dao/SugerenciasDao");
  * @module API_Sugerencias
  */
 
-
-
 /**
- * Envía una nueva sugerencia
- * Se almacena tanto el contenido como el usuario que la envía
+ * Envía una nueva sugerencia.
+ * Se almacena tanto el contenido como el usuario que la envía.
  * @function POST /api/sugerencias/enviar
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
  * @param {number} req.body.idUsuario - ID del usuario que envía la sugerencia.
  * @param {string} req.body.contenido - Contenido de la sugerencia.
- * @returns {Object} La sugerencia almacenada o mensaje de error.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Si no se proporcionan idUsuario y contenido.
+ * @throws {500} Error interno al enviar la sugerencia.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación.
+ *  - sugerencia: Objeto con la sugerencia almacenada.
  */
+
 router.post("/enviar", async (req, res) => {
     const { idUsuario, contenido } = req.body;
     if (!idUsuario || !contenido) {
@@ -32,9 +42,16 @@ router.post("/enviar", async (req, res) => {
 });
 
 /**
- * Obtiene todas las sugerencias
- * Útil para un rol de administrador que quiera ver todas las sugerencias
+ * Obtiene todas las sugerencias.
+ * Útil para un rol de administrador que quiera ver todas las sugerencias.
  * @function GET /api/sugerencias/todas
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al obtener las sugerencias.
+ * 
  * @returns {Array} Lista de todas las sugerencias.
  */
 router.get("/todas", async (req, res) => {
@@ -48,10 +65,19 @@ router.get("/todas", async (req, res) => {
 
 
 /**
- * Obtiene las sugerencias que han sido enviadas por un usuario en concreto
+ * Obtiene las sugerencias enviadas por un usuario en concreto.
  * @function POST /api/sugerencias/usuario
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
  * @param {number} req.body.idUsuario - ID del usuario.
- * @returns {Array} Lista de sugerencias del usuario.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Si no se proporciona el idUsuario.
+ * @throws {500} Error interno al obtener las sugerencias del usuario.
+ * 
+ * @returns {Array} Lista de sugerencias enviadas por el usuario.
  */
 router.post("/usuario", async (req, res) => {
   const { idUsuario } = req.body;
@@ -90,12 +116,23 @@ router.put("/marcarRevisada", async (req, res) => {
 });
 
 /**
- * Responde a una sugerencia.
- * El administrador puede responder a las sugerencias de los usuarios.
- * @function PUT /api/sugerencias/responder
- * @param {number} req.body.idSugerencia - ID de la sugerencia a responder.
- * @param {string} req.body.respuesta - Respuesta a la sugerencia.
- * @returns {Object} La sugerencia actualizada con la respuesta o mensaje de error.
+ * Marca si una sugerencia ha sido revisada o no.
+ * Esta acción está restringida al rol de administrador.
+ * @function PUT /api/sugerencias/marcarRevisada
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
+ * @param {number} req.body.idSugerencia - ID de la sugerencia.
+ * @param {boolean} req.body.revisada - Estado de revisión (true si ha sido revisada).
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Si no se proporcionan idSugerencia y revisada.
+ * @throws {500} Error interno al actualizar el estado de la sugerencia.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación.
+ *  - sugerencia: Objeto con la sugerencia actualizada.
  */
 router.put("/responder", async (req, res) => {
   const { idSugerencia, respuesta } = req.body;
@@ -111,10 +148,23 @@ router.put("/responder", async (req, res) => {
 });
 
 /**
- * Devuelve las sugerencias que no han sido revisadas.
- * Útil si el administrador quiere ver las sugerencias que aún no ha revisado.
- * @function GET /api/sugerencias/noRevisadas
- * @returns {Array} Lista de sugerencias no revisadas.
+ * Responde a una sugerencia.
+ * El administrador puede responder a las sugerencias de los usuarios.
+ * @function PUT /api/sugerencias/responder
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
+ * @param {number} req.body.idSugerencia - ID de la sugerencia a responder.
+ * @param {string} req.body.respuesta - Respuesta a la sugerencia.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {400} Si no se proporcionan idSugerencia y respuesta.
+ * @throws {500} Error interno al responder la sugerencia.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación.
+ *  - sugerencia: Objeto con la sugerencia actualizada con la respuesta.
  */
 router.get("/noRevisadas", async (req, res) => {
   try {

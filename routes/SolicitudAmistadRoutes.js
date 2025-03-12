@@ -11,9 +11,19 @@ const SolicitudAmistadDAO = require("../dao/SolicitudAmistadDao");
 /**
  * Envía una solicitud de amistad.
  * @function POST /api/solicitud/enviar
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
  * @param {number} req.body.idEmisor - ID del usuario que envía la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe la solicitud.
- * @returns {Object} Solicitud enviada o error.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al enviar la solicitud de amistad.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación.
+ *  - solicitud: Objeto con la información de la solicitud creada.
  */
 router.post("/enviar", async (req, res) => {
   const { idEmisor, idReceptor } = req.body;
@@ -28,9 +38,18 @@ router.post("/enviar", async (req, res) => {
 /**
  * Acepta una solicitud de amistad.
  * @function POST /api/solicitud/aceptar
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
  * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe y acepta la solicitud.
- * @returns {Object} Mensaje de éxito o error.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al aceptar la solicitud de amistad.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación de la aceptación y creación de la amistad.
  */
 router.post("/aceptar", async (req, res) => {
   const { idEmisor, idReceptor } = req.body;
@@ -45,9 +64,18 @@ router.post("/aceptar", async (req, res) => {
 /**
  * Rechaza una solicitud de amistad.
  * @function POST /api/solicitud/rechazar
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud.
  * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
  * @param {number} req.body.idReceptor - ID del usuario que recibe y rechaza la solicitud.
- * @returns {Object} Mensaje de éxito o error.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al rechazar la solicitud de amistad.
+ * 
+ * @returns {Object} JSON que contiene:
+ *  - mensaje: Mensaje de confirmación de que la solicitud fue rechazada.
  */
 router.post("/rechazar", async (req, res) => {
   const { idEmisor, idReceptor } = req.body;
