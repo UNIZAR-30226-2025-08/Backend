@@ -26,6 +26,7 @@ const UsuarioDAO = require("../dao/UsuarioDao");
  * @param {Object} res - Objeto de respuesta HTTP.
  * 
  * @throws {201} Usuario creado exitosamente.
+ * @throws {409} El correo ya está registrado.
  * @throws {500} Error interno al crear el usuario.
  * 
  * @param {number} res.status - Código de estado HTTP.
@@ -45,6 +46,9 @@ router.post("/crear", async (req, res) => {
     const usuario = await UsuarioDAO.crearUsuario(nombre, correo, contrasena, avatar);
     res.status(201).json({ mensaje: "Usuario creado", usuario });
   } catch (error) {
+    if (error.message === "El correo ya está registrado.") {
+      return res.status(409).json({ error: error.message });
+    }
     res.status(500).json({ error: "Error al crear usuario" });
   }
 });

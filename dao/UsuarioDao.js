@@ -17,6 +17,10 @@ class UsuarioDAO {
       const { rows } = await pool.query(query, [nombre, correo, contrasena, avatar]);
       return rows[0]; // Retorna los datos del usuario sin la contraseña encriptada.
     } catch (error) {
+      if (error.code === "23505") {
+        // Código 23505 = violación de restricción UNIQUE en PostgreSQL
+        throw new Error("El correo ya está registrado.");
+      }
       console.error("Error al crear usuario:", error);
       throw new Error("Error al registrar el usuario");
     }
