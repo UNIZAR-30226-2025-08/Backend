@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const SugerenciasDAO = require("../dao/SugerenciasDao");
+const SugerenciasDAO = require("../dao/sugerenciasDao");
 
 /**
  * @file SugerenciasRoutes.js

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const JuegaDAO = require("../dao/JuegaDao");
+const JuegaDAO = require("../dao/juegaDao");
 
 /**
  * @file JuegaRoutes.js

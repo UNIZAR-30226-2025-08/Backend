@@ -1,4 +1,4 @@
-const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/Invitaciones");
+const { generarCodigoInvitacion, validarCodigoInvitacion } = require("../utils/invitaciones");
 
 let salas = {
     // Ejemplo de como serían las salas en memoria:

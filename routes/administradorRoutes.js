@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AdministradorDAO = require("../dao/AdministradorDao");
+const AdministradorDAO = require("../dao/administradorDao");
 
 /**
  * @file AdministradorRoutes.js

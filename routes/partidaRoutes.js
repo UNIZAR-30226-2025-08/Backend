@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const PartidaDAO = require("../dao/PartidaDao");
+const PartidaDAO = require("../dao/partidaDao");
 
 /**
  * @file PartidaRoutes.js

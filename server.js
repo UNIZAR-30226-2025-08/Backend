@@ -18,14 +18,14 @@ app.use(cors()); // Permitir solicitudes desde el frontend
 app.use(express.json()); // Permitir recibir JSON en las peticiones
 
 // Importar rutas
-const usuarioRoutes = require("./routes/UsuarioRoutes");
-const partidaRoutes = require("./routes/PartidaRoutes");
-const solicitudAmistadRoutes = require("./routes/SolicitudAmistadRoutes");
-const amistadRoutes = require("./routes/AmistadRoutes");
-const juegaRoutes = require("./routes/JuegaRoutes");
-const sugerenciasRoutes = require("./routes/SugerenciasRoutes");
-const rankingRoutes = require("./routes/RankingRoutes");
-const administradorRoutes = require("./routes/AdministradorRoutes");
+const usuarioRoutes = require("./routes/usuarioRoutes");
+const partidaRoutes = require("./routes/partidaRoutes");
+const solicitudAmistadRoutes = require("./routes/solicitudAmistadRoutes");
+const amistadRoutes = require("./routes/amistadRoutes");
+const juegaRoutes = require("./routes/juegaRoutes");
+const sugerenciasRoutes = require("./routes/sugerenciasRoutes");
+const rankingRoutes = require("./routes/rankingRoutes");
+const administradorRoutes = require("./routes/administradorRoutes");
 // Usar rutas
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/partida", partidaRoutes);
@@ -52,7 +52,7 @@ server.listen(PORT, () => {
 });
 
 
-// // SOCKETS
+// // SOCKETS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // //----------------------------------------------------------------------------------
 // /**
 //  * @file WebSockets Partidas

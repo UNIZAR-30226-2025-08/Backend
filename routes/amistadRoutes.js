@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AmistadDAO = require("../dao/AmistadDao");
+const AmistadDAO = require("../dao/amistadDao");
 
 /**
  * @file AmistadRoutes.js

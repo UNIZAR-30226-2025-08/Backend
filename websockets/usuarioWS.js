@@ -1,4 +1,4 @@
-const { obtenerAmigos } = require("../dao/AmistadDao"); // Función para obtener amigos de un usuario
+const { obtenerAmigos } = require("../dao/amistadDao"); // Función para obtener amigos de un usuario
 let usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
 
 /* Tiempo de reconexión 20 seg */

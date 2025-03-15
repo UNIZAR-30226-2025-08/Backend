@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const RankingDAO = require("../dao/RankingDao");
+const RankingDAO = require("../dao/rankingDao");
 
 /**
  * @file RankingRoutes.js

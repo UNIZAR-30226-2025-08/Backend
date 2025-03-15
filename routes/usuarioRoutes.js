@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const UsuarioDAO = require("../dao/UsuarioDao");
+const UsuarioDAO = require("../dao/usuarioDao");
 
 /**
- * @file UsuarioRoutes.js
+ * @file usuarioRoutes.js
  * @description Endpoints para la gestión de usuarios.
  * @module API_Usuario
  */

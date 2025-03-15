@@ -1,4 +1,4 @@
-const { crearPartida, finalizarPartida } = require("../dao/PartidaDao");
+const { crearPartida, finalizarPartida } = require("../dao/partidaDao");
 //const { obtenerJugadoresSala, asignarRoles } = require("./gameLogic"); // !!!
 //const Partida = require("./Partida"); // Importar la clase Partida !!!
 
