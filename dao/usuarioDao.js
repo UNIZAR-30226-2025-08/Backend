@@ -18,8 +18,13 @@ class UsuarioDAO {
       return rows[0]; // Retorna los datos del usuario sin la contraseña encriptada.
     } catch (error) {
       if (error.code === "23505") {
-        // Código 23505 = violación de restricción UNIQUE en PostgreSQL
-        throw new Error("El correo ya está registrado.");
+        // Revisar el mensaje de error para detectar si es el nombre o el correo el que está duplicado
+        if (error.detail.includes("(nombre)")) {
+          throw new Error("El nombre de usuario ya está registrado.");
+        }
+        if (error.detail.includes("(correo)")) {
+          throw new Error("El correo ya está registrado.");
+        }
       }
       console.error("Error al crear usuario:", error);
       throw new Error("Error al registrar el usuario");
@@ -50,26 +55,40 @@ class UsuarioDAO {
    * @param {string} contrasena - Contraseña en texto plano.
    * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
    */
-  static async validarCredenciales(correo, contrasena) {
-    try {
-      const { rows } = await pool.query(
-        'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "rolFavorito", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
-        [correo]
-      );
-      const usuario = rows[0];
-      if (!usuario) return null;
-  
-      // Comparar hash con hash
-      if (contrasena !== usuario.hashContrasena) return null;
-  
-      // Devolver el usuario sin la contraseña
-      const { hashContrasena, ...usuarioSinPassword } = usuario;
-      return usuarioSinPassword;
-    } catch (error) {
-      console.error("Error al validar credenciales:", error);
-      throw new Error("Error al validar credenciales");
+/**
+ * Valida credenciales de usuario.
+ * @param {string} correo - Correo del usuario.
+ * @param {string} contrasena - Contraseña en texto plano.
+ * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
+ */
+static async validarCredenciales(correo, contrasena) {
+  try {
+    const { rows } = await pool.query(
+      'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "rolFavorito", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
+      [correo]
+    );
+    const usuario = rows[0];
+    
+    // Si no se encuentra el usuario, retornamos un objeto con un mensaje específico
+    if (!usuario) {
+      return { error: 'Usuario no encontrado' };  // Puedes personalizar el mensaje
     }
-  }  
+
+    // Si la contraseña no coincide con el hash guardado, retornamos un mensaje específico
+    if (contrasena !== usuario.hashContrasena) {
+      return { error: 'Contraseña incorrecta' };  // Mensaje personalizado para contraseñas incorrectas
+    }
+
+    // Devolver el usuario sin la contraseña
+    const { hashContrasena, ...usuarioSinPassword } = usuario;
+    return usuarioSinPassword;
+    
+  } catch (error) {
+    console.error("Error al validar credenciales:", error);
+    throw new Error("Error al validar credenciales");
+  }
+}
+
 
   /**
   * Actualizaciones de Perfil de los Usuarios

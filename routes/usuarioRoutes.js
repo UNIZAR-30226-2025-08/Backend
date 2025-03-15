@@ -46,6 +46,9 @@ router.post("/crear", async (req, res) => {
     const usuario = await UsuarioDAO.crearUsuario(nombre, correo, contrasena, avatar);
     res.status(201).json({ mensaje: "Usuario creado", usuario });
   } catch (error) {
+    if (error.message === "El nombre de usuario ya está registrado.") {
+      return res.status(409).json({ error: error.message });
+    }
     if (error.message === "El correo ya está registrado.") {
       return res.status(409).json({ error: error.message });
     }
@@ -129,11 +132,24 @@ router.post("/login", async (req, res) => {
   const { correo, contrasena } = req.body;
   try {
     const usuario = await UsuarioDAO.validarCredenciales(correo, contrasena);
-    if (!usuario) {
-      return res.status(401).json({ error: "Credenciales incorrectas" });
+
+    // Si la respuesta de validarCredenciales contiene un error
+    if (usuario && usuario.error) {
+      // Si el error es 'Usuario no encontrado'
+      if (usuario.error === 'Usuario no encontrado') {
+        return res.status(404).json({ error: "No existe una cuenta con este correo" });
+      }
+      // Si el error es 'Contraseña incorrecta'
+      if (usuario.error === 'Contraseña incorrecta') {
+        return res.status(401).json({ error: "La contraseña es incorrecta" });
+      }
     }
+
+    // Si no hay errores, usuario encontrado y validado
     res.status(200).json({ mensaje: "Inicio de sesión exitoso", usuario });
+
   } catch (error) {
+    console.error("Error al iniciar sesión:", error);
     res.status(500).json({ error: "Error al iniciar sesión" });
   }
 });
