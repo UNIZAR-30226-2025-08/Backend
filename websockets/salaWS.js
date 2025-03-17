@@ -72,6 +72,10 @@ const manejarConexionSalas = (socket, io) => {
         }
     });
     
+    socket.on("obtenerSalas", () => {
+        socket.emit("listaSalas", Object.values(salas)); // Enviar todas las salas al cliente
+    });
+    
     // Expulsar a un jugador de la sala si el líder lo solicita
     socket.on("expulsarJugador", ({ idSala, idLider, idExpulsado }) => {
         const sala = salas[idSala];
