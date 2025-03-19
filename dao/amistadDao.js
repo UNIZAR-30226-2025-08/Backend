@@ -92,6 +92,42 @@ class AmistadDAO {
       throw new Error("No se pudo obtener la lista de amigos.");
     }
   }
+  /**
+   * Obtiene la lista de amigos de un usuario con sus datos básicos y estadísticas.
+   * Se consultan los datos de la tabla "Usuario" y se complementa con las estadísticas
+   * obtenidas a partir de las tablas "Juega" y "Partida".
+   * @param {number} idUsuario - ID del usuario.
+   * @returns {Promise<Array>} Lista de objetos, cada uno con la información del amigo y sus estadísticas.
+   */
+  static async obtenerAmigosConEstadisticas(idUsuario) {
+    try {
+      const query = `
+        SELECT u."idUsuario", u.nombre, u.correo, u.avatar, u."fechaCreacion"
+        FROM "Usuario" u
+        JOIN "Amistad" a 
+          ON ((a."idUsuario1" = $1 AND u."idUsuario" = a."idUsuario2")
+           OR (a."idUsuario2" = $1 AND u."idUsuario" = a."idUsuario1"))
+      `;
+      const { rows } = await pool.query(query, [idUsuario]);
+
+      // Para cada amigo, obtenemos sus estadísticas mediante el DAO de Estadísticas
+      const EstadisticasDAO = require("./estadisticasDao");
+      const amigosConStats = await Promise.all(
+        rows.map(async (friend) => {
+          const stats = await EstadisticasDAO.obtenerEstadisticasAmigo(friend.idUsuario);
+          return {
+            ...friend,
+            estadisticas: stats,
+          };
+        })
+      );
+
+      return amigosConStats;
+    } catch (error) {
+      console.error("Error al obtener amigos con estadísticas:", error);
+      throw new Error("No se pudo obtener la lista de amigos con estadísticas.");
+    }
+  }
 }
 
 module.exports = AmistadDAO;

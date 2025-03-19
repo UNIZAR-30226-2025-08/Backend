@@ -70,5 +70,83 @@ router.delete("/eliminar", async (req, res) => {
     res.status(500).json({ error: "Error al eliminar la amistad" });
   }
 });
+/**
+ * Obtiene la lista de amigos de un usuario.
+ * @function GET /api/amistad/listar/:idUsuario
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {number} req.params.idUsuario - ID del usuario que solicita la lista.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al obtener la lista de amigos.
+ * 
+ * @returns {Object} JSON con la lista de amigos.
+ * @returns {number[]} res.amigos - Array de IDs de amigos.
+ */
+router.get("/listar/:idUsuario", async (req, res) => {
+  try {
+    // Convertimos el parámetro a número
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+
+    // Validación básica
+    if (isNaN(idUsuario)) {
+      return res.status(400).json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    // Llamamos al DAO para obtener los amigos
+    const amigos = await AmistadDAO.obtenerAmigos(idUsuario);
+
+    // Respondemos con la lista
+    res.json({ amigos });
+  } catch (error) {
+    console.error("Error en endpoint de amigos", error);
+    res.status(500).json({ error: "Error al obtener la lista de amigos" });
+  }
+});
+
+/**
+ * Obtiene la lista de amigos de un usuario junto con sus estadísticas.
+ * @function GET /api/amistad/listarConEstadisticas/:idUsuario
+ * 
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {number} req.params.idUsuario - ID del usuario que solicita la lista.
+ * 
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * 
+ * @throws {500} Error interno al obtener la lista de amigos con estadísticas.
+ * 
+ * @returns {Object} JSON con la lista de amigos y, para cada uno, sus estadísticas.
+ * @returns {Object[]} res.amigos - Array de objetos, cada objeto contiene los datos del amigo y un campo 'estadisticas' con:
+ * @returns {number} res.amigos[].idUsuario - ID del amigo.
+ * @returns {string} res.amigos[].nombre - Nombre del amigo.
+ * @returns {string} res.amigos[].correo - Correo del amigo.
+ * @returns {string} res.amigos[].avatar - Avatar del amigo.
+ * @returns {string} res.amigos[].fechaCreacion - Fecha de creación del usuario.
+ * @returns {Object} res.amigos[].estadisticas - Objeto con las estadísticas del amigo.
+ * @returns {number} res.amigos[].estadisticas.partidasGanadas - Número de partidas ganadas.
+ * @returns {number} res.amigos[].estadisticas.partidasTotales - Total de partidas jugadas (finalizadas).
+ * @returns {number} res.amistads[].estadisticas.porcentajeVictorias - Porcentaje de victorias.
+ * @returns {Object[]} res.amigos[].estadisticas.rolesMasJugados - Array con los roles más jugados y su cantidad.
+ */
+router.get("/listarConEstadisticas/:idUsuario", async (req, res) => {
+  try {
+    // Convertimos el parámetro a número
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+    if (isNaN(idUsuario)) {
+      return res.status(400).json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    // Llamamos al DAO para obtener los amigos con estadísticas
+    const amigosConStats = await AmistadDAO.obtenerAmigosConEstadisticas(idUsuario);
+    
+    res.json({ amigos: amigosConStats });
+  } catch (error) {
+    console.error("Error en endpoint de amigos con estadísticas:", error);
+    res.status(500).json({ error: { mensaje: "Error al obtener la lista de amigos con estadísticas." } });
+  }
+});
+
+
 
 module.exports = router;

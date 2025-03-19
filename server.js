@@ -26,6 +26,7 @@ const juegaRoutes = require("./routes/juegaRoutes");
 const sugerenciasRoutes = require("./routes/sugerenciasRoutes");
 const rankingRoutes = require("./routes/rankingRoutes");
 const administradorRoutes = require("./routes/administradorRoutes");
+const estadisticasRoutes = require("./routes/estadisticasRoutes");
 // Usar rutas
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/partida", partidaRoutes);
@@ -35,6 +36,7 @@ app.use("/api/juega", juegaRoutes);
 app.use("/api/sugerencias", sugerenciasRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/admin", administradorRoutes);
+app.use("/api/estadisticas", estadisticasRoutes);
 // WebSockets
 const servidorWS = require("./websockets/servidorWS");
 

@@ -4,12 +4,13 @@ const bcrypt = require("bcrypt");
 class RankingDAO {
   /**
  * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
+ * //Actualizado para devolver avatares de perfil
  * @returns {Promise<Array>} Lista de jugadores con sus victorias.
  */
   static async obtenerRankingGlobal() {
     try {
       const query = `
-        SELECT u."idUsuario", u.nombre, COUNT(*) AS victorias
+        SELECT u."idUsuario", u.nombre, u.avatar, COUNT(*) AS victorias
         FROM "Usuario" u
         JOIN "Juega" j ON u."idUsuario" = j."idUsuario"
         JOIN "Partida" p ON j."idPartida" = p."idPartida"
@@ -18,9 +19,10 @@ class RankingDAO {
             (p.ganadores = 'lobos' AND j."rolJugado" = 'lobo') OR
             (p.ganadores = 'aldeanos' AND j."rolJugado" IN ('aldeano', 'vidente', 'bruja', 'cazador'))
           )
-        GROUP BY u."idUsuario", u.nombre
+        GROUP BY u."idUsuario", u.nombre, u.avatar
         ORDER BY victorias DESC;
       `;
+
       const { rows } = await pool.query(query);
       return rows;
     } catch (error) {

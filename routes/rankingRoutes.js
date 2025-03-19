@@ -22,6 +22,7 @@ const RankingDAO = require("../dao/rankingDao");
  * @param {Object[]} res.ranking - Lista de jugadores en el ranking global.
  * @param {number} res.ranking[].idUsuario - ID único del usuario en el ranking.
  * @param {string} res.ranking[].nombre - Nombre del usuario.
+ * @param {string} res.ranking[].avatar - Avatar del usuario.
  * @param {number} res.ranking[].victorias - Número de victorias del usuario en partidas públicas.
  * 
  * @param {Object} res.error - Objeto de error.
