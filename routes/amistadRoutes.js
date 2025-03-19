@@ -85,13 +85,23 @@ router.delete("/eliminar", async (req, res) => {
  * @returns {number[]} res.amigos - Array de IDs de amigos.
  */
 router.get("/listar/:idUsuario", async (req, res) => {
-  const { idUsuario } = req.params;
   try {
+    // Convertimos el parámetro a número
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+
+    // Validación básica
+    if (isNaN(idUsuario)) {
+      return res.status(400).json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    // Llamamos al DAO para obtener los amigos
     const amigos = await AmistadDAO.obtenerAmigos(idUsuario);
+
+    // Respondemos con la lista
     res.json({ amigos });
   } catch (error) {
     console.error("Error en endpoint de amigos", error);
-    res.status(500).json({ error: { mensaje: "Error al obtener la lista de amigos" } });
+    res.status(500).json({ error: "Error al obtener la lista de amigos" });
   }
 });
 
@@ -120,15 +130,23 @@ router.get("/listar/:idUsuario", async (req, res) => {
  * @returns {Object[]} res.amigos[].estadisticas.rolesMasJugados - Array con los roles más jugados y su cantidad.
  */
 router.get("/listarConEstadisticas/:idUsuario", async (req, res) => {
-  const { idUsuario } = req.params;
   try {
+    // Convertimos el parámetro a número
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+    if (isNaN(idUsuario)) {
+      return res.status(400).json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    // Llamamos al DAO para obtener los amigos con estadísticas
     const amigosConStats = await AmistadDAO.obtenerAmigosConEstadisticas(idUsuario);
+    
     res.json({ amigos: amigosConStats });
   } catch (error) {
     console.error("Error en endpoint de amigos con estadísticas:", error);
     res.status(500).json({ error: { mensaje: "Error al obtener la lista de amigos con estadísticas." } });
   }
 });
+
 
 
 module.exports = router;
