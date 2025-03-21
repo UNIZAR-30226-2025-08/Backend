@@ -14,27 +14,37 @@ class SolicitudAmistadDAO {
 
     try {
       if (idEmisor === idReceptor) {
-        throw new Error("No puedes enviarte una solicitud de amistad a ti mismo.");
+        throw new Error(
+          "No puedes enviarte una solicitud de amistad a ti mismo."
+        );
       }
 
       await client.query("BEGIN");
 
       // Verificar si ya existe una solicitud en este sentido
-      const checkQuery = `SELECT * FROM SolicitudAmistad WHERE idUsuarioEmisor = $1 AND idUsuarioReceptor = $2`;
-      const { rows: existingRequests } = await client.query(checkQuery, [idEmisor, idReceptor]);
+      const checkQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rows: existingRequests } = await client.query(checkQuery, [
+        idEmisor,
+        idReceptor,
+      ]);
 
       if (existingRequests.length > 0) {
         throw new Error("Ya existe una solicitud de amistad pendiente.");
       }
 
       // Verificar si hay una solicitud en sentido contrario
-      const checkReverseQuery = `SELECT * FROM SolicitudAmistad WHERE idUsuarioEmisor = $1 AND idUsuarioReceptor = $2`;
-      const { rows: reverseRequests } = await client.query(checkReverseQuery, [idReceptor, idEmisor]);
+      const checkReverseQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rows: reverseRequests } = await client.query(checkReverseQuery, [
+        idReceptor,
+        idEmisor,
+      ]);
 
-      if (reverseRequests.length > 0) { // Si hay una solicitud mutua, se crea la amistad y se eliminan ambas solicitudes
+      if (reverseRequests.length > 0) {
+        // Si hay una solicitud mutua, se crea la amistad y se eliminan ambas solicitudes
         await AmistadDAO.agregarAmigo(idEmisor, idReceptor, client);
-        await client.query(`DELETE FROM SolicitudAmistad 
-          WHERE (idUsuarioEmisor = $1 AND idUsuarioReceptor = $2) OR (idUsuarioEmisor = $2 AND idUsuarioReceptor = $1)`, 
+        await client.query(
+          `DELETE FROM "SolicitudAmistad" 
+          WHERE ("idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2) OR ("idUsuarioEmisor" = $2 AND "idUsuarioReceptor" = $1)`,
           [idEmisor, idReceptor]
         );
 
@@ -43,7 +53,7 @@ class SolicitudAmistadDAO {
       }
 
       // Insertar nueva solicitud de amistad
-      const insertQuery  = `INSERT INTO SolicitudAmistad (idUsuarioEmisor, idUsuarioReceptor) VALUES ($1, $2) RETURNING *`;
+      const insertQuery = `INSERT INTO "SolicitudAmistad" ("idUsuarioEmisor", "idUsuarioReceptor") VALUES ($1, $2) RETURNING *`;
       const { rows } = await client.query(insertQuery, [idEmisor, idReceptor]);
 
       await client.query("COMMIT");
@@ -70,7 +80,7 @@ class SolicitudAmistadDAO {
       await client.query("BEGIN");
 
       // Verificar si la solicitud existe
-      const checkQuery = `SELECT * FROM SolicitudAmistad WHERE idUsuarioEmisor = $1 AND idUsuarioReceptor = $2`;
+      const checkQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
       const { rows } = await client.query(checkQuery, [idEmisor, idReceptor]);
 
       if (rows.length === 0) {
@@ -81,8 +91,11 @@ class SolicitudAmistadDAO {
       await AmistadDAO.agregarAmigo(idEmisor, idReceptor, client);
 
       // Eliminar la solicitud de amistad
-      await client.query(`
-        DELETE FROM SolicitudAmistad WHERE idUsuarioEmisor = $1 AND idUsuarioReceptor = $2`, [idEmisor, idReceptor]);
+      await client.query(
+        `
+        DELETE FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`,
+        [idEmisor, idReceptor]
+      );
 
       await client.query("COMMIT");
     } catch (error) {
@@ -102,7 +115,7 @@ class SolicitudAmistadDAO {
    */
   static async rechazarSolicitud(idEmisor, idReceptor) {
     try {
-      const query = `DELETE FROM SolicitudAmistad WHERE idUsuarioEmisor = $1 AND idUsuarioReceptor = $2`;
+      const query = `DELETE FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
       const { rowCount } = await pool.query(query, [idEmisor, idReceptor]);
 
       if (rowCount === 0) {
