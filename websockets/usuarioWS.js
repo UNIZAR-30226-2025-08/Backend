@@ -4,6 +4,12 @@ let usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketI
 /* Tiempo de reconexión 20 seg */
 const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
 
+/**
+ * @file usuarioWS.js
+ * @description Websockets para la gestion de usuarios.
+ * @module API_WB_Usuarios
+ */
+
 // Maneja la reconexión de un usuario
 const manejarReconexionUsuarios = (socket, usuariosConectados, io) => {
   // Evento para manejar reconexiones: desde el cliente nos tienen enviar su id de usuario
