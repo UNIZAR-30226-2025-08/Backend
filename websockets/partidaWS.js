@@ -36,9 +36,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra o no hay suficientes jugadores.
    * @emits partidaIniciada - Si la partida se inicia correctamente.
-   * @param {Object} res - Datos de la partida iniciada.
-   * @param {string} res.idPartida - ID único de la partida.
-   * @param {Object} res.estado - Estado inicial de la partida.
+   * @param {string} idPartida - ID único de la partida.
+   * @param {Object} estado - Estado inicial de la partida.
    */
   socket.on("iniciarPartida", ({ idSala }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
@@ -70,9 +69,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra.
    * @emits turnoCambiado - Si el turno se cambia correctamente.
-   * @param {Object} res - Datos de la partida actualizados.
-   * @param {Object} res.estado - Estado actualizado de la partida.
-   * @param {string} res.mensaje - Mensaje de confirmación del cambio de turno.
+   * @param {Object} estado - Estado actualizado de la partida.
+   * @param {string} mensaje - Mensaje de confirmación del cambio de turno.
    */
   socket.on("cambiarTurno", ({ idPartida }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
@@ -96,7 +94,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoRegistrado - Si el voto se registra correctamente.
-   * @param {Object} res - Estado actualizado de la partida.
+   * @param {Object} partida - Estado actualizado de la partida.
    */
   socket.on("votar", ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
@@ -121,7 +119,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoAlguacilRegistrado - Si el voto se registra correctamente.
-   * @param {Object} res - Estado actualizado de la partida.
+   * @param {Object} partida - Estado actualizado de la partida.
    */
   socket.on("votarAlguacil", ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
@@ -141,8 +139,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra.
    * @emits alguacilElegido - Si el alguacil es elegido correctamente.
-   * @param {Object} res - Estado actualizado de la partida.
-   * @param {string} res.mensaje - Mensaje con el resultado de la elección.
+   * @param {string} mensaje - Mensaje con el resultado de la elección.
    */
   socket.on("elegirAlguacil", ({ idPartida }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
@@ -163,7 +160,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits error - Si la partida no se encuentra.
    * @emits mensajeChat - Si el mensaje se envía correctamente.
-   * @param {Object} res - Chat actualizado de la partida.
+   * @param {Object} partida - Chat actualizado de la partida.
+   * @param {string} partida.chat - Chat de la partida
    */
   socket.on("enviarMensaje", ({ idPartida, idJugador, mensaje }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);

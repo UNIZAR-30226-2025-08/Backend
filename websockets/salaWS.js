@@ -185,7 +185,7 @@ const manejarConexionSalas = (socket, io) => {
    * @param {boolean} res.estado - Estado actualizado del usuario.
    *
    * @emits actualizarSala
-   * @param {Object} res.sala - Estado actualizado de la sala.
+   * @param {Object} sala - Estado actualizado de la sala.
    */
   socket.on("marcarEstado", ({ idSala, idUsuario, estado }) => {
     const sala = salas[idSala];
@@ -228,15 +228,13 @@ const manejarConexionSalas = (socket, io) => {
    * @param {number} datos.idExpulsado - ID del usuario a expulsar.
    *
    * @emits actualizarSala
-   * @param {Object} res.sala - Estado actualizado de la sala después de la expulsión.
+   * @param {Object} sala - Estado actualizado de la sala después de la expulsión.
    *
    * @emits expulsadoDeSala
-   * @param {Object} res - Información del usuario expulsado.
-   * @param {number} res.idExpulsado - ID del usuario expulsado.
+   * @param {number} idExpulsado - ID del usuario expulsado.
    *
    * @emits redirigirExpulsado
-   * @param {Object} res - Información para redirigir al usuario expulsado.
-   * @param {number} res.idExpulsado - ID del usuario expulsado.
+   * @param {number} idExpulsado - ID del usuario expulsado.
    */
   socket.on("expulsarJugador", ({ idSala, idLider, idExpulsado }) => {
     const sala = salas[idSala];
@@ -273,7 +271,7 @@ const manejarConexionSalas = (socket, io) => {
    * @param {Object[]} salas - Lista actualizada de salas después de la salida.
    *
    * @emits actualizarSala
-   * @param {Object} res.sala - Estado actualizado de la sala después de la salida.
+   * @param {Object} sala - Estado actualizado de la sala después de la salida.
    *
    * @emits salaAbandonada
    * @param {Object} res - Confirmación de la salida.
