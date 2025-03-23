@@ -4,7 +4,6 @@ const cors = require("cors");
 const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
 //const { Server } = require("socket.io");
 
-
 //const redisClient = require("./redisClient"); !!!
 
 const app = express();
@@ -53,7 +52,6 @@ server.listen(PORT, () => {
   console.log(`WebSockets escuchando en ws://localhost:${PORT}`);
 });
 
-
 // // SOCKETS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // //----------------------------------------------------------------------------------
 // /**
@@ -85,7 +83,6 @@ server.listen(PORT, () => {
 //     socket.emit("partidaState", partidasActivas[idPartida]);
 //   });
 
-  
 //   /**
 //    * Inicia una partida desde una sala existente.
 //    * @event iniciar_partida

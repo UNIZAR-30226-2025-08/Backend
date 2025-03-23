@@ -12,12 +12,14 @@ class PartidaDAO {
   static async crearPartida(nombre, tipo, contrasena = null) {
     try {
       // Validación de tipo de partida
-      if (!['publica', 'privada'].includes(tipo)) {
-        throw new Error("Tipo de partida inválido. Debe ser 'publica' o 'privada'.");
+      if (!["publica", "privada"].includes(tipo)) {
+        throw new Error(
+          "Tipo de partida inválido. Debe ser 'publica' o 'privada'."
+        );
       }
 
       let hashContrasena = null;
-      if (tipo === 'privada' && contrasena) {
+      if (tipo === "privada" && contrasena) {
         hashContrasena = await bcrypt.hash(contrasena, 10);
       }
 
@@ -46,9 +48,9 @@ class PartidaDAO {
       // Verificamos si se proporcionaron los datos necesarios
       if (!idPartida || estado !== "terminada" || !ganadores) {
         throw new Error(
-          "Debe proporcionar el identificador de la partida, " + 
-          "el estado de la partida debe ser 'terminada' y " + 
-          "debe proporcionar el bando ganador"
+          "Debe proporcionar el identificador de la partida, " +
+            "el estado de la partida debe ser 'terminada' y " +
+            "debe proporcionar el bando ganador"
         );
       }
 
@@ -98,7 +100,7 @@ class PartidaDAO {
       const { rows } = await pool.query(query, [idPartida]);
 
       if (rows.length === 0 || !rows[0].hashContrasena) {
-          throw new Error("Partida no encontrada o no es privada.");
+        throw new Error("Partida no encontrada o no es privada.");
       }
 
       const esValida = await bcrypt.compare(contrasena, rows[0].hashContrasena);

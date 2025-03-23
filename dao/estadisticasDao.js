@@ -53,15 +53,14 @@ class EstadisticasDAO {
       const { rows: rolesRows } = await pool.query(queryRoles, [idUsuario]);
 
       // Calcular el porcentaje de victorias
-      const porcentajeVictorias = partidasTotales > 0 
-        ? (partidasGanadas / partidasTotales) * 100 
-        : 0;
+      const porcentajeVictorias =
+        partidasTotales > 0 ? (partidasGanadas / partidasTotales) * 100 : 0;
 
       return {
         partidasGanadas,
         partidasTotales,
         porcentajeVictorias,
-        rolesMasJugados: rolesRows
+        rolesMasJugados: rolesRows,
       };
     } catch (error) {
       console.error("Error obteniendo estadísticas para el usuario:", error);

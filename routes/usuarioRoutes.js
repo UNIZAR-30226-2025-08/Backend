@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const UsuarioDAO = require("../dao/usuarioDao");
 
@@ -8,11 +8,10 @@ const UsuarioDAO = require("../dao/usuarioDao");
  * @module API_Usuario
  */
 
-
 /**
  * Crea un nuevo usuario en el sistema.
- * 
- * Recibe los datos de un nuevo usuario (nombre, correo, contraseña y avatar opcional) 
+ *
+ * Recibe los datos de un nuevo usuario (nombre, correo, contraseña y avatar opcional)
  * y los guarda en la base de datos. Devuelve una respuesta indicando el éxito o fallo de la operación.
  *
  * @function POST /api/usuario/crear
@@ -22,13 +21,13 @@ const UsuarioDAO = require("../dao/usuarioDao");
  * @param {string} req.body.correo - Correo electrónico del usuario.
  * @param {string} req.body.contrasena - Contraseña del usuario.
  * @param {string} [req.body.avatar] - URL del avatar del usuario (opcional).
- * 
+ *
  * @param {Object} res - Objeto de respuesta HTTP.
- * 
+ *
  * @throws {201} Usuario creado exitosamente.
  * @throws {409} El correo ya está registrado.
  * @throws {500} Error interno al crear el usuario.
- * 
+ *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.mensaje - Mensaje de confirmación.
  * @param {Object} res.usuario - Datos del usuario creado.
@@ -36,14 +35,19 @@ const UsuarioDAO = require("../dao/usuarioDao");
  * @param {string} res.usuario.nombre - Nombre del usuario.
  * @param {string} res.usuario.correo - Correo del usuario.
  * @param {string} [res.usuario.avatar] - URL del avatar (opcional).
- * 
+ *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/crear", async (req, res) => {
   const { nombre, correo, contrasena, avatar } = req.body;
   try {
-    const usuario = await UsuarioDAO.crearUsuario(nombre, correo, contrasena, avatar);
+    const usuario = await UsuarioDAO.crearUsuario(
+      nombre,
+      correo,
+      contrasena,
+      avatar
+    );
     res.status(201).json({ mensaje: "Usuario creado", usuario });
   } catch (error) {
     if (error.message === "El nombre de usuario ya está registrado.") {
@@ -63,13 +67,13 @@ router.post("/crear", async (req, res) => {
  * @param {Object} req - Objeto de solicitud HTTP.
  * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
  * @param {string} req.body.correo - Correo electrónico del usuario a buscar.
- * 
+ *
  * @param {Object} res - Objeto de respuesta HTTP.
- * 
+ *
  * @throws {400} El correo es requerido.
  * @throws {404} Usuario no encontrado.
  * @throws {500} Error interno al obtener el usuario.
- * 
+ *
  * @param {number} res.status - Código de estado HTTP.
  * @param {Object} res.usuario - Datos del usuario encontrado.
  * @param {number} res.usuario.idUsuario - ID único del usuario.
@@ -78,7 +82,7 @@ router.post("/crear", async (req, res) => {
  * @param {string} [res.usuario.avatar] - URL del avatar del usuario (opcional).
  * @param {string} res.usuario.fechaCreacion - Fecha de creación del usuario en formato ISO.
  * @param {string} res.usuario.rolFavorito - Rol favorito del usuario en el sistema.
- * 
+ *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
  */
@@ -100,7 +104,6 @@ router.post("/obtener", async (req, res) => {
   }
 });
 
-
 /**
  * Inicia sesión validando las credenciales del usuario.
  *
@@ -109,12 +112,12 @@ router.post("/obtener", async (req, res) => {
  * @param {Object} req.body - Cuerpo de la solicitud con las credenciales del usuario.
  * @param {string} req.body.correo - Correo electrónico del usuario.
  * @param {string} req.body.contrasena - Contraseña del usuario.
- * 
+ *
  * @param {Object} res - Objeto de respuesta HTTP.
- * 
+ *
  * @throws {401} Credenciales incorrectas.
  * @throws {500} Error interno al iniciar sesión.
- * 
+ *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.mensaje - Mensaje de confirmación del inicio de sesión.
  * @param {Object} res.usuario - Datos del usuario autenticado.
@@ -124,7 +127,7 @@ router.post("/obtener", async (req, res) => {
  * @param {string} [res.usuario.avatar] - URL del avatar del usuario (opcional).
  * @param {string} res.usuario.fechaCreacion - Fecha de creación del usuario en formato ISO.
  * @param {string} res.usuario.rolFavorito - Rol favorito del usuario en el sistema.
- * 
+ *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
  */
@@ -136,18 +139,19 @@ router.post("/login", async (req, res) => {
     // Si la respuesta de validarCredenciales contiene un error
     if (usuario && usuario.error) {
       // Si el error es 'Usuario no encontrado'
-      if (usuario.error === 'Usuario no encontrado') {
-        return res.status(404).json({ error: "No existe una cuenta con este correo" });
+      if (usuario.error === "Usuario no encontrado") {
+        return res
+          .status(404)
+          .json({ error: "No existe una cuenta con este correo" });
       }
       // Si el error es 'Contraseña incorrecta'
-      if (usuario.error === 'Contraseña incorrecta') {
+      if (usuario.error === "Contraseña incorrecta") {
         return res.status(401).json({ error: "La contraseña es incorrecta" });
       }
     }
 
     // Si no hay errores, usuario encontrado y validado
     res.status(200).json({ mensaje: "Inicio de sesión exitoso", usuario });
-
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
     res.status(500).json({ error: "Error al iniciar sesión" });
@@ -157,20 +161,20 @@ router.post("/login", async (req, res) => {
 /**
  * Actualiza el perfil del usuario.
  * Parámetros modificables: Nombre y Avatar.
-* @function PUT /api/usuario/actualizar
+ * @function PUT /api/usuario/actualizar
  * @param {Object} req - Objeto de solicitud HTTP.
  * @param {Object} req.body - Cuerpo de la solicitud con los datos a actualizar.
  * @param {number} req.body.idUsuario - ID del usuario que se va a actualizar.
  * @param {string} [req.body.nombre] - Nuevo nombre del usuario (opcional).
  * @param {string} [req.body.avatar] - Nueva URL del avatar del usuario (opcional).
  * @param {string} [req.body.rolFavorito] - Nuevo rol favorito del usuario (opcional).
- * 
+ *
  * @param {Object} res - Objeto de respuesta HTTP.
- * 
+ *
  * @throws {400} El ID del usuario es requerido.
  * @throws {404} Usuario no encontrado.
  * @throws {500} Error interno al actualizar el perfil.
- * 
+ *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.mensaje - Mensaje de confirmación de la actualización.
  * @param {Object} res.usuario - Datos del usuario actualizado.
@@ -180,19 +184,27 @@ router.post("/login", async (req, res) => {
  * @param {string} [res.usuario.avatar] - URL del avatar actualizado (opcional).
  * @param {string} res.usuario.fechaCreacion - Fecha de creación del usuario en formato ISO.
  * @param {string} res.usuario.rolFavorito - Rol favorito actualizado del usuario.
- * 
+ *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
  */
 router.put("/actualizar", async (req, res) => {
   const { idUsuario, nombre, avatar, rolFavorito } = req.body;
   try {
-    const usuarioActualizado = await UsuarioDAO.actualizarPerfil(idUsuario, { nombre, avatar, rolFavorito });
-    res.status(200).json({ mensaje: "Perfil actualizado exitosamente", usuario: usuarioActualizado });
+    const usuarioActualizado = await UsuarioDAO.actualizarPerfil(idUsuario, {
+      nombre,
+      avatar,
+      rolFavorito,
+    });
+    res
+      .status(200)
+      .json({
+        mensaje: "Perfil actualizado exitosamente",
+        usuario: usuarioActualizado,
+      });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 module.exports = router;

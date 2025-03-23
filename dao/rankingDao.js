@@ -3,10 +3,10 @@ const bcrypt = require("bcrypt");
 
 class RankingDAO {
   /**
- * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
- * //Actualizado para devolver avatares de perfil
- * @returns {Promise<Array>} Lista de jugadores con sus victorias.
- */
+   * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
+   * //Actualizado para devolver avatares de perfil
+   * @returns {Promise<Array>} Lista de jugadores con sus victorias.
+   */
   static async obtenerRankingGlobal() {
     try {
       const query = `
@@ -30,11 +30,6 @@ class RankingDAO {
       throw new Error("No se pudo obtener el ranking global.");
     }
   }
-
-
 }
-
-
-
 
 module.exports = RankingDAO;

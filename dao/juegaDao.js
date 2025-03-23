@@ -9,24 +9,31 @@ class JuegaDAO {
    * @returns {Promise<Object>} Registro de la relación.
    */
   static async asignarUsuarioAPartida(idUsuario, idPartida, rolJugado) {
-
     const rolesValidos = ["lobo", "aldeano", "vidente", "bruja", "cazador"];
 
     if (!rolesValidos.includes(rolJugado)) {
-      throw new Error(`Rol inválido. Debe ser uno de: ${rolesValidos.join(", ")}`);
+      throw new Error(
+        `Rol inválido. Debe ser uno de: ${rolesValidos.join(", ")}`
+      );
     }
 
     try {
       // Insertar usuario en la partida
       const insertQuery = `INSERT INTO "Juega" ("idUsuario", "idPartida", "rolJugado") VALUES ($1, $2, $3) RETURNING *`;
-      const { rows } = await pool.query(insertQuery, [idUsuario, idPartida, rolJugado]);
+      const { rows } = await pool.query(insertQuery, [
+        idUsuario,
+        idPartida,
+        rolJugado,
+      ]);
 
       return rows[0];
     } catch (error) {
-      if (error.code === "23505") { // Código de error para clave duplicada en PostgreSQL
+      if (error.code === "23505") {
+        // Código de error para clave duplicada en PostgreSQL
         throw new Error("El usuario ya está registrado en esta partida.");
       }
-      if (error.code === "23503") { // Código de error para clave duplicada en PostgreSQL
+      if (error.code === "23503") {
+        // Código de error para clave duplicada en PostgreSQL
         throw new Error("Error en la clave foránea.");
       }
       console.error("Error al asignar usuario a la partida:", error);
@@ -56,8 +63,6 @@ class JuegaDAO {
       throw new Error("No se pudieron obtener las partidas del usuario");
     }
   }
-
-
 }
 
 module.exports = JuegaDAO;

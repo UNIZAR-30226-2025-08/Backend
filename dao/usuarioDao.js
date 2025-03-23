@@ -14,7 +14,12 @@ class UsuarioDAO {
       const query = `
         INSERT INTO "Usuario" (nombre, correo, "hashContrasena", avatar)
         VALUES ($1, $2, $3, $4) RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"`;
-      const { rows } = await pool.query(query, [nombre, correo, contrasena, avatar]);
+      const { rows } = await pool.query(query, [
+        nombre,
+        correo,
+        contrasena,
+        avatar,
+      ]);
       return rows[0]; // Retorna los datos del usuario sin la contraseña encriptada.
     } catch (error) {
       if (error.code === "23505") {
@@ -55,52 +60,50 @@ class UsuarioDAO {
    * @param {string} contrasena - Contraseña en texto plano.
    * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
    */
-/**
- * Valida credenciales de usuario.
- * @param {string} correo - Correo del usuario.
- * @param {string} contrasena - Contraseña en texto plano.
- * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
- */
-static async validarCredenciales(correo, contrasena) {
-  try {
-    const { rows } = await pool.query(
-      'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "rolFavorito", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
-      [correo]
-    );
-    const usuario = rows[0];
-    
-    // Si no se encuentra el usuario, retornamos un objeto con un mensaje específico
-    if (!usuario) {
-      return { error: 'Usuario no encontrado' };  // Puedes personalizar el mensaje
-    }
+  /**
+   * Valida credenciales de usuario.
+   * @param {string} correo - Correo del usuario.
+   * @param {string} contrasena - Contraseña en texto plano.
+   * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
+   */
+  static async validarCredenciales(correo, contrasena) {
+    try {
+      const { rows } = await pool.query(
+        'SELECT "idUsuario", "nombre", "correo", "avatar", "fechaCreacion", "rolFavorito", "hashContrasena" FROM "Usuario" WHERE "correo" = $1',
+        [correo]
+      );
+      const usuario = rows[0];
 
-    // Si la contraseña no coincide con el hash guardado, retornamos un mensaje específico
-    if (contrasena !== usuario.hashContrasena) {
-      return { error: 'Contraseña incorrecta' };  // Mensaje personalizado para contraseñas incorrectas
-    }
+      // Si no se encuentra el usuario, retornamos un objeto con un mensaje específico
+      if (!usuario) {
+        return { error: "Usuario no encontrado" }; // Puedes personalizar el mensaje
+      }
 
-    // Devolver el usuario sin la contraseña
-    const { hashContrasena, ...usuarioSinPassword } = usuario;
-    return usuarioSinPassword;
-    
-  } catch (error) {
-    console.error("Error al validar credenciales:", error);
-    throw new Error("Error al validar credenciales");
+      // Si la contraseña no coincide con el hash guardado, retornamos un mensaje específico
+      if (contrasena !== usuario.hashContrasena) {
+        return { error: "Contraseña incorrecta" }; // Mensaje personalizado para contraseñas incorrectas
+      }
+
+      // Devolver el usuario sin la contraseña
+      const { hashContrasena, ...usuarioSinPassword } = usuario;
+      return usuarioSinPassword;
+    } catch (error) {
+      console.error("Error al validar credenciales:", error);
+      throw new Error("Error al validar credenciales");
+    }
   }
-}
-
 
   /**
-  * Actualizaciones de Perfil de los Usuarios
-  * Parámetros modificables: Nombre y Avatar
-  * (Se podría cambira también la contraseña pero no creo que sea algo imprescindible)
-  * @param {number} idUsuario - ID del usuario que envía la solicitud de modificación
-  * @param {Object} datos - Objeto que contiene los datos a actualizar.
-  * @param {string} [datos.nombre] - Nuevo nombre del usuario.
-  * @param {string} [datos.avatar] - Nueva URL del avatar.
-  * @param {string} [datos.rolFavorito] - Nuevo rol favorito del usuario.
-  * @returns {Promise<Object>} Datos del usuario actualizado.
-  */
+   * Actualizaciones de Perfil de los Usuarios
+   * Parámetros modificables: Nombre y Avatar
+   * (Se podría cambira también la contraseña pero no creo que sea algo imprescindible)
+   * @param {number} idUsuario - ID del usuario que envía la solicitud de modificación
+   * @param {Object} datos - Objeto que contiene los datos a actualizar.
+   * @param {string} [datos.nombre] - Nuevo nombre del usuario.
+   * @param {string} [datos.avatar] - Nueva URL del avatar.
+   * @param {string} [datos.rolFavorito] - Nuevo rol favorito del usuario.
+   * @returns {Promise<Object>} Datos del usuario actualizado.
+   */
   static async actualizarPerfil(idUsuario, { nombre, avatar, rolFavorito }) {
     /*COALESCE se utiliza para que si solo se actualiza el nombre y no el avatar
       o viceversa, el parámetro que no se actualiza mantiene el valor que tenia antes
@@ -114,7 +117,12 @@ static async validarCredenciales(correo, contrasena) {
         WHERE "idUsuario" = $4
         RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"
       `;
-      const { rows } = await pool.query(query, [nombre, avatar, rolFavorito, idUsuario]);
+      const { rows } = await pool.query(query, [
+        nombre,
+        avatar,
+        rolFavorito,
+        idUsuario,
+      ]);
       return rows[0];
     } catch (error) {
       console.error("Error al actualizar el perfil:", error);

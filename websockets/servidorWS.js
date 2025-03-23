@@ -1,8 +1,17 @@
 const { Server } = require("socket.io");
 const redis = require("redis");
 //const redisClient = redis.createClient();
-const { manejarReconexionUsuarios, manejarConexionUsuarios, manejarDesconexionUsuarios, usuariosConectados} = require("./usuarioWS");
-const { manejarConexionSalas, manejarDesconexionSalas, salas } = require("./salaWS");
+const {
+  manejarReconexionUsuarios,
+  manejarConexionUsuarios,
+  manejarDesconexionUsuarios,
+  usuariosConectados,
+} = require("./usuarioWS");
+const {
+  manejarConexionSalas,
+  manejarDesconexionSalas,
+  salas,
+} = require("./salaWS");
 //const { manejarConexionPartidas, manejarDesconexionPartidas } = require("./partidaWS");
 
 const ServidorWS = (server) => {
@@ -23,7 +32,7 @@ const ServidorWS = (server) => {
     manejarConexionUsuarios(socket, io);
     manejarConexionSalas(socket, io);
     //manejarConexionPartidas(socket, io);
-  
+
     // Evento de desconexión
     socket.on("disconnect", () => {
       console.log(`Usuario desconectado: ${socket.id}`);
@@ -39,8 +48,8 @@ const ServidorWS = (server) => {
 
 module.exports = ServidorWS;
 
-    // Iniciar la partida
-    /*socket.on("iniciarPartida", async ({ idPartida }) => {
+// Iniciar la partida
+/*socket.on("iniciarPartida", async ({ idPartida }) => {
       if (salas[idPartida]) {
         // Obtener jugadores de la sala
         //const jugadores = obtenerJugadoresSala(idPartida); !!!
@@ -57,8 +66,8 @@ module.exports = ServidorWS;
       }
     });*/
 
-    // Acción del jugador
-    /*socket.on("accionJugador", async ({ idPartida, accion }) => {
+// Acción del jugador
+/*socket.on("accionJugador", async ({ idPartida, accion }) => {
       let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
       if (partida) {
         partida.estado = accion.estado; // !!!
@@ -67,8 +76,8 @@ module.exports = ServidorWS;
       }
     });*/
 
-    // Terminar la partida
-    /*socket.on("terminarPartida", async ({ idPartida, resultado, resultadosJugadores }) => {
+// Terminar la partida
+/*socket.on("terminarPartida", async ({ idPartida, resultado, resultadosJugadores }) => {
       let partida = JSON.parse(await redisClient.get(`partida_${idPartida}`));
       if (partida) {
         // Guardar resultados en PostgreSQL
@@ -87,4 +96,3 @@ module.exports = ServidorWS;
         io.to(idPartida).emit("partidaTerminada", resultado);
       }
     });*/
-
