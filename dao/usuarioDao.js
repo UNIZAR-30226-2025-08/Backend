@@ -55,6 +55,24 @@ class UsuarioDAO {
   }
 
   /**
+   * Busca un usuario por id.
+   * @param {string} id - ID del usuario.
+   * @returns {Promise<Object|null>} Datos del usuario sin contraseña o null si no existe.
+   */
+  static async obtenerUsuarioID(id) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito" FROM "Usuario" WHERE "idUsuario" = $1`,
+        [id]
+      );
+      return rows[0] || null;
+    } catch (error) {
+      console.error("Error al buscar usuario por correo:", error);
+      throw new Error(error.message);
+    }
+  }
+
+  /**
    * Valida credenciales de usuario.
    * @param {string} correo - Correo del usuario.
    * @param {string} contrasena - Contraseña en texto plano.
