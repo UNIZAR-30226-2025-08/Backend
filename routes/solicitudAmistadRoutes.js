@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const SolicitudAmistadDAO = require("../dao/solicitudAmistadDao");
+const UsuarioDAO = require("../dao/usuarioDao");
 
 /**
  * @file SolicitudAmistadRoutes.js

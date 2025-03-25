@@ -67,7 +67,25 @@ class UsuarioDAO {
       );
       return rows[0] || null;
     } catch (error) {
-      console.error("Error al buscar usuario por correo:", error);
+      console.error("Error al buscar usuario por id:", error);
+      throw new Error(error.message);
+    }
+  }
+
+  /**
+   * Busca un usuario por nombre.
+   * @param {string} nombre - nombre del usuario.
+   * @returns {Promise<Object|null>} Datos del usuario sin contraseña o null si no existe.
+   */
+  static async obtenerUsuarioNombre(nombre) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito" FROM "Usuario" WHERE "nombre" = $1`,
+        [nombre]
+      );
+      return rows[0] || null;
+    } catch (error) {
+      console.error("Error al buscar usuario por nombre:", error);
       throw new Error(error.message);
     }
   }

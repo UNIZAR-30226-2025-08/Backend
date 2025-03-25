@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const AmistadDAO = require("../dao/amistadDao");
+const UsuarioDAO = require("../dao/usuarioDao");
 
 /**
  * @file AmistadRoutes.js
@@ -70,6 +71,48 @@ router.delete("/eliminar", async (req, res) => {
     res.status(500).json({ error: "Error al eliminar la amistad" });
   }
 });
+
+/**
+ * Elimina una amistad entre dos usuarios.
+ * @function DELETE /api/amistad/eliminar_por_nombre
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos de la amistad a eliminar.
+ * @param {number} req.body.idUsuario1 - ID del primer usuario.
+ * @param {number} req.body.nombreUsuario2 - nombre del segundo usuario.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} Los datos requeridos están incompletos o no son válidos.
+ * @throws {500} Error interno al eliminar la amistad.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de la amistad eliminada.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.delete("/eliminar_por_nombre", async (req, res) => {
+  const { idUsuario1, nombreUsuario2 } = req.body;
+  // Obtengo el id del usuario
+  try {
+    const usuario2 = await UsuarioDAO.obtenerUsuarioNombre(nombreUsuario2);
+    if (!usuario2) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    idUsuario2 = usuario2.idUsuario;
+  } catch (error) {
+    res.status(500).json({ error: error.message }); //Cambiar?
+  }
+
+  try {
+    await AmistadDAO.eliminarAmigo(idUsuario1, idUsuario2);
+    res.json({ mensaje: "Amistad eliminada correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: "Error al eliminar la amistad" });
+  }
+});
+
 /**
  * Obtiene la lista de amigos de un usuario.
  * @function GET /api/amistad/listar/:idUsuario
