@@ -250,3 +250,47 @@ router.put("/actualizar", async (req, res) => {
 });
 
 module.exports = router;
+
+/**
+ * Obtiene un usuario por nombre.
+ *
+ * @function POST /api/usuario/obtener_por_nombre
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
+ * @param {string} req.body.idUsuario - Correo electrónico del usuario a buscar.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El nombre es requerido.
+ * @throws {404} Usuario no encontrado.
+ * @throws {500} Error interno al obtener el usuario.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {Object} res.usuario - Datos del usuario encontrado.
+ * @param {number} res.usuario.idUsuario - ID único del usuario.
+ * @param {string} res.usuario.nombre - Nombre del usuario.
+ * @param {string} res.usuario.correo - Correo electrónico del usuario.
+ * @param {string} [res.usuario.avatar] - URL del avatar del usuario (opcional).
+ * @param {string} res.usuario.fechaCreacion - Fecha de creación del usuario en formato ISO.
+ * @param {string} res.usuario.rolFavorito - Rol favorito del usuario en el sistema.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/obtener_por_nombre", async (req, res) => {
+  const { nombre } = req.body; // Obtenemos el id del body
+
+  if (!nombre) {
+    return res.status(400).json({ error: "El nombre es requerido." });
+  }
+
+  try {
+    const usuario = await UsuarioDAO.obtenerUsuarioNombre(nombre);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.json({ usuario });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
