@@ -457,11 +457,16 @@ const manejarDesconexionSalas = async (socket, io) => {
 
       // Si la sala queda vacía, eliminarla
       if (sala.jugadores.length === 0) {
-        delete salas[idSala];
-        await eliminarSalaDeRedis(idSala); // Eliminar de Redis
-        console.log(
-          `Sala ${idSala} eliminada por desconexión del último jugador`
-        );
+        setTimeout(async () => {
+          // Verificar nuevamente si la sala sigue vacía antes de eliminarla
+          if (sala.jugadores.length === 0) {
+            delete salas[idSala];
+            await eliminarSalaDeRedis(idSala); // Eliminar de Redis
+            console.log(
+              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`
+            );
+          }
+        }, 5000);
       } else {
         await guardarSalasEnRedis(); // Guardar cambios si la sala sigue existiendo
       }
