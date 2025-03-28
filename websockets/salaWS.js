@@ -417,13 +417,13 @@ const manejarConexionSalas = (socket, io) => {
     try {
       const sala = salas[idSala];
 
-      if (!salas[idSala]) {
+      if (!sala) {
         console.log("Error: idSala no existe en salas");
         return;
       }
 
-      if (!sala || sala.lider !== idLider) {
-        socket.emit("error", "No tienes permisos para iniciar la partida");
+      if (sala.lider !== idLider) {
+        socket.emit("error", "No tienes permisos para iniciar la partida. Debes de ser lider.");
         return;
       }
 
