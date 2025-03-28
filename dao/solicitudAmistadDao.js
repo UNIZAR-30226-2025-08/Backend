@@ -135,7 +135,7 @@ class SolicitudAmistadDAO {
   static async listarSolicitudes(idUsuario) {
     try {
       const query = `
-          SELECT s.*, u.nombre AS nombreEmisor, u.avatar AS avatarEmisor
+          SELECT s.*, u.nombre AS "nombreEmisor", u.avatar AS "avatarEmisor"
           FROM "SolicitudAmistad" s
           JOIN "Usuario" u ON s."idUsuarioEmisor" = u."idUsuario"
           WHERE s."idUsuarioReceptor" = $1
