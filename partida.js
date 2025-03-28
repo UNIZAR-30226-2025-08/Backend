@@ -78,7 +78,7 @@ class Partida {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
-    if (this.turno === "dia" || jugador.rol === "Hombre_lobo") {
+    if (this.turno === "dia" || jugador.rol === "Hombre lobo") {
       this.chat.push({ idJugador, mensaje, timestamp: Date.now() });
     }
   }
@@ -173,8 +173,8 @@ class Partida {
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
     // Verificar si el jugador que vota es lobo y si el objetivo es válido
-    if (!jugador || !jugador.estaVivo || jugador.rol !== "Hombre_lobo") return;
-    if (!objetivo || !objetivo.estaVivo || objetivo.rol === "Hombre_lobo")
+    if (!jugador || !jugador.estaVivo || jugador.rol !== "Hombre lobo") return;
+    if (!objetivo || !objetivo.estaVivo || objetivo.rol === "Hombre lobo")
       return;
 
     this.votosNoche[idJugador] = idObjetivo;
@@ -379,7 +379,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre_lobo" && j.estaVivo
+      (j) => j.rol === "Hombre lobo" && j.estaVivo
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -436,10 +436,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre_lobo"
+      (j) => j.estaVivo && j.rol === "Hombre lobo"
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre_lobo"
+      (j) => j.estaVivo && j.rol !== "Hombre lobo"
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
