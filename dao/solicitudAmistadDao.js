@@ -126,6 +126,28 @@ class SolicitudAmistadDAO {
       throw new Error("No se pudo rechazar la solicitud de amistad.");
     }
   }
+
+  /**
+   * Lista las solicitudes de amistad recibidas por un usuario.
+   * @param {number} idUsuario - ID del usuario receptor.
+   * @returns {Promise<Array>} Array de solicitudes de amistad con datos del emisor.
+   */
+  static async listarSolicitudes(idUsuario) {
+    try {
+      const query = `
+          SELECT s.*, u.nombre AS nombreEmisor, u.avatar AS avatarEmisor
+          FROM "SolicitudAmistad" s
+          JOIN "Usuario" u ON s."idUsuarioEmisor" = u."idUsuario"
+          WHERE s."idUsuarioReceptor" = $1
+          ORDER BY s."fechaSolicitud" DESC
+        `;
+      const { rows } = await pool.query(query, [idUsuario]);
+      return rows;
+    } catch (error) {
+      console.error("Error al listar solicitudes de amistad:", error);
+      throw new Error("No se pudieron listar las solicitudes de amistad.");
+    }
+  }
 }
 
 module.exports = SolicitudAmistadDAO;
