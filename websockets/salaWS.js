@@ -388,61 +388,140 @@ const manejarConexionSalas = (socket, io) => {
     });
   });
 
-  // Evento para iniciar partida
+  /**
+   * Iniciar una partida en una sala.
+   * @event iniciarPartida
+   *
+   * @param {Object} datos - Datos de la partida a iniciar.
+   * @param {string} datos.idSala - ID de la sala donde se inicia la partida.
+   * @param {number} datos.idLider - ID del líder que intenta iniciar la partida.
+   *
+   * @emits error
+   * @param {string} mensaje - Mensaje de error si el usuario no tiene permisos o los jugadores no están listos.
+   *
+   * @emits rolAsignado
+   * @param {Object} datos - Información del rol asignado a un jugador.
+   * @param {string} datos.rol - Rol asignado al jugador.
+   * @param {string} datos.idSala - ID de la sala en la que se asignó el rol.
+   *
+   * @emits enPartida
+   * @param {Object} datos - Notificación de inicio de partida.
+   * @param {string} datos.mensaje - Mensaje indicando el inicio de la partida.
+   * @param {Object} datos.sala - Estado de la sala sin revelar los roles de los jugadores.
+   * @param {Object[]} datos.sala.jugadores - Lista de jugadores en la sala.
+   * @param {string} datos.sala.jugadores.id - ID del jugador.
+   * @param {string} datos.sala.jugadores.nombre - Nombre del jugador.
+   * @param {boolean} datos.sala.jugadores.listo - Indica si el jugador estaba listo antes de iniciar la partida.
+   */
   socket.on("iniciarPartida", async ({ idSala, idLider }) => {
-    const sala = salas[idSala];
+    try {
+      const sala = salas[idSala];
 
-    if (!sala || sala.lider !== idLider) {
-      socket.emit("error", "No tienes permisos para iniciar la partida");
-      return;
-    }
-
-    // Verificar que todos los jugadores estén listos
-    const todosListos = sala.jugadores.every((j) => j.listo === true);
-    if (!todosListos) {
-      socket.emit("error", "No todos los jugadores están listos");
-      return;
-    }
-
-    // Distribuir los roles aleatoriamente
-    const rolesDisponibles = [];
-    Object.entries(sala.maxRoles).forEach(([rol, cantidad]) => {
-      for (let i = 0; i < cantidad; i++) {
-        rolesDisponibles.push(rol);
+      if (!salas[idSala]) {
+        console.log("Error: idSala no existe en salas");
+        return;
       }
-    });
 
-    // Mezclar los roles aleatoriamente
-    const rolesAleatorios = rolesDisponibles.sort(() => Math.random() - 0.5);
+      if (!sala || sala.lider !== idLider) {
+        socket.emit("error", "No tienes permisos para iniciar la partida");
+        return;
+      }
 
-    // Asignar los roles a los jugadores
-    sala.jugadores.forEach((jugador, index) => {
-      jugador.rol = rolesAleatorios[index];
-    });
+      // Verificar que todos los jugadores estén listos
 
-    sala.enPartida = true;
-    await guardarSalasEnRedis();
+      // ESTO AHORA MISMO CREO QUE PETA Y TAMBIÉN SE COMPRUEBA EN FRONTEND MÓVIL !!
+      /*
+      const todosListos = sala.jugadores.every((j) => j.listo === true);
+      if (!todosListos) {
+        socket.emit("error", "No todos los jugadores están listos");
+        return;
+      }*/
 
-    // Notificar a cada jugador su rol individualmente
-    sala.jugadores.forEach((jugador) => {
-      io.to(jugador.socketId).emit("rolAsignado", {
-        rol: jugador.rol,
-        idSala: sala.id,
+      /*
+      if (sala.jugadores.length < 4) {
+        // Suponiendo un mínimo de 4 jugadores para iniciar
+        socket.emit(
+          "error",
+          "No hay suficientes jugadores para iniciar la partida"
+        );
+        return;
+      }*/
+      if (!sala.maxRoles) {
+        console.error("Error: sala o sala.maxRoles no están definidos", sala);
+        return;
+      }
+
+      console.log("sala.maxRoles antes de Object.entries:", sala.maxRoles);
+      // Distribuir los roles aleatoriamente
+      const rolesDisponibles = [];
+      Object.entries(sala.maxRoles).forEach(([rol, cantidad]) => {
+        for (let i = 0; i < cantidad; i++) {
+          rolesDisponibles.push(rol);
+        }
       });
-    });
+      // Mezclar los roles aleatoriamente
+      const rolesAleatorios = rolesDisponibles.sort(() => Math.random() - 0.5);
+      console.log(`Error: jugador  no tiene socketId`);
+      if (sala.jugadores.length > rolesAleatorios.length) {
+        socket.emit("error", "Número de roles insuficiente");
+        return;
+      }
 
-    // Notificar a todos que la partida ha comenzado
-    io.to(idSala).emit("enPartida", {
-      mensaje: "¡La partida ha comenzado!",
-      sala: {
-        ...sala,
-        jugadores: sala.jugadores.map((j) => ({
-          id: j.id,
-          nombre: j.nombre,
-          listo: j.listo,
-        })), // No enviamos los roles de otros jugadores
-      },
-    });
+      /* Esto no sé para qué está y jugador no está definido !!!!!!!
+      if (!jugador.socketId) {
+        console.log(`Error: jugador ${jugador.nombre} no tiene socketId`);
+        return;
+      }*/
+
+      // Asignar los roles a los jugadores
+      sala.jugadores.forEach((jugador, index) => {
+        jugador.rol = rolesAleatorios[index];
+      });
+
+      sala.enPartida = true;
+      await guardarSalasEnRedis();
+      // Notificar a cada jugador su rol individualmente
+      sala.jugadores.forEach((jugador) => {
+        io.to(jugador.socketId).emit("rolAsignado", {
+          rol: jugador.rol,
+          idSala: sala.id,
+        });
+      });
+      // Notificar a todos que la partida ha comenzado
+      io.to(idSala).emit("enPartida", {
+        mensaje: "¡La partida ha comenzado!",
+        sala: {
+          ...sala,
+          jugadores: sala.jugadores.map((j) => ({
+            id: j.id,
+            nombre: j.nombre,
+            listo: j.listo,
+          })), // No enviamos los roles de otros jugadores
+        },
+      });
+      // REPLICADO PARA TESTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      sala.jugadores.forEach((jugador) => {
+        socket.emit("rolAsignado", {
+          rol: jugador.rol,
+          idSala: sala.id,
+        });
+      });
+      socket.emit("enPartida", {
+        mensaje: "¡La partida ha comenzado!",
+        sala: {
+          ...sala,
+          jugadores: sala.jugadores.map((j) => ({
+            id: j.id,
+            nombre: j.nombre,
+            listo: j.listo,
+          })), // No enviamos los roles de otros jugadores
+        },
+      });
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    } catch (error) {
+      console.error("Error en iniciarPartida:", error);
+      socket.emit("error", "Error interno del servidor");
+    }
   });
 };
 

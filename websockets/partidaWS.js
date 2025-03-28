@@ -39,7 +39,7 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {string} idPartida - ID único de la partida.
    * @param {Object} estado - Estado inicial de la partida.
    */
-  socket.on("iniciarPartida", ({ idSala }) => {
+  /*socket.on("iniciarPartida", ({ idSala }) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
     if (!partida) return;
 
@@ -54,11 +54,12 @@ const manejarConexionPartidas = (socket, io) => {
 
     const idPartida = `partida_${idSala}`;
     partidas[idPartida] = new Partida(idPartida, sala.jugadores);
+    socket.emit("partidaIniciada", partidas[idPartida]); // Confirmar al creador
     io.to(idSala).emit("partidaIniciada", {
       idPartida,
       estado: partidas[idPartida],
     });
-  });
+  });*/
 
   /**
    * Cambia el turno de la partida.
