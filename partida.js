@@ -10,7 +10,7 @@ class Partida {
   constructor(idPartida, jugadores) {
     this.idPartida = idPartida;
     this.estado = "en_curso"; // Estado de la partida ('en_curso', 'terminada')
-    this.turno = "noche"; // Fase actual: 'dia' o 'noche'. La partida empieza en la noche
+    this.turno = "dia"; // Fase actual: 'dia' o 'noche'. La partida empieza de día
     this.jugadores = jugadores.map((jugador) => ({
       // Array de jugadores con sus roles
       id: jugador.id,
@@ -54,7 +54,7 @@ class Partida {
    * día. Reinicia el uso de habilidad de la vidente.
    */
   siguienteTurno() {
-    this.turno = this.turno === "noche" ? "dia" : "noche";
+    this.turno = this.turno === "dia" ? "noche" : "dia"; // Cambia de día a noche y de noche a día
     this.votos = {}; // Reiniciar votos en el día
     this.votosNoche = {}; // Reiniciar votos de los lobos en la noche
     this.votosAlguacil = {}; // Reiniciar votos para elegir alguacil

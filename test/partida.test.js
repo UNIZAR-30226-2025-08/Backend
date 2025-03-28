@@ -1,14 +1,17 @@
 // partida.test.js
 const Partida = require("../partida");
 
-// Función para crear jugadores
+/**
+ * Crea una lista de jugadores con roles predefinidos.
+ * @returns {Array<Object>} Lista de jugadores.
+ */
 function crearJugadores() {
   return [
-    { id: "1", rol: "lobo" },
-    { id: "2", rol: "lobo" },
-    { id: "3", rol: "bruja" },
-    { id: "4", rol: "vidente" },
-    { id: "5", rol: "aldeano" },
+    { id: "1", rol: "Hombre lobo" },
+    { id: "2", rol: "Hombre lobo" },
+    { id: "3", rol: "Bruja" },
+    { id: "4", rol: "Vidente" },
+    { id: "5", rol: "Aldeano" },
   ];
 }
 
@@ -21,53 +24,73 @@ describe("Clase Partida", () => {
     partida = new Partida("partida1", jugadores);
   });
 
+  /**
+   * Test para verificar que la partida se inicia correctamente.
+   */
   test("iniciar la partida correctamente", () => {
     expect(partida.idPartida).toBe("partida1");
     expect(partida.estado).toBe("en_curso");
-    expect(partida.turno).toBe("noche");
+    expect(partida.turno).toBe("dia");
     expect(partida.jugadores.length).toBe(5);
   });
 
-  test("cambiar el turno de noche a día", () => {
-    partida.gestionarTurno(); // Cambia a 'dia'
-    expect(partida.turno).toBe("dia");
+  /**
+   * Test para cambiar el turno de día a noche.
+   */
+  test("cambiar el turno de día a noche", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
+    expect(partida.turno).toBe("noche");
   });
 
+  /**
+   * Test para verificar si la partida ha terminado.
+   */
   test("verificar si la partida ha terminado", () => {
     expect(partida.gestionarTurno()).toBe("El turno ha cambiado.");
 
     // Simular una situación de victoria de los lobos
     partida.jugadores = [
-      { id: "1", rol: "lobo", estaVivo: true },
-      { id: "2", rol: "lobo", estaVivo: true },
-      { id: "3", rol: "bruja", estaVivo: false },
-      { id: "4", rol: "vidente", estaVivo: false },
-      { id: "5", rol: "aldeano", estaVivo: false },
+      { id: "1", rol: "Hombre lobo", estaVivo: true },
+      { id: "2", rol: "Hombre lobo", estaVivo: true },
+      { id: "3", rol: "Bruja", estaVivo: false },
+      { id: "4", rol: "Vidente", estaVivo: false },
+      { id: "5", rol: "Aldeano", estaVivo: false },
     ];
     expect(partida.gestionarTurno()).toBe("Los lobos han ganado la partida.");
   });
 
+  /**
+   * Test para revisar que los jugadores eliminados no puedan votar.
+   */
   test("revisar que los jugadores eliminados no puedan votar", () => {
-    partida.gestionarTurno(); // Cambia a 'dia'
     // Simular que el jugador 3 está eliminado
     partida.jugadores.find((j) => j.id === "3").estaVivo = false;
     partida.vota("3", "2");
     expect(partida.votos["3"]).toBe(undefined);
   });
 
+  /**
+   * Test para verificar que los jugadores vivos pueden votar.
+   */
   test("los jugadores vivos pueden votar", () => {
-    partida.gestionarTurno(); // Cambia a 'dia'
     partida.vota("1", "5");
     expect(partida.votos["1"]).toBe("5");
   });
 
+  /**
+   * Test para añadir un mensaje al chat durante el día.
+   */
   test("añadir un mensaje al chat durante el día", () => {
     partida.agregarMensajeChat("1", "Hola a todos");
     expect(partida.chat.length).toBe(1);
     expect(partida.chat[0].mensaje).toBe("Hola a todos");
   });
 
+  /**
+   * Test para impedir a los jugadores eliminados enviar mensaje.
+   */
   test("impedir a los jugadores eliminados enviar mensaje", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "3"); // El jugador 1 (lobo) vota por el jugador 3
     partida.votaNoche("2", "3"); // El jugador 2 (lobo) vota por el jugador 3
     partida.votaNoche("3", "2"); // El jugador 3 (no es lobo) intenta votar por el jugador 2. No puede votar.
@@ -81,9 +104,10 @@ describe("Clase Partida", () => {
     expect(partida.chat.length).toBe(0); // No debe agregar el mensaje
   });
 
+  /**
+   * Test para realizar una votación correctamente, eliminando a un jugador tras alcanzar una mayoría.
+   */
   test("realizar una votación correctamente, eliminando a un jugador tras alcanzar una mayoría", () => {
-    partida.gestionarTurno();
-    // Cambia a 'dia'
     expect(partida.turno).toBe("dia");
     partida.vota("1", "3"); // El jugador 1 vota por el jugador 3
     partida.vota("2", "3"); // El jugador 2 vota por el jugador 3
@@ -101,8 +125,10 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "2").estaVivo).toBe(false);
   });
 
+  /**
+   * Test para hacer la votación del Alguacil dando empate durante el día. El alguacil tiene voto doble.
+   */
   test("hacer la votación del Alguacil dando empate durante el dia. El alguacil tiene voto doble", () => {
-    partida.gestionarTurno(); // Cambia a 'dia'
     partida.votaAlguacil("1", "2"); // Jugador 1 vota por jugador 2
     partida.votaAlguacil("3", "2"); // Jugador 3 vota por jugador 2
     partida.votaAlguacil("4", "3"); // Jugador 4 vota por jugador 3
@@ -140,7 +166,11 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "3").estaVivo).toBe(false);
   });
 
+  /**
+   * Test para impedir eliminar al objetivo si no hay consenso entre los lobos durante la noche.
+   */
   test("impedir eliminar al objetivo si no hay consenso entre los lobos durante la noche", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "4");
     partida.votaNoche("2", "3"); // Los lobos no se ponen de acuerdo
     const result = partida.resolverVotosNoche();
@@ -154,7 +184,11 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "3").estaVivo).toBe(true);
   });
 
+  /**
+   * Test para evitar que un lobo vote a otro lobo durante la noche.
+   */
   test("evitar que un lobo vote a otro lobo durante la noche", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "1");
     partida.votaNoche("2", "1");
     partida.resolverVotosNoche();
@@ -164,7 +198,11 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "1").estaVivo).toBe(true);
   });
 
+  /**
+   * Test para verificar que los lobos eliminan a un jugador si hay consenso.
+   */
   test("los lobos eliminan a un jugador si hay consenso", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "4");
     partida.votaNoche("2", "4");
     partida.resolverVotosNoche();
@@ -174,7 +212,11 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "4").estaVivo).toBe(false);
   });
 
+  /**
+   * Test para usar la poción de cura de la bruja correctamente. Evitar que la bruja use la poción de curar dos veces.
+   */
   test("usar la poción de cura de la bruja correctamente. Evitar que la bruja use la poción de curar dos veces", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "3"); // El jugador 1 (lobo) vota por el jugador 3
     partida.votaNoche("2", "3"); // El jugador 2 (lobo) vota por el jugador 3
     partida.resolverVotosNoche(); // Se eliminará al jugador 3 al cambiar de turno
@@ -197,7 +239,11 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "3").estaVivo).toBe(false);
   });
 
+  /**
+   * Test para usar la poción de muerte de la bruja correctamente. Evitar que la bruja use la poción de matar dos veces.
+   */
   test("usar la poción de muerte de la bruja correctamente. Evitar que la bruja use la poción de matar dos veces", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "4"); // El jugador 1 (lobo) vota por el jugador 4
     partida.votaNoche("2", "4"); // El jugador 2 (lobo) vota por el jugador 4
     partida.resolverVotosNoche(); // Se eliminará al jugador 4 al cambiar de turno
@@ -221,8 +267,13 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "2").estaVivo).toBe(true);
   });
 
+  /**
+   * Test para prevenir a la vidente de ver el rol de un jugador muerto, ver el rol de un jugador vivo e
+   * impedir volver a ver el rol de otro jugador durante la misma noche.
+   */
   test(`prevenir a la vidente de ver el rol de un jugador muerto, 
     ver el rol de un jugador vivo e impedir volver a ver el rol de otro jugador durante la misma noche`, () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     partida.votaNoche("1", "3"); // El jugador 1 (lobo) vota por el jugador 3
     partida.votaNoche("2", "3"); // El jugador 2 (lobo) vota por el jugador 3
     partida.resolverVotosNoche(); // Se eliminará al jugador 3 al cambiar de turno
@@ -234,14 +285,15 @@ describe("Clase Partida", () => {
     result = partida.videnteRevela("4", "3"); // La vidente intenta ver el rol del jugador 3
     expect(result).toBe("Solo puedes ver el rol de un jugador vivo.");
     result = partida.videnteRevela("4", "1"); // La vidente intenta ver el rol del jugador 1
-    expect(result).toBe("El jugador 1 es lobo.");
+    expect(result).toBe("El jugador 1 es Hombre lobo.");
     result = partida.videnteRevela("4", "2"); // La vidente intenta ver el rol del jugador 2
     expect(result).toBe("No puedes usar esta habilidad.");
   });
 
+  /**
+   * Test para elegir sucesor para el alguacil cuando muere.
+   */
   test("elegir sucesor para el alguacil cuando muere", () => {
-    partida.gestionarTurno(); // Cambia a 'dia'
-
     // Elegir a un alguacil inicial
     partida.votaAlguacil("1", "3");
     partida.votaAlguacil("2", "3");
@@ -268,12 +320,16 @@ describe("Clase Partida", () => {
     expect(partida.jugadores.find((j) => j.id === "1").esAlguacil).toBe(true);
   });
 
+  /**
+   * Test para verificar que el cazador dispara al morir.
+   */
   test("el cazador dispara al morir", () => {
+    partida.gestionarTurno(); // Cambia a 'noche'
     // Añadir al cazador a la partida
-    partida.jugadores.push({ id: "6", rol: "cazador", estaVivo: true });
+    partida.jugadores.push({ id: "6", rol: "Cazador", estaVivo: true });
 
     // Aseguramos que el cazador está en la partida
-    expect(partida.jugadores.find((j) => j.id === "6").rol).toBe("cazador");
+    expect(partida.jugadores.find((j) => j.id === "6").rol).toBe("Cazador");
 
     partida.votaNoche("1", "6"); // El jugador 1 (lobo) vota por el jugador 6
     partida.votaNoche("2", "6"); // El jugador 2 (lobo) vota por el jugador 6
