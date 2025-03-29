@@ -5,6 +5,10 @@ const {
 const crypto = require("crypto");
 const redisClient = require("../config/redis");
 
+const { usuariosConectados } = require("./usuarioWS");
+
+console.log(usuariosConectados); // Ahora puedes acceder a la variable en salaWS.js
+
 let salas = {}; // Almacenamiento en memoria de las salas
 let expulsados = {}; // Registro de jugadores expulsados
 
@@ -423,7 +427,10 @@ const manejarConexionSalas = (socket, io) => {
       }
 
       if (sala.lider !== idLider) {
-        socket.emit("error", "No tienes permisos para iniciar la partida. Debes de ser lider.");
+        socket.emit(
+          "error",
+          "No tienes permisos para iniciar la partida. Debes de ser lider."
+        );
         return;
       }
 
