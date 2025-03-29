@@ -11,7 +11,7 @@ class EstadisticasDAO {
   static async obtenerEstadisticasAmigo(idUsuario) {
     try {
       // Número de partidas ganadas
-      //Hacemos un JOIN de la tabla Juega con la tabla partida
+      // Hacemos un JOIN de la tabla Juega con la tabla partida
       // Y seleccionamos las partidas que esten en Juega que sean de ese usuario
       // Y que en esa partida el usuario este en el bando ganador
       const queryGanadas = `

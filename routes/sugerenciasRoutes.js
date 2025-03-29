@@ -76,7 +76,7 @@ router.post("/enviar", async (req, res) => {
 router.get("/todas", async (req, res) => {
   try {
     const sugerencias = await SugerenciasDAO.obtenerSugerencias();
-    res.json({ mensaje: "Sugerencias obtenidas", sugerencias });
+    res.status(200).json({ mensaje: "Sugerencias obtenidas", sugerencias });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -112,7 +112,7 @@ router.post("/usuario", async (req, res) => {
     const sugerencias = await SugerenciasDAO.obtenerSugerenciasPorUsuario(
       idUsuario
     );
-    res.json({ mensaje: "Sugerencias del usuario obtenidas", sugerencias });
+    res.status(200).json({ mensaje: "Sugerencias del usuario obtenidas", sugerencias });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -151,7 +151,7 @@ router.put("/marcarRevisada", async (req, res) => {
       idSugerencia,
       revisada
     );
-    res.json({ mensaje: "Sugerencia actualizada", sugerencia });
+    res.status(200).json({ mensaje: "Sugerencia actualizada", sugerencia });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -194,7 +194,7 @@ router.put("/responder", async (req, res) => {
       idSugerencia,
       respuesta
     );
-    res.json({ mensaje: "Sugerencia respondida exitosamente", sugerencia });
+    res.status(200).json({ mensaje: "Sugerencia respondida exitosamente", sugerencia });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -226,7 +226,7 @@ router.put("/responder", async (req, res) => {
 router.get("/noRevisadas", async (req, res) => {
   try {
     const sugerencias = await SugerenciasDAO.obtenerSugerenciasNoRevisadas();
-    res.json({ mensaje: "Sugerencias no revisadas obtenidas", sugerencias });
+    res.status(200).json({ mensaje: "Sugerencias no revisadas obtenidas", sugerencias });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

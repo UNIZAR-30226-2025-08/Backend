@@ -18,6 +18,7 @@ const EstadisticasDAO = require("../dao/estadisticasDao");
  *
  * @param {Object} res - Objeto de respuesta HTTP.
  *
+ * @throws {400} El ID de usuario debe ser un número válido.
  * @throws {500} Error interno al obtener las estadísticas del usuario.
  *
  * @returns {Object} JSON con las estadísticas del usuario.
@@ -39,7 +40,7 @@ router.get("/obtener/:idUsuario", async (req, res) => {
     // Se obtienen las estadísticas del usuario (amigo) a través del DAO
     const stats = await EstadisticasDAO.obtenerEstadisticasAmigo(idUsuario);
 
-    res.json({ stats });
+    res.status(200).json({ mensaje: "Estadísticas obtenidas", stats });
   } catch (error) {
     console.error("Error en ruta de estadísticas:", error);
     res.status(500).json({

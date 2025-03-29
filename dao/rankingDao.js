@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 class RankingDAO {
   /**
    * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
-   * //Actualizado para devolver avatares de perfil
+   * Devuelve el idUsuario, nombre, avatar y victorias de los jugadores.
    * @returns {Promise<Array>} Lista de jugadores con sus victorias.
    */
   static async obtenerRankingGlobal() {

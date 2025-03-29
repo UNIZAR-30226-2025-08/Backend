@@ -30,7 +30,7 @@ const RankingDAO = require("../dao/rankingDao");
 router.get("/ranking", async (req, res) => {
   try {
     const ranking = await RankingDAO.obtenerRankingGlobal();
-    res.json({ mensaje: "Ranking global obtenido", ranking });
+    res.status(200).json({ mensaje: "Ranking global obtenido", ranking });
   } catch (error) {
     res.status(500).json({ error: "Error al obtener el ranking global" });
   }

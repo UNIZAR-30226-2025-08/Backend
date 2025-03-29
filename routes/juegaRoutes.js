@@ -41,7 +41,7 @@ router.post("/asignar", async (req, res) => {
       idPartida,
       rolJugado
     );
-    res.json({ mensaje: "Usuario asignado a la partida", juega });
+    res.status(200).json({ mensaje: "Usuario asignado a la partida", juega });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -85,7 +85,7 @@ router.get("/usuario/:idUsuario", async (req, res) => {
     }
 
     const partidas = await JuegaDAO.obtenerPartidasDeUsuario(idUsuario);
-    res.json(partidas);
+    res.status(200).json(partidas);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

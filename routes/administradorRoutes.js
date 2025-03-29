@@ -74,7 +74,7 @@ router.post("/quitar", async (req, res) => {
   }
   try {
     await AdministradorDAO.quitarAdministrador(idUsuario);
-    res.json({ mensaje: "Rol de administrador eliminado exitosamente" });
+    res.status(200).json({ mensaje: "Rol de administrador eliminado exitosamente" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -104,7 +104,7 @@ router.post("/esAdministrador", async (req, res) => {
   }
   try {
     const esAdmin = await AdministradorDAO.esAdministrador(idUsuario);
-    res.json({ esAdministrador: esAdmin });
+    res.status(200).json({ esAdministrador: esAdmin });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -132,7 +132,7 @@ router.post("/esAdministrador", async (req, res) => {
 router.get("/todos", async (req, res) => {
   try {
     const administradores = await AdministradorDAO.obtenerAdministradores();
-    res.json({ mensaje: "Administradores obtenidos", administradores });
+    res.status(200).json({ mensaje: "Administradores obtenidos", administradores });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -36,14 +36,14 @@ router.post("/agregar", async (req, res) => {
   const { idUsuario1, idUsuario2 } = req.body;
   try {
     const amistad = await AmistadDAO.agregarAmigo(idUsuario1, idUsuario2);
-    res.json({ mensaje: "Amistad creada", amistad });
+    res.status(200).json({ mensaje: "Amistad creada", amistad });
   } catch (error) {
     res.status(500).json({ error: "Error al agregar amigo" });
   }
 });
 
 /**
- * Elimina una amistad entre dos usuarios.
+ * Elimina una amistad entre dos usuarios por id.
  * @function DELETE /api/amistad/eliminar
  *
  * @param {Object} req - Objeto de solicitud HTTP.
@@ -66,25 +66,26 @@ router.delete("/eliminar", async (req, res) => {
   const { idUsuario1, idUsuario2 } = req.body;
   try {
     await AmistadDAO.eliminarAmigo(idUsuario1, idUsuario2);
-    res.json({ mensaje: "Amistad eliminada correctamente" });
+    res.status(200).json({ mensaje: "Amistad eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar la amistad" });
   }
 });
 
 /**
- * Elimina una amistad entre dos usuarios.
+ * Elimina una amistad entre dos usuarios por nombre.
  * @function DELETE /api/amistad/eliminar_por_nombre
  *
  * @param {Object} req - Objeto de solicitud HTTP.
  * @param {Object} req.body - Cuerpo de la solicitud con los datos de la amistad a eliminar.
  * @param {number} req.body.idUsuario1 - ID del primer usuario.
- * @param {number} req.body.nombreUsuario2 - nombre del segundo usuario.
+ * @param {string} req.body.nombreUsuario2 - nombre del segundo usuario.
  *
  * @param {Object} res - Objeto de respuesta HTTP.
  *
  * @throws {400} Los datos requeridos están incompletos o no son válidos.
  * @throws {500} Error interno al eliminar la amistad.
+ * @throws {404} El usuario no existe.
  *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.mensaje - Mensaje de confirmación de la amistad eliminada.
@@ -102,12 +103,12 @@ router.delete("/eliminar_por_nombre", async (req, res) => {
     }
     idUsuario2 = usuario2.idUsuario;
   } catch (error) {
-    res.status(500).json({ error: error.message }); //Cambiar?
+    res.status(500).json({ error: "Error al obtener el id del usuario con ese nombre" });
   }
 
   try {
     await AmistadDAO.eliminarAmigo(idUsuario1, idUsuario2);
-    res.json({ mensaje: "Amistad eliminada correctamente" });
+    res.status(200).json({ mensaje: "Amistad eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar la amistad" });
   }
@@ -123,6 +124,7 @@ router.delete("/eliminar_por_nombre", async (req, res) => {
  * @param {Object} res - Objeto de respuesta HTTP.
  *
  * @throws {500} Error interno al obtener la lista de amigos.
+ * @throws {400} El ID de usuario debe ser un número válido.
  *
  * @returns {Object} JSON con la lista de amigos.
  * @returns {number[]} res.amigos - Array de IDs de amigos.
@@ -143,7 +145,7 @@ router.get("/listar/:idUsuario", async (req, res) => {
     const amigos = await AmistadDAO.obtenerAmigos(idUsuario);
 
     // Respondemos con la lista
-    res.json({ amigos });
+    res.status(200).json({ amigos });
   } catch (error) {
     console.error("Error en endpoint de amigos", error);
     res.status(500).json({ error: "Error al obtener la lista de amigos" });
@@ -189,7 +191,7 @@ router.get("/listarConEstadisticas/:idUsuario", async (req, res) => {
       idUsuario
     );
 
-    res.json({ amigos: amigosConStats });
+    res.status(200).json({ amigos: amigosConStats });
   } catch (error) {
     console.error("Error en endpoint de amigos con estadísticas:", error);
     res.status(500).json({

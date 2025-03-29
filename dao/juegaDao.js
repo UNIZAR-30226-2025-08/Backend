@@ -49,7 +49,7 @@ class JuegaDAO {
   static async obtenerPartidasDeUsuario(idUsuario) {
     try {
       const query = `
-        SELECT p."idPartida", p.nombre, p.fecha, p.tipo, p.estado, p.ganadores, 
+        SELECT p."idPartida", p.fecha, p.tipo, p.estado, p.ganadores, 
                j."rolJugado"
         FROM "Juega" j
         JOIN "Partida" p ON j."idPartida" = p."idPartida"
