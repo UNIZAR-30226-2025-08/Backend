@@ -13,4 +13,4 @@ jobs:
       - name: Instalar dependencias
         run: npm install
       - name: Ejecutar tests
-        run: npm test -- "test/Partida.test.js"
+        run: npm test -- "tests/Partida.test.js"

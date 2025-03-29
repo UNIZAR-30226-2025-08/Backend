@@ -36,10 +36,8 @@ CREATE TABLE "Usuario" (
 -- Tabla Partida
 CREATE TABLE "Partida" (
   "idPartida" SERIAL PRIMARY KEY,
-  nombre VARCHAR(100) NOT NULL,
   fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, /* Al crearla se pone por defecto el tiempo actual */
   tipo tipoPartida NOT NULL, /* La columna tipo solo puede contener los valores 'publica' o 'privada' */
-  "hashContrasena" VARCHAR(255) DEFAULT NULL, /* Solo se especificará contraseña en el caso de que la partida sea privada */
   estado estadoPartida NOT NULL DEFAULT 'en_curso', /* Por defecto 'en curso' */
   ganadores bandoGanador DEFAULT NULL /* Al crear la partida aún no se sabrá el ganador, no hasta que termine la partida */
 );

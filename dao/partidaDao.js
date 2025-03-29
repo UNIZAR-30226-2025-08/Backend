@@ -1,15 +1,12 @@
 const pool = require("../config/db");
-const bcrypt = require("bcrypt");
 
 class PartidaDAO {
   /**
    * Crea una nueva partida.
-   * @param {string} nombre - Nombre de la partida.
    * @param {string} tipo - Tipo de partida ('publica' o 'privada').
-   * @param {string} [contrasena] - Contraseña si es privada.
    * @returns {Promise<Object>} Datos de la partida creada.
    */
-  static async crearPartida(nombre, tipo, contrasena = null) {
+  static async crearPartida(tipo) {
     try {
       // Validación de tipo de partida
       if (!["publica", "privada"].includes(tipo)) {
@@ -18,16 +15,11 @@ class PartidaDAO {
         );
       }
 
-      let hashContrasena = null;
-      if (tipo === "privada" && contrasena) {
-        hashContrasena = await bcrypt.hash(contrasena, 10);
-      }
-
       const query = `
-        INSERT INTO "Partida" (nombre, tipo, "hashContrasena")
-        VALUES ($1, $2, $3) 
-        RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
-      const { rows } = await pool.query(query, [nombre, tipo, hashContrasena]);
+        INSERT INTO "Partida" (tipo)
+        VALUES ($1) 
+        RETURNING "idPartida", tipo, fecha, estado, ganadores`;
+      const { rows } = await pool.query(query, [tipo]);
 
       return rows[0];
     } catch (error) {
@@ -56,7 +48,7 @@ class PartidaDAO {
 
       const query = `
         UPDATE "Partida" SET estado = $1, ganadores = $2 WHERE "idPartida" = $3 
-        RETURNING "idPartida", nombre, tipo, fecha, estado, ganadores`;
+        RETURNING "idPartida", tipo, fecha, estado, ganadores`;
       const { rows } = await pool.query(query, [estado, ganadores, idPartida]);
 
       if (rows.length === 0) {
@@ -78,36 +70,13 @@ class PartidaDAO {
   static async obtenerPartida(idPartida) {
     try {
       const query = `
-          SELECT "idPartida", nombre, tipo, fecha, estado, ganadores 
+          SELECT "idPartida", tipo, fecha, estado, ganadores 
           FROM "Partida" WHERE "idPartida" = $1`;
       const { rows } = await pool.query(query, [idPartida]);
       return rows[0] || null;
     } catch (error) {
       console.error("Error al obtener la partida:", error);
       throw new Error("No se pudo obtener la partida.");
-    }
-  }
-
-  /**
-   * Verifica la contraseña de una partida privada.
-   * @param {number} idPartida - ID de la partida.
-   * @param {string} contrasena - Contraseña ingresada.
-   * @returns {Promise<boolean>} Devuelve true si la contraseña es correcta, false si no lo es.
-   */
-  static async verificarContrasena(idPartida, contrasena) {
-    try {
-      const query = `SELECT "hashContrasena" FROM "Partida" WHERE "idPartida" = $1 AND tipo = 'privada'`;
-      const { rows } = await pool.query(query, [idPartida]);
-
-      if (rows.length === 0 || !rows[0].hashContrasena) {
-        throw new Error("Partida no encontrada o no es privada.");
-      }
-
-      const esValida = await bcrypt.compare(contrasena, rows[0].hashContrasena);
-      return esValida;
-    } catch (error) {
-      console.error("Error al verificar la contraseña:", error);
-      throw new Error("No se pudo verificar la contraseña.");
     }
   }
 }

@@ -13,9 +13,7 @@ const PartidaDAO = require("../dao/partidaDao");
  * @function POST /api/partida/crear
  *
  * @param {Object} req - Objeto de solicitud HTTP.
- * @param {string} req.body.nombre - Nombre de la partida.
  * @param {string} req.body.tipo - Tipo de la partida ('publica' o 'privada').
- * @param {string} [req.body.contrasena] - Contraseña de la partida (si es privada).
  *
  * @throws {500} Error interno al crear la partida.
  *
@@ -24,7 +22,6 @@ const PartidaDAO = require("../dao/partidaDao");
  * @param {string} res.mensaje - Mensaje de confirmación de la creación de la partida.
  * @param {Object} res.partida - Objeto con la información de la partida creada.
  * @param {number} res.partida.idPartida - ID único de la partida creada.
- * @param {string} res.partida.nombre - Nombre de la partida.
  * @param {string} res.partida.tipo - Tipo de la partida ('publica' o 'privada').
  * @param {string} res.partida.fecha - Fecha y hora de creación de la partida.
  * @param {string} res.partida.estado - Estado actual de la partida.
@@ -34,9 +31,9 @@ const PartidaDAO = require("../dao/partidaDao");
  * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/crear", async (req, res) => {
-  const { nombre, tipo, contrasena } = req.body;
+  const { tipo } = req.body;
   try {
-    const partida = await PartidaDAO.crearPartida(nombre, tipo, contrasena);
+    const partida = await PartidaDAO.crearPartida(tipo);
     res.status(201).json({ mensaje: "Partida creada", partida });
   } catch (error) {
     res.status(500).json({ error: "Error al crear la partida" });
@@ -63,7 +60,6 @@ router.post("/crear", async (req, res) => {
  * @param {string} res.mensaje - Mensaje de confirmación de la finalización de la partida.
  * @param {Object} res.partida - Objeto con la información de la partida finalizada.
  * @param {number} res.partida.idPartida - ID único de la partida finalizada.
- * @param {string} res.partida.nombre - Nombre de la partida.
  * @param {string} res.partida.tipo - Tipo de la partida ('publica' o 'privada').
  * @param {string} res.partida.fecha - Fecha y hora de creación de la partida.
  * @param {string} res.partida.estado - Estado final de la partida ('terminada').
@@ -130,7 +126,6 @@ router.put("/finalizar-partida", async (req, res) => {
  * @param {number} res.status - Código de estado HTTP.
  * @param {Object} res.partida - Objeto con la información de la partida.
  * @param {number} res.partida.idPartida - ID único de la partida.
- * @param {string} res.partida.nombre - Nombre de la partida.
  * @param {string} res.partida.tipo - Tipo de la partida ('publica' o 'privada').
  * @param {string} res.partida.fecha - Fecha y hora de creación de la partida.
  * @param {string} res.partida.estado - Estado actual de la partida.
@@ -156,40 +151,6 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(partida);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener la partida" });
-  }
-});
-
-/**
- * Verifica la contraseña de una partida privada.
- * @function POST /api/partida/verificar-contrasena
- *
- * @param {Object} req - Objeto de solicitud HTTP.
- * @param {number} req.body.idPartida - ID de la partida.
- * @param {string} req.body.contrasena - Contraseña ingresada.
- *
- * @throws {500} Error interno al verificar la contraseña.
- *
- * @param {Object} res - Objeto de respuesta HTTP.
- * @param {number} res.status - Código de estado HTTP.
- * @param {string} res.mensaje - Mensaje de verificación de la contraseña.
- * @param {boolean} res.valida - Indica si la contraseña es correcta o no.
- *
- * @param {Object} res.error - Objeto de error.
- * @param {string} res.error.mensaje - Descripción del error.
- */
-router.post("/verificar-contrasena", async (req, res) => {
-  const { idPartida, contrasena } = req.body;
-  try {
-    const esValida = await PartidaDAO.verificarContrasena(
-      idPartida,
-      contrasena
-    );
-    res.status(200).json({
-      mensaje: esValida ? "Contraseña correcta" : "Contraseña incorrecta",
-      valida: esValida,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Error al verificar la contraseña" });
   }
 });
 
