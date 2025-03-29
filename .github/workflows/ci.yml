@@ -1,16 +1,31 @@
+name: Test Pipeline
+
 on:
   push:
-    branches: [ main ]
- 
+    branches: [main]
+
 jobs:
-  build:
+  test-endpoints:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: "14.x"
       - name: Instalar dependencias
         run: npm install
-      - name: Ejecutar tests
-        run: npm test -- "tests/Partida.test.js"
+      - name: Ejecutar tests de endpoints o rutas
+        run: npm test -- "tests/routes.test.js"
+
+  test-partida:
+    needs: test-endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "14.x"
+      - name: Instalar dependencias
+        run: npm install
+      - name: Ejecutar tests de la clase Partida
+        run: npm test -- "tests/partida.test.js"
