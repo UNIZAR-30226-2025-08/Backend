@@ -98,7 +98,7 @@ router.post("/obtener", async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
-    res.json({ usuario });
+    res.status(200).json({ usuario });
   } catch (error) {
     res.status(500).json({ error: error.message }); //Cambiar?
   }
@@ -142,7 +142,7 @@ router.post("/obtener_por_id", async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
-    res.json({ usuario });
+    res.status(200).json({ usuario });
   } catch (error) {
     res.status(500).json({ error: error.message }); //Cambiar?
   }
@@ -257,7 +257,7 @@ module.exports = router;
  * @function POST /api/usuario/obtener_por_nombre
  * @param {Object} req - Objeto de solicitud HTTP.
  * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
- * @param {string} req.body.idUsuario - Correo electrónico del usuario a buscar.
+ * @param {string} req.body.nombre - Nombre del usuario a buscar.
  *
  * @param {Object} res - Objeto de respuesta HTTP.
  *
@@ -278,7 +278,7 @@ module.exports = router;
  * @param {string} res.error.mensaje - Descripción del error.
  */
 router.post("/obtener_por_nombre", async (req, res) => {
-  const { nombre } = req.body; // Obtenemos el id del body
+  const { nombre } = req.body; // Obtenemos el nombre del body
 
   if (!nombre) {
     return res.status(400).json({ error: "El nombre es requerido." });
@@ -289,7 +289,7 @@ router.post("/obtener_por_nombre", async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
-    res.json({ usuario });
+    res.status(200).json({ usuario });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

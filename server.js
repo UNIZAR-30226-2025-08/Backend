@@ -2,15 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
-//const { Server } = require("socket.io");
-
-//const redisClient = require("./redisClient"); !!!
 
 const app = express();
 const server = createServer(app);
-//const io = new Server(server, { cors: { origin: "*" } });
-
-//const partidasActivas = {}; // Almacén en memoria para partidas activas
 
 // Middlewares
 app.use(cors()); // Permitir solicitudes desde el frontend
@@ -26,6 +20,7 @@ const sugerenciasRoutes = require("./routes/sugerenciasRoutes");
 const rankingRoutes = require("./routes/rankingRoutes");
 const administradorRoutes = require("./routes/administradorRoutes");
 const estadisticasRoutes = require("./routes/estadisticasRoutes");
+
 // Usar rutas
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/partida", partidaRoutes);
@@ -36,6 +31,7 @@ app.use("/api/sugerencias", sugerenciasRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/admin", administradorRoutes);
 app.use("/api/estadisticas", estadisticasRoutes);
+
 // WebSockets
 const servidorWS = require("./websockets/servidorWS");
 
@@ -47,10 +43,14 @@ const io = servidorWS(server);
  * @function
  */
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
   console.log(`WebSockets escuchando en ws://localhost:${PORT}`);
 });
+
+
+module.exports = { app, server };
 
 // // SOCKETS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // //----------------------------------------------------------------------------------

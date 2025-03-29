@@ -37,7 +37,7 @@ router.post("/crear", async (req, res) => {
   const { nombre, tipo, contrasena } = req.body;
   try {
     const partida = await PartidaDAO.crearPartida(nombre, tipo, contrasena);
-    res.json({ mensaje: "Partida creada", partida });
+    res.status(201).json({ mensaje: "Partida creada", partida });
   } catch (error) {
     res.status(500).json({ error: "Error al crear la partida" });
   }
@@ -109,7 +109,7 @@ router.put("/finalizar-partida", async (req, res) => {
     }
 
     // Retornamos el mensaje de éxito con la partida finalizada
-    res.json({ mensaje: "Partida finalizada", partida });
+    res.status(200).json({ mensaje: "Partida finalizada", partida });
   } catch (error) {
     res.status(500).json({ error: "Error al finalizar la partida" });
   }
@@ -153,7 +153,7 @@ router.get("/:id", async (req, res) => {
     if (!partida) {
       return res.status(404).json({ error: "Partida no encontrada" });
     }
-    res.json(partida);
+    res.status(200).json(partida);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener la partida" });
   }
@@ -184,7 +184,7 @@ router.post("/verificar-contrasena", async (req, res) => {
       idPartida,
       contrasena
     );
-    res.json({
+    res.status(200).json({
       mensaje: esValida ? "Contraseña correcta" : "Contraseña incorrecta",
       valida: esValida,
     });

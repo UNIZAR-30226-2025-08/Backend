@@ -8,7 +8,7 @@ const csv = require("csv-parser");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // URL de conexión de Neon
 
-  connectionTimeoutMillisssl: {
+  ssl: {
     rejectUnauthorized: false, // Especificación necesaria para Neon en producción
   },
 });
@@ -104,6 +104,6 @@ async function importarTodosLosCSV() {
 
 //importarTodosLosCSV();
 
-testConnection(); // Llama a la función para probar la conexión
+//testConnection(); // Llama a la función para probar la conexión
 
 module.exports = pool; // Exporta el pool para usarlo en otros módulos

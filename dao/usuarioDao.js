@@ -14,6 +14,7 @@ class UsuarioDAO {
       const query = `
         INSERT INTO "Usuario" (nombre, correo, "hashContrasena", avatar)
         VALUES ($1, $2, $3, $4) RETURNING "idUsuario", nombre, correo, avatar, "fechaCreacion", "rolFavorito"`;
+        
       const { rows } = await pool.query(query, [
         nombre,
         correo,
