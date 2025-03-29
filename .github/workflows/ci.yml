@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "14.x"
+      - name: Configurar variables de entorno
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
       - name: Instalar dependencias
         run: npm install
       - name: Ejecutar tests de endpoints o rutas
