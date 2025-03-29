@@ -10,7 +10,7 @@ const RankingDAO = require("../dao/rankingDao");
 
 /**
  * Obtiene el ranking global de jugadores con más victorias en partidas públicas.
- * @function GET /api/ranking
+ * @function GET /api/ranking/ranking
  *
  * @param {Object} res - Objeto de respuesta HTTP.
  *
