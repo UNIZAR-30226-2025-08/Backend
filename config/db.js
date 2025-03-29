@@ -5,7 +5,6 @@ const path = require("path");
 const csv = require("csv-parser");
 
 // Configuración del pool de conexiones con Neon (PostgreSQL)
-console.log("DATABASE_URL en GitHub Actions:", process.env.DATABASE_URL);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // URL de conexión de Neon
 
