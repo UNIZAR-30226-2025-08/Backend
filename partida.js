@@ -14,6 +14,8 @@ class Partida {
     this.jugadores = jugadores.map((jugador) => ({
       // Array de jugadores con sus roles
       id: jugador.id,
+      nombre: jugador.nombre,
+      socketId: jugador.socketId,
       rol: jugador.rol, // Rol asignado (por ejemplo: 'lobo', 'bruja', 'vidente','cazador','aldeano')
       estaVivo: true,
       esAlguacil: false, // ¿Es alguacil?
@@ -31,7 +33,7 @@ class Partida {
   }
 
   /**
-   * Gestiona el cambio de turno en la partida.
+   * (Método que usa partidaWS) Gestiona el cambio de turno en la partida.
    * Aplica las eliminaciones pendientes y verifica si la partida ha terminado.
    * Si la partida sigue en curso, cambia al siguiente turno.
    *
@@ -50,7 +52,7 @@ class Partida {
   }
 
   /**
-   * (Método de server) Método interno para cambiar turnos, cambia de día a noche y de noche a
+   * Método interno para cambiar turnos, cambia de día a noche y de noche a
    * día. Reinicia el uso de habilidad de la vidente.
    */
   siguienteTurno() {
@@ -70,17 +72,48 @@ class Partida {
   }
 
   /**
-   * Agrega un mensaje al chat de la partida.
+   * (Método que usa partidaWS) Agrega un mensaje al chat de la partida si el turno es de día.
    * @param {number} idJugador - ID del jugador que envía el mensaje.
    * @param {string} mensaje - Contenido del mensaje.
    */
-  agregarMensajeChat(idJugador, mensaje) {
+  agregarMensajeChatDia(idJugador, mensaje) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
-    if (this.turno === "dia" || jugador.rol === "Hombre lobo") {
-      this.chat.push({ idJugador, mensaje, timestamp: Date.now() });
+    if (this.turno === "dia") {
+      this.chat.push({
+        nombre: jugador.nombre,
+        mensaje,
+        timestamp: Date.now(),
+      });
     }
+  }
+
+  /**
+   * (Método que usa partidaWS) Prepara los mensajes privados para los hombres lobos.
+   * @param {number} idJugador - ID del jugador que intenta enviar el mensaje.
+   * @param {string} mensaje - Contenido del mensaje.
+   * @returns {Array<Object>} - Preparación de los mensajes privados para los hombres lobos.
+   */
+  prepararMensajesChatNoche(idJugador, mensaje) {
+    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    if (!jugador || !jugador.estaVivo || jugador.rol !== "Hombre lobo") {
+      return []; // El jugador que intenta enviar el mensaje no es un hombre lobo o está muerto
+    }
+
+    const preparacionMensajes = [];
+    this.jugadores.forEach((j) => {
+      if (j.rol === "Hombre lobo" && j.estaVivo && j.id !== idJugador) {
+        preparacionMensajes.push({
+          socketId: j.socketId,
+          nombre: jugador.nombre,
+          mensaje,
+          timestamp: Date.now(),
+        });
+      }
+    });
+
+    return preparacionMensajes; // Retorna la preparación de los mensajes
   }
 
   /**
@@ -255,7 +288,7 @@ class Partida {
       }
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo
+        (id) => id !== idObjetivo,
       ); // Cancela la muerte de los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
     }
@@ -379,7 +412,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo
+      (j) => j.rol === "Hombre lobo" && j.estaVivo,
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -436,35 +469,74 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo"
+      (j) => j.estaVivo && j.rol === "Hombre lobo",
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo"
+      (j) => j.estaVivo && j.rol !== "Hombre lobo",
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
     if (lobosVivos === 0 && aldeanosVivos !== 0) {
       this.estado = "terminada";
-      return "Los aldeanos han ganado la partida.";
-      // Podemos emitir el estado de la partida devolviendo un objeto con el estado y un mensaje !!!
-      // return { ganador: 'aldeanos', mensaje: 'Los aldeanos han ganado la partida.' };
+      // Emitir el estado de la partida devolviendo un objeto con el ganador y un mensaje
+      return {
+        ganador: "aldeanos",
+        mensaje: "Los aldeanos han ganado la partida.",
+      };
     }
 
     // Ganan los lobos cuando no quedan aldeanos vivos
     if (aldeanosVivos === 0 && lobosVivos !== 0) {
       this.estado = "terminada";
-      return "Los lobos han ganado la partida.";
-      // return { ganador: 'lobos', mensaje: 'Los lobos han ganado la partida.' }; !!!
+      return {
+        ganador: "hombres lobos",
+        mensaje: "Los hombres lobos han ganado la partida.",
+      };
     }
 
     // Empate si todos los jugadores están muertos
     if (aldeanosVivos === 0 && lobosVivos === 0) {
       this.estado = "terminada";
-      return "Empate, no hay ganadores.";
-      // return { ganador: 'empate', mensaje: 'Empate, no hay ganadores.' }; !!!
+      return { ganador: "empate", mensaje: "Empate, no hay ganadores." };
     }
 
     return null; // La partida sigue en curso
+  }
+
+  /**
+   * (Método que usa partidaWS) Verifica si todos los jugadores vivos han votado.
+   * Si todos han votado, devuelve true. En caso contrario, devuelve false.
+   * @param {string} contexto - Contexto de la votación ('dia', 'noche' o 'alguacil').
+   * @returns {boolean} true si todos han votado, false en caso contrario.
+   */
+  verificarVotos(contexto) {
+    let totalJugadoresVivos = 0;
+    let totalLobosVivos = 0;
+    let totalVotos = 0;
+    if (contexto === "dia") {
+      totalJugadoresVivos = this.jugadores.filter((j) => j.estaVivo).length;
+      totalVotos = Object.keys(this.votos).length;
+    } else if (contexto === "noche") {
+      totalLobosVivos = this.jugadores.filter(
+        (j) => j.estaVivo && j.rol === "Hombre lobo",
+      ).length;
+      totalVotos = Object.keys(this.votosNoche).length;
+    } else if (contexto === "alguacil") {
+      totalJugadoresVivos = this.jugadores.filter((j) => j.estaVivo).length;
+      totalVotos = Object.keys(this.votosAlguacil).length;
+    }
+
+    if (
+      (contexto === "alguacil" || contexto === "dia") &&
+      totalJugadoresVivos <= totalVotos
+    ) {
+      // Puede haber más votos que jugadores vivos, por el caso de los votos del jugador que tiene el cargo de alguacil
+      return true;
+    } else if (contexto === "noche" && totalLobosVivos === totalVotos) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 

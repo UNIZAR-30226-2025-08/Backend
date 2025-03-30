@@ -1,18 +1,22 @@
 const { Server } = require("socket.io");
-const redis = require("redis");
-//const redisClient = redis.createClient();
+
 const {
   manejarReconexionUsuarios,
   manejarConexionUsuarios,
   manejarDesconexionUsuarios,
   usuariosConectados,
 } = require("./usuarioWS");
+
 const {
   manejarConexionSalas,
   manejarDesconexionSalas,
   salas,
 } = require("./salaWS");
-//const { manejarConexionPartidas, manejarDesconexionPartidas } = require("./partidaWS");
+
+const {
+  manejarConexionPartidas,
+  manejarDesconexionPartidas,
+} = require("./partidaWS");
 
 const ServidorWS = (server) => {
   if (!server) {
@@ -31,7 +35,7 @@ const ServidorWS = (server) => {
     manejarReconexionUsuarios(socket, usuariosConectados, io);
     manejarConexionUsuarios(socket, io);
     manejarConexionSalas(socket, io);
-    //manejarConexionPartidas(socket, io);
+    manejarConexionPartidas(socket, io);
 
     // Evento de desconexión
     socket.on("disconnect", () => {
@@ -40,7 +44,7 @@ const ServidorWS = (server) => {
       // Delegar la lógica de desconexión a los módulos
       manejarDesconexionUsuarios(socket, salas, io);
       manejarDesconexionSalas(socket, io);
-      //manejarDesconexionPartidas(socket, io);
+      manejarDesconexionPartidas(socket, io);
     });
   });
   return io;
