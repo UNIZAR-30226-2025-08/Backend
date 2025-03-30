@@ -16,7 +16,7 @@ class Partida {
       id: jugador.id,
       nombre: jugador.nombre,
       socketId: jugador.socketId,
-      rol: jugador.rol, // Rol asignado (por ejemplo: 'lobo', 'bruja', 'vidente','cazador','aldeano')
+      rol: jugador.rol, // Rol asignado (por ejemplo: 'Hombre lobo', 'Bruja', 'Vidente','Cazador','Aldeano')
       estaVivo: true,
       esAlguacil: false, // ¿Es alguacil?
       pocionCuraUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de vida
@@ -30,6 +30,10 @@ class Partida {
     this.repetirVotosDia = false; // Controla si hubo un empate previo en las votaciones del día
     this.votosNoche = {}; // Votos de los lobos durante la noche
     this.colaEliminaciones = []; // Cola de eliminación al final del turno
+    this.votacionActiva = false; // Indica si hay una votación activa
+    this.temporizadorVotacion = null; // Temporizador para la votación
+    this.tiempoLimiteVotacion = 30000; // Tiempo límite para la votación en milisegundos (30 segundos)
+    this.tiempoLimiteHabilidad = 15000; // Tiempo límite para usar habilidades en milisegundos (15 segundos)
   }
 
   /**
@@ -126,6 +130,7 @@ class Partida {
    * - Si hay empate en la segunda votación: "Segundo empate consecutivo, no se elige alguacil."
    */
   elegirAlguacil() {
+    if (this.turno !== "dia") return;
     const conteoVotos = {};
     for (const votante in this.votosAlguacil) {
       const votado = this.votosAlguacil[votante];
@@ -149,13 +154,19 @@ class Partida {
       const alguacil = this.jugadores.find((j) => j.id === candidatos[0]);
       if (alguacil) alguacil.esAlguacil = true;
       this.repetirVotacionAlguacil = false; // Reiniciar flag de repetición
+      this.votacionActiva = false; // Desactivar la votación
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return `El jugador ${candidatos[0]} ha sido elegido como alguacil.`;
     } else {
       if (this.repetirVotacionAlguacil) {
+        this.votacionActiva = false; // Desactivar la votación
+        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Segundo empate consecutivo, no se elige alguacil.";
       } else {
         this.repetirVotacionAlguacil = true;
         this.votosAlguacil = {}; // Resetear votos para repetir elección
+        this.votacionActiva = false; // Desactivar la votación
+        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Empate en la elección del alguacil, se repiten las votaciones.";
       }
     }
@@ -168,10 +179,17 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador por el que vota.
    */
   votaAlguacil(idJugador, idObjetivo) {
+    if (this.turno !== "dia" || !this.votacionActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
     this.votosAlguacil[idJugador] = idObjetivo;
+
+    // Verificar si todos jugadores han votado
+    if (this.verificarVotos("alguacil")) {
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
+      this.elegirAlguacil(); // Resuelve la votación de alguacil
+    }
   }
 
   /**
@@ -181,15 +199,20 @@ class Partida {
    * @param {string} idJugador - ID del jugador que vota.
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
-
   vota(idJugador, idObjetivo) {
-    if (this.turno !== "dia") return;
+    if (this.turno !== "dia" || !this.votacionActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
     this.votos[idJugador] = idObjetivo;
     if (jugador.esAlguacil) {
       this.votos[`alguacil_${idJugador}`] = idObjetivo; // Doble voto (voto extra del alguacil)
+    }
+
+    // Verificar si todos los jugadores han votado
+    if (this.verificarVotos("dia")) {
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
+      this.resolverVotosDia(); // Resuelve la votación de día
     }
   }
 
@@ -201,7 +224,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   votaNoche(idJugador, idObjetivo) {
-    if (this.turno !== "noche") return;
+    if (this.turno !== "noche" || !this.votacionActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
@@ -211,6 +234,12 @@ class Partida {
       return;
 
     this.votosNoche[idJugador] = idObjetivo;
+
+    // Verificar si todos los hombres lobos han votado
+    if (this.verificarVotos("noche")) {
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
+      this.resolverVotosNoche(); // Resuelve la votación de noche
+    }
   }
 
   /**
@@ -288,7 +317,7 @@ class Partida {
       }
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo,
+        (id) => id !== idObjetivo
       ); // Cancela la muerte de los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
     }
@@ -358,6 +387,7 @@ class Partida {
    * - Si hay empate en la segunda votación: "Segundo empate consecutivo, nadie es eliminado."
    */
   resolverVotosDia() {
+    if (this.turno !== "dia") return;
     const conteoVotos = {};
 
     for (const votante in this.votos) {
@@ -381,13 +411,19 @@ class Partida {
     if (candidatos.length === 1) {
       this.agregarAColaDeEliminacion(candidatos[0]);
       this.repetirVotosDia = false; // Se reinicia al resolver una votación sin empate
+      this.votacionActiva = false; // Desactivar la votación
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return `El jugador ${candidatos[0]} será eliminado al final del día.`;
     } else {
       if (this.repetirVotosDia) {
+        this.votacionActiva = false; // Desactivar la votación
+        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Segundo empate consecutivo, nadie es eliminado.";
       } else {
         this.repetirVotosDia = true;
         this.votos = {}; // Reiniciar votos para repetir la votación
+        this.votacionActiva = false; // Desactivar la votación
+        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Empate, se repiten las votaciones.";
       }
     }
@@ -402,6 +438,7 @@ class Partida {
    * - Si no hay acuerdo: "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
    */
   resolverVotosNoche() {
+    if (this.turno !== "noche") return;
     const conteoVotos = {};
 
     for (const idLobo in this.votosNoche) {
@@ -412,7 +449,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo,
+      (j) => j.rol === "Hombre lobo" && j.estaVivo
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -422,8 +459,12 @@ class Partida {
 
     if (victimaElegida) {
       this.agregarAColaDeEliminacion(victimaElegida);
+      this.votacionActiva = false; // Desactivar la votación
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return `Los lobos atacaron al jugador ${victimaElegida}. Será eliminado al final de la noche.`;
     } else {
+      this.votacionActiva = false; // Desactivar la votación
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.";
     }
   }
@@ -469,10 +510,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo",
+      (j) => j.estaVivo && j.rol === "Hombre lobo"
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo",
+      (j) => j.estaVivo && j.rol !== "Hombre lobo"
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -518,7 +559,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo",
+        (j) => j.estaVivo && j.rol === "Hombre lobo"
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {
@@ -537,6 +578,30 @@ class Partida {
     } else {
       return false;
     }
+  }
+
+  // Método para iniciar la votación en el día
+  iniciarVotacion() {
+    this.votacionActiva = true;
+    this.temporizadorVotacion = setTimeout(() => {
+      this.resolverVotosDia(); // Resuelve la votación si se agota el tiempo
+    }, this.tiempoLimiteVotacion);
+  }
+
+  // Método para iniciar la votación del alguacil
+  iniciarVotacionAlguacil() {
+    this.votacionActiva = true;
+    this.temporizadorVotacion = setTimeout(() => {
+      this.elegirAlguacil(); // Resuelve la votación si se agota el tiempo
+    }, this.tiempoLimiteVotacion);
+  }
+
+  // Método para iniciar la votación de los hombres lobos en la noche
+  iniciarVotacionLobos() {
+    this.votacionActiva = true;
+    this.temporizadorVotacion = setTimeout(() => {
+      this.resolverVotosNoche(); // Resuelve la votación si se agota el tiempo
+    }, this.tiempoLimiteVotacion);
   }
 }
 

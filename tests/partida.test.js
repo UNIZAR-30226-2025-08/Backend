@@ -57,7 +57,7 @@ describe("Clase Partida", () => {
       { id: "5", rol: "Aldeano", estaVivo: false },
     ];
     expect(partida.gestionarTurno().mensaje).toBe(
-      "Los hombres lobos han ganado la partida.",
+      "Los hombres lobos han ganado la partida."
     );
     expect(partida.gestionarTurno().ganador).toBe("hombres lobos");
   });
@@ -76,6 +76,7 @@ describe("Clase Partida", () => {
    * Test para verificar que los jugadores vivos pueden votar.
    */
   test("los jugadores vivos pueden votar", () => {
+    partida.iniciarVotacion();
     partida.vota("1", "5");
     expect(partida.votos["1"]).toBe("5");
   });
@@ -94,15 +95,17 @@ describe("Clase Partida", () => {
    */
   test("impedir a los jugadores eliminados enviar mensaje", () => {
     partida.gestionarTurno(); // Cambia a 'noche'
+    partida.iniciarVotacionLobos();
     partida.votaNoche("1", "3"); // El jugador 1 (lobo) vota por el jugador 3
     partida.votaNoche("2", "3"); // El jugador 2 (lobo) vota por el jugador 3
     partida.votaNoche("3", "2"); // El jugador 3 (no es lobo) intenta votar por el jugador 2. No puede votar.
     partida.votaNoche("4", "2"); // El jugador 4 (no es lobo) intenta votar por el jugador 2. No puede votar.
     partida.votaNoche("5", "2"); // El jugador 5 (no es lobo) intenta votar por el jugador 2. No puede votar.
-    partida.resolverVotosNoche(); // Se eliminará al jugador 3 al cambiar de turno
+    //partida.resolverVotosNoche(); // Se eliminará al jugador 3 al cambiar de turno
     partida.gestionarTurno(); // Cambia a 'dia'
     partida.agregarMensajeChatDia("3", "Hola a todos");
     expect(partida.turno).toBe("dia");
+    partida.iniciarVotacion();
     expect(partida.jugadores.find((j) => j.id === "3").estaVivo).toBe(false);
     expect(partida.chat.length).toBe(0); // No debe agregar el mensaje
   });
@@ -139,7 +142,7 @@ describe("Clase Partida", () => {
     resultado = partida.elegirAlguacil();
     expect(partida.repetirVotacionAlguacil).toBe(true);
     expect(resultado).toBe(
-      "Empate en la elección del alguacil, se repiten las votaciones.",
+      "Empate en la elección del alguacil, se repiten las votaciones."
     );
     partida.votaAlguacil("1", "2"); // Jugador 1 vota por jugador 2
     partida.votaAlguacil("2", "3"); // Jugador 2 vota por jugador 3
@@ -178,7 +181,7 @@ describe("Clase Partida", () => {
     partida.votaNoche("2", "3"); // Los lobos no se ponen de acuerdo
     const result = partida.resolverVotosNoche();
     expect(result).toBe(
-      "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.",
+      "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
     );
     expect(partida.colaEliminaciones).toEqual([]);
     partida.gestionarTurno(); // Cambia a 'dia'
