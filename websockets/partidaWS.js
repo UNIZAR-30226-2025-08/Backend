@@ -1,7 +1,8 @@
-const { crearPartida, finalizarPartida } = require("../dao/partidaDao");
-const { salas } = require("./salaWS");
+const { salas, guardarSalasEnRedis } = require("./salaWS");
 const Partida = require("../partida"); // Importar la clase Partida
 const redisClient = require("../config/redis"); // Importar el cliente de Redis
+const PartidaDAO = require("../dao/partidaDao"); // Importar el DAO de Partida
+const JuegaDAO = require("../dao/juegaDao"); // Importar el DAO de juega
 
 let partidas = {}; // Almacenamiento en memoria de las partidas
 
@@ -70,33 +71,157 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la partida a iniciar.
    * @param {string} datos.idSala - ID de la sala donde se iniciará la partida.
+   * @param {string} datos.idLider - ID del lider que intenta iniciar la partida.
    *
-   * @emits error - Si la partida no se encuentra o no hay suficientes jugadores.
-   * @emits partidaIniciada - Si la partida se inicia correctamente.
-   * @param {string} idPartida - ID único de la partida.
-   * @param {Object} estado - Estado inicial de la partida.
+   * @emits error - Si la sala no se encuentra o el supuesto lider no tiene permisos.
+   * @param {string} mensaje - Mensaje de error
+   *
+   * @emits rolAsignado
+   * @param {Object} datos - Información del rol asignado a un jugador.
+   * @param {string} datos.rol - Rol asignado al jugador.
+   * @param {string} datos.idSala - ID de la sala en la que se asignó el rol.
+   *
+   * @emits enPartida
+   * @param {Object} datos - Notificación de inicio de partida.
+   * @param {string} datos.mensaje - Mensaje indicando el inicio de la partida.
+   *
+   * @param {Object} datos.sala - Estado de la sala sin revelar los roles de los jugadores.
+   * @param {Object[]} datos.sala.jugadores - Lista de jugadores en la sala.
+   * @param {string} datos.sala.jugadores.id - ID del jugador.
+   * @param {string} datos.sala.jugadores.nombre - Nombre del jugador.
+   * @param {boolean} datos.sala.jugadores.listo - Indica si el jugador estaba listo antes de iniciar la partida.
    */
-  /*socket.on("iniciarPartida", ({ idSala }) => {
-    const partida = obtenerPartida(socket, partidas, idPartida);
-    if (!partida) return;
+  socket.on("iniciarPartida", async ({ idSala, idLider }) => {
+    try {
+      const sala = salas[idSala];
 
-    if (sala.jugadores.length < 4) {
-      // Suponiendo un mínimo de 4 jugadores para iniciar
-      socket.emit(
-        "error",
-        "No hay suficientes jugadores para iniciar la partida"
+      if (!sala) {
+        console.log(salas);
+        socket.emit("error", "No existe la sala");
+        console.log("Error: idSala no existe en salas");
+        return;
+      }
+
+      if (sala.lider !== idLider) {
+        socket.emit(
+          "error",
+          "No tienes permisos para iniciar la partida. Debes de ser lider."
+        );
+        return;
+      }
+
+      if (!sala.maxRoles) {
+        console.error("Error: sala.maxRoles no están definidos", sala);
+        return;
+      }
+
+      // Distribuir los roles aleatoriamente
+      const rolesDisponibles = [];
+      Object.entries(sala.maxRoles).forEach(([rol, cantidad]) => {
+        for (let i = 0; i < cantidad; i++) {
+          rolesDisponibles.push(rol);
+        }
+      });
+
+      // Mezclar los roles aleatoriamente
+      const rolesAleatorios = rolesDisponibles.sort(() => Math.random() - 0.5);
+      if (sala.jugadores.length > rolesAleatorios.length) {
+        socket.emit("error", "Número de roles insuficiente");
+        return;
+      }
+
+      // Asignar los roles a los jugadores
+      sala.jugadores.forEach((jugador, index) => {
+        jugador.rol = rolesAleatorios[index];
+      });
+
+      // Notificar a cada jugador su rol individualmente
+      sala.jugadores.forEach((jugador) => {
+        if (!jugador.socketId) {
+          console.log(`Error: jugador ${jugador.nombre} no tiene socketId`);
+          return;
+        } else {
+          io.to(jugador.socketId).emit("rolAsignado", {
+            rol: jugador.rol,
+            idSala: sala.id,
+          });
+        }
+      });
+
+      sala.enPartida = true;
+      await guardarSalasEnRedis();
+
+      // Crear la partida usando el DAO de Partida
+      const partida = await PartidaDAO.crearPartida(sala.tipo); // Crear la partida en la base de datos PostgreSQL
+
+      // Inicializar el objeto partida
+      const nuevaPartida = new Partida(partida.idPartida, sala.jugadores); // Crear un objeto Partida con los jugadores
+
+      // Guardar la nueva partida en memoria
+      partidas[partida.idPartida] = nuevaPartida;
+
+      // Asignar usuarios a la partida en la base de datos
+      await Promise.all(
+        sala.jugadores.map((jugador) => {
+          switch (jugador.rol) {
+            case "Hombre lobo":
+              JuegaDAO.asignarUsuarioAPartida(
+                jugador.id,
+                partida.idPartida,
+                "lobo"
+              );
+              break;
+            case "Aldeano":
+              JuegaDAO.asignarUsuarioAPartida(
+                jugador.id,
+                partida.idPartida,
+                "aldeano"
+              );
+              break;
+            case "Vidente":
+              JuegaDAO.asignarUsuarioAPartida(
+                jugador.id,
+                partida.idPartida,
+                "vidente"
+              );
+              break;
+            case "Bruja":
+              JuegaDAO.asignarUsuarioAPartida(
+                jugador.id,
+                partida.idPartida,
+                "bruja"
+              );
+              break;
+            case "Cazador":
+              JuegaDAO.asignarUsuarioAPartida(
+                jugador.id,
+                partida.idPartida,
+                "cazador"
+              );
+              break;
+          }
+        })
       );
-      return;
-    }
 
-    const idPartida = `partida_${idSala}`;
-    partidas[idPartida] = new Partida(idPartida, sala.jugadores);
-    socket.emit("partidaIniciada", partidas[idPartida]); // Confirmar al creador
-    io.to(idSala).emit("partidaIniciada", {
-      idPartida,
-      estado: partidas[idPartida],
-    });
-  });*/
+      await guardarPartidasEnRedis();
+
+      // Notificar a todos que la partida ha comenzado
+      io.to(idSala).emit("enPartida", {
+        mensaje: "¡La partida ha comenzado!",
+        sala: {
+          ...sala,
+          jugadores: sala.jugadores.map((j) => ({
+            id: j.id,
+            nombre: j.nombre,
+            listo: j.listo,
+          })), // No enviamos los roles de otros jugadores
+        },
+      });
+    } catch (error) {
+      console.error("Error en iniciarPartida:", error);
+      socket.emit("error", "Error interno del servidor");
+    }
+  });
 
   /**
    * Cambia el turno de la partida y aplica las eliminaciones pendientes.
