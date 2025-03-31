@@ -208,6 +208,7 @@ const manejarConexionPartidas = (socket, io) => {
       // Notificar a todos que la partida ha comenzado
       io.to(idSala).emit("enPartida", {
         mensaje: "¡La partida ha comenzado!",
+        partidaID: partida.idPartida,
         sala: {
           ...sala,
           jugadores: sala.jugadores.map((j) => ({
