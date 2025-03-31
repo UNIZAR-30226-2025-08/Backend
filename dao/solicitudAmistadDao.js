@@ -61,7 +61,7 @@ class SolicitudAmistadDAO {
     } catch (error) {
       await client.query("ROLLBACK");
       console.error("Error al enviar solicitud de amistad:", error);
-      throw new Error("No se pudo enviar la solicitud de amistad.");
+      throw new Error(error.message);
     } finally {
       client.release();
     }

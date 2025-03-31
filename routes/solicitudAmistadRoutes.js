@@ -45,7 +45,7 @@ router.post("/enviar", async (req, res) => {
     );
     res.status(200).json({ mensaje: "Solicitud enviada", solicitud });
   } catch (error) {
-    res.status(500).json({ error: "Error al enviar solicitud" });
+    res.status(500).json({ error: error.message });
   }
 });
 
