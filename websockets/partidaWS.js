@@ -215,6 +215,7 @@ const manejarConexionPartidas = (socket, io) => {
           jugadores: nuevaPartida.jugadores.map((j) => ({
             id: j.id,
             nombre: j.nombre,
+            avatar: j.avatar,
             listo: j.listo,
             rol: j.rol,
             estaVivo: j.estaVivo,

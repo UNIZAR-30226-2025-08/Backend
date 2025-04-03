@@ -104,7 +104,7 @@ const manejarConexionSalas = (socket, io) => {
         contrasena,
         maxJugadores,
         maxRoles,
-        jugadores: [{ ...usuario, socketId: socket.id }],
+        jugadores: [{ ...usuario, avatar: usuario.avatar, socketId: socket.id }],
         lider: usuario.id,
         codigoInvitacion,
         enPartida: false,
@@ -190,7 +190,7 @@ const manejarConexionSalas = (socket, io) => {
       }
 
       // Agregar el jugador a la sala
-      sala.jugadores.push({ ...usuario, socketId: socket.id });
+      sala.jugadores.push({ ...usuario, avatar: usuario.avatar, socketId: socket.id });
       socket.join(idSala);
 
       await guardarSalasEnRedis(); // Guardar cambios en Redis
@@ -202,6 +202,7 @@ const manejarConexionSalas = (socket, io) => {
       io.to(idSala).emit("jugadorUnido", {
         nombre: usuario.nombre,
         id: usuario.id,
+        avatar: usuario.avatar,
       });
 
       // Retrasar la actualización de la sala para disimular la reconexión
