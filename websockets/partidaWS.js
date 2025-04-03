@@ -205,16 +205,23 @@ const manejarConexionPartidas = (socket, io) => {
 
       await guardarPartidasEnRedis();
 
+      console.log("Jugadores que se envían al frontend:", nuevaPartida.jugadores);
       // Notificar a todos que la partida ha comenzado
       io.to(idSala).emit("enPartida", {
         mensaje: "¡La partida ha comenzado!",
         partidaID: partida.idPartida,
         sala: {
           ...sala,
-          jugadores: sala.jugadores.map((j) => ({
+          jugadores: nuevaPartida.jugadores.map((j) => ({
             id: j.id,
             nombre: j.nombre,
             listo: j.listo,
+            rol: j.rol,
+            estaVivo: j.estaVivo,
+            esAlguacil: j.esAlguacil,
+            haVisto: j.haVisto,
+            pocionCuraUsada: j.pocionCuraUsada,
+            pocionMatarUsada: j.pocionMatarUsada,
           })), // No enviamos los roles de otros jugadores
         },
       });
@@ -483,6 +490,24 @@ const manejarConexionPartidas = (socket, io) => {
 
     const resultado = partida.aplicarEliminaciones();
     callback({ mensaje: resultado });
+  });
+
+  socket.on("obtenerEstadoPartida", ({ idPartida }) => {
+    // Obtenemos la partida en memoria
+    const partida = partidas[idPartida];
+    if (!partida) {
+      socket.emit("estadoPartida", {
+        error: "No se encontró la partida con ese ID",
+        jugadores: [],
+      });
+      return;
+    }
+  
+    // Si existe, enviamos el array de jugadores
+    socket.emit("estadoPartida", {
+      mensaje: "Estado actual de la partida",
+      jugadores: partida.jugadores,
+    });
   });
 };
 
