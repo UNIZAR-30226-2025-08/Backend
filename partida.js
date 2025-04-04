@@ -11,21 +11,19 @@ class Partida {
     this.idPartida = idPartida;
     this.estado = "en_curso"; // Estado de la partida ('en_curso', 'terminada')
     this.turno = "dia"; // Fase actual: 'dia' o 'noche'. La partida empieza de día
-    this.jugadores = jugadores.map((jugador) => {
-      console.log("Jugador recibido:", jugador); // Imprime el jugador recibido
-      return {
-        id: jugador.id,
-        nombre: jugador.nombre,
-        socketId: jugador.socketId,
-        rol: jugador.rol,
-        avatar: jugador.avatar,
-        estaVivo: true,
-        esAlguacil: false,
-        pocionCuraUsada: jugador.rol === "Bruja" ? false : undefined,
-        pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined,
-        haVisto: jugador.rol === "Vidente" ? false : undefined,
-      };
-    });
+    this.jugadores = jugadores.map((jugador) => ({
+      // Array de jugadores con sus roles
+      id: jugador.id, // ID del jugador
+      nombre: jugador.nombre, // Nombre del jugador
+      socketId: jugador.socketId, // ID del socket del jugador
+      rol: jugador.rol, // Rol asignado (por ejemplo: 'Hombre lobo', 'Bruja', 'Vidente','Cazador','Aldeano')
+      avatar: jugador.avatar, // Avatar del jugador
+      estaVivo: true, // ¿Está vivo?
+      esAlguacil: false, // ¿Es alguacil?
+      pocionCuraUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de vida
+      pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de muerte
+      haVisto: jugador.rol === "Vidente" ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
+    }));
     this.chat = []; // Mensajes de chat (día: global, noche: solo lobos)
     this.votosAlguacil = {}; // Votos para elegir al alguacil
     this.votos = {}; // Votos de los jugadores durante el día

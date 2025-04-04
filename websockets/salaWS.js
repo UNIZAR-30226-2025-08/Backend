@@ -104,7 +104,9 @@ const manejarConexionSalas = (socket, io) => {
         contrasena,
         maxJugadores,
         maxRoles,
-        jugadores: [{ ...usuario, avatar: usuario.avatar, socketId: socket.id }],
+        jugadores: [
+          { ...usuario, avatar: usuario.avatar, socketId: socket.id },
+        ],
         lider: usuario.id,
         codigoInvitacion,
         enPartida: false,
@@ -190,7 +192,11 @@ const manejarConexionSalas = (socket, io) => {
       }
 
       // Agregar el jugador a la sala
-      sala.jugadores.push({ ...usuario, avatar: usuario.avatar, socketId: socket.id });
+      sala.jugadores.push({
+        ...usuario,
+        avatar: usuario.avatar,
+        socketId: socket.id,
+      });
       socket.join(idSala);
 
       await guardarSalasEnRedis(); // Guardar cambios en Redis
@@ -435,4 +441,9 @@ const manejarDesconexionSalas = async (socket, io) => {
 // Cargar salas al iniciar el servidor
 cargarSalasDesdeRedis();
 
-module.exports = { manejarConexionSalas, manejarDesconexionSalas, guardarSalasEnRedis, salas };
+module.exports = {
+  manejarConexionSalas,
+  manejarDesconexionSalas,
+  guardarSalasEnRedis,
+  salas,
+};
