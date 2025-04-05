@@ -31,11 +31,13 @@ class Partida {
     this.repetirVotosDia = false; // Controla si hubo un empate previo en las votaciones del día
     this.votosNoche = {}; // Votos de los lobos durante la noche
     this.colaEliminaciones = []; // Cola de eliminación al final del turno
-    this.votacionActiva = false; // Indica si hay una votación activa
     this.temporizadorVotacion = null; // Temporizador para la votación
+    this.temporizadorHabilidad = null; // Temporizador para la habilidad
     this.tiempoLimiteVotacion = 30000; // Tiempo límite para la votación en milisegundos (30 segundos)
     this.tiempoLimiteHabilidad = 15000; // Tiempo límite para usar habilidades en milisegundos (15 segundos)
     this.votacionAlguacilActiva = true; // Indica si hay una votación activa para elegir al alguacil
+    this.votacionLobosActiva = true; // Indica si hay una votación activa para los lobos
+    this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
                                      // la victima elegida por los lobos es la que se elimina al final del turno.
   }
@@ -73,7 +75,7 @@ class Partida {
     // Reiniciar la habilidad de la vidente cuando comienza una nueva noche
     if (this.turno === "noche") {
       this.jugadores.forEach((jugador) => {
-        if (jugador.rol === "Vidente") {
+        if (jugador.rol === "Vidente" && jugador.estaVivo) {
           jugador.haVisto = false;
         }
       });
@@ -165,23 +167,21 @@ class Partida {
       const alguacil = this.jugadores.find((j) => j.id === candidatos[0]);
       if (alguacil) alguacil.esAlguacil = true;
       this.repetirVotacionAlguacil = false; // Reiniciar flag de repetición
-      this.votacionActiva = false; // Desactivar la votación
-      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
+      clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
         alguacil: candidatos[0],
         mensaje: `El jugador ${candidatos[0]} ha sido elegido como alguacil.`,
       };
     } else {
       if (this.repetirVotacionAlguacil) {
-        this.votacionActiva = false; // Desactivar la votación
-        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
+        clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Segundo empate consecutivo, no se elige alguacil.";
       } else {
         this.repetirVotacionAlguacil = true;
         this.votosAlguacil = {}; // Resetear votos para repetir elección
-        this.votacionActiva = false; // Desactivar la votación
+        this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Empate en la elección del alguacil, se repiten las votaciones.";
       }
@@ -195,7 +195,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador por el que vota.
    */
   votaAlguacil(idJugador, idObjetivo) {
-    if (this.turno !== "dia" || !this.votacionActiva) return;
+    if (this.turno !== "dia" || !this.votacionAlguacilActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
@@ -240,7 +240,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   votaNoche(idJugador, idObjetivo) {
-    if (this.turno !== "noche" || !this.votacionActiva) return;
+    if (this.turno !== "noche" || !this.votacionLobosActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
@@ -451,7 +451,7 @@ class Partida {
    * - Si hay empate en la segunda votación: "Segundo empate consecutivo, nadie es eliminado."
    */
   resolverVotosDia() {
-    if (this.turno !== "dia") return;
+    if (this.turno !== "dia" || !this.votacionActiva) return;
     const conteoVotos = {};
 
     for (const votante in this.votos) {
@@ -475,7 +475,7 @@ class Partida {
     if (candidatos.length === 1) {
       this.agregarAColaDeEliminacion(candidatos[0]);
       this.repetirVotosDia = false; // Se reinicia al resolver una votación sin empate
-      this.votacionActiva = false; // Desactivar la votación
+      this.votacionActiva = false; // Desactivar la votación de día
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
         mensaje: `El jugador ${candidatos[0]} será eliminado al final del día.`,
@@ -483,13 +483,13 @@ class Partida {
       }
     } else {
       if (this.repetirVotosDia) {
-        this.votacionActiva = false; // Desactivar la votación
+        this.votacionActiva = false; // Desactivar la votación de día
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Segundo empate consecutivo, nadie es eliminado.";
       } else {
         this.repetirVotosDia = true;
         this.votos = {}; // Reiniciar votos para repetir la votación
-        this.votacionActiva = false; // Desactivar la votación
+        this.votacionActiva = false; // Desactivar la votación de día
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
         return "Empate, se repiten las votaciones.";
       }
@@ -505,7 +505,7 @@ class Partida {
    * - Si no hay acuerdo: "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
    */
   resolverVotosNoche() {
-    if (this.turno !== "noche") return;
+    if (this.turno !== "noche" || !this.votacionLobosActiva) return;
     const conteoVotos = {};
 
     for (const idLobo in this.votosNoche) {
@@ -527,11 +527,11 @@ class Partida {
     if (victimaElegida) {
       this.agregarAColaDeEliminacion(victimaElegida);
       this.victimaElegidaLobos = victimaElegida; // Se guarda la victima elegida por los lobos
-      this.votacionActiva = false; // Desactivar la votación
+      this.votacionLobosActiva = false; // Desactivar la votación
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return `Los lobos van a atacar al jugador ${victimaElegida}. Será eliminado al final de la noche.`;
     } else {
-      this.votacionActiva = false; // Desactivar la votación
+      this.votacionLobosActiva = false; // Desactivar la votación
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.";
     }
@@ -667,28 +667,53 @@ class Partida {
     }
   }
 
-  // Método para iniciar la votación en el día
-  iniciarVotacion() {
-    this.votacionActiva = true;
-    this.temporizadorVotacion = setTimeout(() => {
-      this.resolverVotosDia(); // Resuelve la votación si se agota el tiempo
-    }, this.tiempoLimiteVotacion);
-  }
-
   // Método para iniciar la votación del alguacil
   iniciarVotacionAlguacil() {
-    this.votacionActiva = true;
+    this.votacionAlguacilActiva = true;
     this.temporizadorVotacion = setTimeout(() => {
-      this.elegirAlguacil(); // Resuelve la votación si se agota el tiempo
-    }, this.tiempoLimiteVotacion);
+      this.votacionAlguacilActiva = false;
+      this.temporizadorVotacion = null; // Reiniciar el temporizador
+    }, this.tiempoLimiteVotacion); // Tiempo límite para la votación del alguacil
   }
 
   // Método para iniciar la votación de los hombres lobos en la noche
   iniciarVotacionLobos() {
+    this.votacionLobosActiva = true;
+    this.temporizadorVotacion = setTimeout(() => {
+      this.votacionLobosActiva = false;
+      this.temporizadorVotacion = null; // Reiniciar el temporizador
+    }, this.tiempoLimiteVotacion);
+  }
+
+  // Método para iniciar la votación en el día
+  iniciarVotacion() {
     this.votacionActiva = true;
     this.temporizadorVotacion = setTimeout(() => {
-      this.resolverVotosNoche(); // Resuelve la votación si se agota el tiempo
+      this.votacionActiva = false;
+      this.temporizadorVotacion = null; // Reiniciar el temporizador
     }, this.tiempoLimiteVotacion);
+  }
+
+  // Método para iniciar la habilidad de la vidente
+  iniciarHabilidadVidente() {
+    // La variable de los jugadores videntes 'haVisto' se pone a false al gestionar el turno y cambiar de turno a noche
+    // La variable de los jugadores videntes 'haVisto' se pone a true al usar la habilidad o al expirar el tiempo límite
+    this.temporizadorHabilidad = setTimeout(() => {
+      // Pone a true la variable 'haVisto' a todos los jugadores videntes
+      this.jugadores.forEach((j) => {
+        if (j.rol === "Vidente") {
+          j.haVisto = true;
+        }
+      });
+      this.temporizadorHabilidad = null; // Reiniciar el temporizador
+    }, this.tiempoLimiteHabilidad);
+  }
+
+  // Método para iniciar la habilidad de la bruja
+  iniciarHabilidadBruja() {
+    this.temporizadorHabilidad = setTimeout(() => {
+      this.temporizadorHabilidad = null; // Reiniciar el temporizador
+    }, this.tiempoLimiteHabilidad);
   }
 }
 

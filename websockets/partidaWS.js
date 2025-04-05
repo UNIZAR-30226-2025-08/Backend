@@ -209,6 +209,7 @@ const manejarConexionPartidas = (socket, io) => {
         "Jugadores que se envían al frontend:",
         nuevaPartida.jugadores
       );
+
       // Notificar a todos que la partida ha comenzado
       io.to(idSala).emit("enPartida", {
         mensaje: "¡La partida ha comenzado!",
@@ -224,46 +225,11 @@ const manejarConexionPartidas = (socket, io) => {
           })), // No enviamos los roles de otros jugadores
         },
       });
+
+      await manejarFasesPartida(nuevaPartida, idSala);
     } catch (error) {
       console.error("Error en iniciarPartida:", error);
       socket.emit("error", "Error interno del servidor");
-    }
-  });
-
-  /**
-   * Cambia el turno de la partida y aplica las eliminaciones pendientes.
-   * @event gestionarTurno
-   *
-   * @param {Object} datos - Datos de la partida.
-   * @param {string} datos.idPartida - ID de la partida en curso.
-   *
-   * @emits error - Si la partida no se encuentra.
-   * @emits turnoCambiado - Si el turno se cambia correctamente.
-   * @emits partidaFinalizada - Si la partida ha terminado.
-   * @param {Object} estado - Estado actualizado de la partida.
-   * @param {string} mensaje - Mensaje de confirmación del cambio de turno o resultado de la partida.
-   */
-  socket.on("gestionarTurno", async ({ idPartida }) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
-
-    const resultado = partida.gestionarTurno(); // Cambiar turno y aplicar eliminaciones
-    if (resultado === "El turno ha cambiado.") {
-      // La partida sigue en curso, notificar el cambio de turno
-      io.to(idPartida).emit("turnoCambiado", {
-        estado: partida,
-        mensaje: resultado,
-      });
-      // Guardar cambios en Redis después de gestionar el turno
-      await guardarPartidasEnRedis();
-    } else {
-      // La partida ha terminado, notificar el resultado
-      io.to(idPartida).emit("partidaFinalizada", {
-        mensaje: resultado.mensaje,
-        ganador: resultado.ganador,
-      });
-      await eliminarPartidaDeRedis(idPartida); // Eliminar de Redis
-      delete partidas[idPartida]; // Eliminar de la memoria
     }
   });
 
@@ -312,34 +278,13 @@ const manejarConexionPartidas = (socket, io) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
     if (!partida) return;
 
-    partida.votaAlguacil(idJugador, idObjetivo);
-    io.to(idPartida).emit("votoAlguacilRegistrado", { estado: partida });
+    if(partida.votacionAlguacilActiva === true){
+      partida.votaAlguacil(idJugador, idObjetivo);
+      io.to(idPartida).emit("votoAlguacilRegistrado", { estado: partida });
 
-    // Guardar cambios en Redis después de registrar un voto para elegir alguacil
-    await guardarPartidasEnRedis();
-  });
-
-  /// !!!! ESTO DESDE DONDE SE LLAMARÍA????? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  /**
-   * Elige al alguacil de la partida.
-   * @event elegirAlguacil
-   *
-   * @param {Object} datos - Datos de la partida.
-   * @param {string} datos.idPartida - ID de la partida en curso.
-   *
-   * @emits error - Si la partida no se encuentra.
-   * @emits alguacilElegido - Si el alguacil es elegido correctamente.
-   * @param {string} mensaje - Mensaje con el resultado de la elección.
-   */
-  socket.on("elegirAlguacil", async ({ idPartida }) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
-
-    const mensaje = partida.elegirAlguacil();
-    io.to(idPartida).emit("alguacilElegido", { estado: partida, mensaje });
-
-    // Guardar cambios en Redis después de elegir alguacil
-    await guardarPartidasEnRedis();
+      // Guardar cambios en Redis después de registrar un voto para elegir alguacil
+      await guardarPartidasEnRedis();
+    }
   });
 
   /**
@@ -389,27 +334,35 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del mensaje.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que quiere revelar el rol.
-   * @param {number} datos.idObjetivo - ID del jugador objetivo del vidente.
+   * @param {number} datos.idJugador - ID del jugador (supuesto vidente) que quiere revelar el rol de otro jugador.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
    *
    * @emits error - Si la partida no se encuentra.
    * @param {string} mensaje - Mensaje con el resultado de la revelación.
+   * @param {string} rol - Rol del jugador objetivo.
    */
   socket.on(
     "videnteRevela",
     async ({ idPartida, idJugador, idObjetivo }, callback) => {
-      const partida = obtenerPartida(socket, idPartida);
-      if (!partida) return;
-
-      const resultado = partida.videnteRevela(idJugador, idObjetivo);
-      callback({ mensaje: resultado });
-
-      // Guardar cambios en Redis después de revelar el rol
-      await guardarPartidasEnRedis();
+      try {
+        const partida = obtenerPartida(socket, idPartida);
+        if (!partida) {
+          return callback({ mensaje: "Partida no encontrada", rol: null });
+        }
+    
+        const resultado = partida.videnteRevela(idJugador, idObjetivo);
+        callback({ mensaje: resultado.mensaje, rol: resultado.rol });
+    
+        // Guardar cambios en Redis después de revelar el rol
+        await guardarPartidasEnRedis();
+      } catch (error) {
+        console.error("Error en videnteRevela:", error);
+        callback({ mensaje: "Error al revelar el rol", rol: null });
+      }
     }
   );
 
-  /*  NECESITAMOS ESTA FUNCIÓN????
+  /*  NECESITAMOS ESTA FUNCIÓN???? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   socket.on("obtenerJugadoresEnColaEliminacion", ({ idPartida }, callback) => {
     const partida = obtenerPartida(socket, partidas, idPartida);
     if (!partida) return;
@@ -419,6 +372,50 @@ const manejarConexionPartidas = (socket, io) => {
   });
   */
 
+  /** 
+   * Permite a la bruja ver la victima elegida por los lobos.
+   *
+   * @event verVictimaElegidaLobos
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {number} datos.idJugador - ID del jugador bruja.
+   *
+   * @emits error - Si la partida no se encuentra.
+   * 
+   * @emits verVictimaElegidaLobos - Si la victima elegida por los lobos se ve correctamente.
+   * @param {Object} resultado - Resultado de la acción.
+   * @param {string} resultado.mensaje - Mensaje con el nombre de la victima elegida por los lobos.
+   * @param {string} resultado.victima - ID de la victima elegida por los lobos.
+   */
+  socket.on("verVictimaElegidaLobos", ({ idPartida, idJugador }, callback) => {
+    const partida = obtenerPartida(socket, idPartida);
+    if (!partida) return;
+
+    const resultado = partida.verVictimaElegidaLobos(idJugador);
+    callback(resultado);
+  });
+
+
+  /**
+   * Permite a la bruja usar una de sus pociones.
+   * Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones.
+   *
+   * @event usaPocionBruja
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {number} datos.idJugador - ID del jugador que usa la poción.
+   * @param {string} datos.tipo - Tipo de poción ('curar' o 'eliminar').
+   * @param {number} datos.idObjetivo - ID del jugador objetivo de la poción.
+   *
+   * @emits error - Si la partida no se encuentra.
+   * @emits usaPocionBruja - Si la poción se usa correctamente.
+   * @param {Object} partida - Estado actualizado de la partida.
+   * @param {string} partida.mensaje - Mensaje con el resultado de la acción.
+   * @param {string} partida.tipo - Tipo de poción ('curar' o 'eliminar').
+   * @param {number} partida.idObjetivo - ID del jugador objetivo de la poción.
+   */
   socket.on(
     "usaPocionBruja",
     ({ idPartida, idJugador, tipo, idObjetivo }, callback) => {
@@ -460,36 +457,6 @@ const manejarConexionPartidas = (socket, io) => {
       guardarPartidasEnRedis();
     }
   );
-
-  socket.on("resolverVotosDia", ({ idPartida }, callback) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
-
-    const resultado = partida.resolverVotosDia();
-    callback({ mensaje: resultado });
-
-    // Guardar cambios en Redis después de resolver los votos del día
-    guardarPartidasEnRedis();
-  });
-
-  socket.on("resolverVotosNoche", ({ idPartida }, callback) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
-
-    const resultado = partida.resolverVotosNoche();
-    callback({ mensaje: resultado });
-
-    // Guardar cambios en Redis después de resolver los votos de la noche
-    guardarPartidasEnRedis();
-  });
-
-  socket.on("aplicarEliminaciones", ({ idPartida }, callback) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
-
-    const resultado = partida.aplicarEliminaciones();
-    callback({ mensaje: resultado });
-  });
 
   socket.on("obtenerEstadoPartida", ({ idPartida }) => {
     // Obtenemos la partida en memoria
@@ -537,5 +504,208 @@ const manejarDesconexionPartidas = (socket, io) => {
 
 // Cargar partidas al iniciar el servidor
 cargarPartidasDesdeRedis();
+
+const manejarFasesPartida = async (partida, idSala) => {
+  // Definición de funciones auxiliares
+
+  // Función auxiliar para verificar el fin de la partida
+  const verificarFinPartida = (resultado) => {
+    // La partida ha terminado, notificar el resultado
+    if (resultado.ganador) {
+      io.to(idSala).emit("partidaFinalizada", {
+        mensaje: resultado.mensaje,
+        ganador: resultado.ganador
+      });
+      eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis  
+      delete partida; // Eliminar de la memoria
+      return true;
+    }
+    return false;
+  };
+
+  // Fase de votación del alguacil
+  const manejarVotacionAlguacil = async () => {
+    // Fase 2: Iniciar votaciones para elegir alguacil
+    io.to(idSala).emit("iniciarVotacionAlguacil", { 
+      mensaje: "Inician las votaciones para elegir al alguacil." 
+    });
+    partida.iniciarVotacionAlguacil();
+
+    // Esperar a que termine la votación (por tiempo o por votos completos)
+    const checkVotacionAlguacil = setInterval(async () => {
+      if (partida.verificarVotos("alguacil") || !partida.votacionAlguacilActiva) {
+        clearInterval(checkVotacionAlguacil);
+        const resultadoAlguacil = partida.elegirAlguacil();
+        
+        if (resultadoAlguacil.includes("Empate")) {
+          // Notificar del primer empate y reiniciar la votación
+          io.to(idSala).emit("empateVotacionAlguacil", { mensaje: resultadoAlguacil });
+          partida.iniciarVotacionAlguacil(); // Reiniciar votación
+          
+          // Segunda votación
+          const checkSegundaVotacionAlguacil = setInterval(async () => {
+            if (partida.verificarVotos("alguacil") || !partida.votacionAlguacilActiva) {
+              clearInterval(checkSegundaVotacionAlguacil);
+              const resultadoAlguacil2 = partida.elegirAlguacil();
+              if (resultadoAlguacil2.includes("Segundo")) {
+                // Notificar del segundo empate. No se elige a ningún jugador como alguacil.
+                io.to(idSala).emit("segundoEmpateVotacionAlguacil", { mensaje: resultadoAlguacil2 });
+              } else {
+                // Notificar quien es el alguacil elegido
+                io.to(idSala).emit("alguacilElegido", { mensaje: resultadoAlguacil2.mensaje, alguacil: resultadoAlguacil2.alguacil });
+              }
+              await iniciarCicloPartida();
+            }
+          }, 1000);
+        } else {
+          // Notificar quien es el alguacil elegido
+          io.to(idSala).emit("alguacilElegido", { mensaje: resultadoAlguacil.mensaje, alguacil: resultadoAlguacil.alguacil });
+          await iniciarCicloPartida();
+        }
+      }
+    }, 1000); // Verificar cada segundo
+  };
+
+  // Ciclo principal de la partida. Alterna los turnos de noche y día hasta que haya un ganador
+  const iniciarCicloPartida = async () => {
+    // Fase 3: Noche
+    io.to(idSala).emit("nocheComienza", { mensaje: "La noche ha comenzado." });
+    
+    // Sub-fase 1: Habilidad de la vidente
+    io.to(idSala).emit("habilidadVidente", { 
+      mensaje: "La vidente tiene 15 segundos para usar su habilidad." 
+    });
+    partida.iniciarHabilidadVidente();
+    
+    const checkVidente = setInterval(() => {
+      const todosVidentesUsaron = partida.jugadores
+        .filter(j => j.rol === "Vidente" && j.estaVivo)
+        .every(j => j.haVisto);
+        
+      if (todosVidentesUsaron || !partida.temporizadorHabilidad) {
+        clearInterval(checkVidente);
+        manejarFaseHombresLobos();
+      }
+    }, 1000);
+
+    // Sub-fase 2: Hombres lobos
+    const manejarFaseHombresLobos = () => {
+      io.to(idSala).emit("turnoHombresLobos", {
+        mensaje: "Los hombres lobos tienen 30 segundos para elegir una víctima."
+      });
+      partida.iniciarVotacionLobos();
+
+      const checkVotosLobos = setInterval(async () => {
+        if (partida.verificarVotos("noche") || !partida.votacionLobosActiva) {
+          clearInterval(checkVotosLobos);
+          // Indicar a los hombres lobos el resultado de la votación nocturna
+          const resultadoVotosNoche = partida.resolverVotosNoche();
+          await guardarPartidasEnRedis();
+          const preparacionResultado = partida.prepararResultadoVotacionNoche(resultadoVotosNoche);
+          preparacionResultado.forEach(({ socketId, mensaje }) => {
+            io.to(socketId).emit("resultadoVotosNoche", { mensaje });
+          });
+          manejarFaseBruja();
+        }
+      }, 1000);
+    };
+
+    // Sub-fase 3: Habilidad de la bruja
+    const manejarFaseBruja = () => {
+      io.to(idSala).emit("habilidadBruja", {
+        mensaje: "La bruja tiene 30 segundos para usar su poción."
+      });
+      partida.iniciarHabilidadBruja();
+
+      const checkBruja = setInterval(async () => {
+        const todasBrujasUsaron = partida.jugadores
+        .filter(j => j.rol === "Bruja" && j.estaVivo)
+        .every(j => j.pocionCuraUsada && j.pocionMuerteUsada);
+        
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DE MOMENTO SOLO PASAMOS DE FASE SI
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LAS BRUJAS HAN USADOS LAS DOS POCIONES O EL TIEMPO LIMITE HA EXPIRADO
+        if (todasBrujasUsaron || !partida.temporizadorHabilidad) {
+          clearInterval(checkBruja);
+          const resultadoTurno2 = partida.gestionarTurno();
+          
+          const finPartida2 = verificarFinPartida(resultadoTurno2);
+          await guardarPartidasEnRedis();
+          if (partida.estado === "en_curso" && !finPartida2) {
+            await manejarFaseDia(); // Pasar a la fase de día
+          }
+        }
+      }, 1000);
+    };
+
+    // Fase 4: Día
+    const manejarFaseDia = () => {
+      io.to(idSala).emit("diaComienza", {
+        mensaje: "Es de día, los jugadores tienen 1 minuto para decidir quién será eliminado."
+      });
+      partida.iniciarVotacion();
+
+      const checkVotosDia = setInterval(async () => {
+        if (partida.verificarVotos("dia") || !partida.votacionActiva) {
+          clearInterval(checkVotosDia);
+          // Resolver votos del día
+          const resultadoVotosDia = partida.resolverVotosDia();
+          await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
+          if (resultadoVotosDia.includes("Empate")) {
+            // Notificar del primer empate y reiniciar la votación
+            io.to(idSala).emit("empateVotacionDia", { mensaje: resultadoVotosDia });
+            partida.iniciarVotacion(); // Reiniciar votación
+            
+            // Segunda votación
+            const checkSegundaVotacion = setInterval(async () => {
+              if (partida.verificarVotos("dia") || !partida.votacionActiva) {
+                clearInterval(checkSegundaVotacion);
+                const resultadoVotosDia2 = partida.resolverVotosDia();
+                await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
+
+                if (resultadoVotosDia2.includes("Segundo")) {
+                  // Notificar del segundo empate. No se elige a ningún jugador para ser eliminado.
+                  io.to(idSala).emit("segundoEmpateVotacionDia", { mensaje: resultadoVotosDia2 });
+                } else {
+                  // Notificar quien es el jugador a eliminar
+                  io.to(idSala).emit("resultadoVotosDia", { mensaje: resultadoVotosDia2.mensaje, jugadorAEliminar: resultadoVotosDia2.jugadorAEliminar });
+                }
+
+                const resultadoTurno = partida.gestionarTurno();
+                // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto' 
+                // se pone a false si se ha cambiado de turno a noche
+                const finPartida = verificarFinPartida(resultadoTurno);
+                await guardarPartidasEnRedis();
+                if (partida.estado === "en_curso" && !finPartida) {
+                  // Volver a la fase de noche
+                  await iniciarCicloPartida();
+                }
+              }
+            }, 1000);
+          } else {
+            // Notificar quien es el jugador a eliminar
+            io.to(idSala).emit("resultadoVotosDia", { mensaje: resultadoVotosDia.mensaje, jugadorAEliminar: resultadoVotosDia.jugadorAEliminar });
+
+            const resultadoTurno2 = partida.gestionarTurno();
+            // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto' 
+            // se pone a false si se ha cambiado de turno a noche
+            const finPartida2 = verificarFinPartida(resultadoTurno2);
+            await guardarPartidasEnRedis();
+            if (partida.estado === "en_curso" && !finPartida2) {
+              // Volver a la fase de noche
+              await iniciarCicloPartida();
+            }
+          }
+        }
+      }, 1000);
+    };
+  };
+
+  // Fase 1: Esperar 30 segundos antes de iniciar las votaciones de alguacil
+  io.to(idSala).emit("esperaInicial", { mensaje: "La partida comenzará en 30 segundos" });
+  await new Promise(resolve => setTimeout(resolve, 30000)); // 30 segundos de espera inicial
+
+  // Comenzar la secuencia de la partida
+  await manejarVotacionAlguacil();
+};
 
 module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
