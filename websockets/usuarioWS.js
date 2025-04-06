@@ -107,6 +107,28 @@ const manejarConexionUsuarios = (socket, io) => {
   });
 
   /**
+   * Escucha cuando un usuario se desconecta manualmente (desde el frontend)
+   * @event desconectarUsuario
+   */
+  socket.on("desconectarUsuario", async ({ idUsuario }) => {
+    // Primero eliminamos del objeto de conectados
+    delete usuariosConectados[idUsuario];
+
+    // Ahora notificamos a todos los amigos que este usuario se ha desconectado
+    const amigos = await obtenerAmigos(idUsuario);
+    amigos.forEach((idAmigo) => {
+      if (usuariosConectados[idAmigo]) {
+        io.to(usuariosConectados[idAmigo]).emit("estadoAmigo", {
+          idUsuario,
+          en_linea: false,
+        });
+      }
+    });
+
+    console.log(`Usuario ${idUsuario} se desconectó voluntariamente`);
+  });
+
+  /**
    * Un usuario solicita el estado de sus amigos.
    * @event solicitarEstadoAmigos
    *

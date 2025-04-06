@@ -75,7 +75,9 @@ router.post("/aceptar", async (req, res) => {
   const { idEmisor, idReceptor } = req.body;
   try {
     await SolicitudAmistadDAO.aceptarSolicitud(idEmisor, idReceptor);
-    res.status(200).json({ mensaje: "Solicitud de amistad aceptada y amistad creada." });
+    res
+      .status(200)
+      .json({ mensaje: "Solicitud de amistad aceptada y amistad creada." });
   } catch (error) {
     res
       .status(500)
