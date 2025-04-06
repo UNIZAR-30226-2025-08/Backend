@@ -54,7 +54,7 @@ const ServidorWS = (server) => {
 
 module.exports = ServidorWS;
 
-// Iniciar la partida
+// Iniciar la partida !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /*socket.on("iniciarPartida", async ({ idPartida }) => {
       if (salas[idPartida]) {
         // Obtener jugadores de la sala

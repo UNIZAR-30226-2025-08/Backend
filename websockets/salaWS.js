@@ -121,7 +121,7 @@ const manejarConexionSalas = (socket, io) => {
 
       // Emitir la lista de salas actualizada a todos los clientes conectados
       io.emit("listaSalas", Object.values(salas));
-    }
+    },
   );
 
   /**
@@ -155,7 +155,7 @@ const manejarConexionSalas = (socket, io) => {
     async ({ idSala, usuario, contrasena, codigoInvitacion }) => {
       const sala = salas[idSala];
       if (!sala) {
-        socket.emit("error", "Sala inexistente");
+        socket.emit("error", "La sala no existe");
         return;
       }
 
@@ -163,7 +163,7 @@ const manejarConexionSalas = (socket, io) => {
       if (expulsados[idSala] && expulsados[idSala].includes(usuario.id)) {
         socket.emit(
           "error",
-          "Estás expulsado de esta sala y no puedes unirte nuevamente."
+          "Estás expulsado de esta sala y no puedes unirte nuevamente.",
         );
         return;
       }
@@ -180,7 +180,7 @@ const manejarConexionSalas = (socket, io) => {
 
       if (!accesoLibre && !accesoPorCodigo && !accesoPorContrasena) {
         console.log(
-          "Acceso denegado: No cumples con los requisitos para unirte a la sala."
+          "Acceso denegado: No cumples con los requisitos para unirte a la sala.",
         );
         return socket.emit("error", "Acceso denegado");
       }
@@ -188,6 +188,13 @@ const manejarConexionSalas = (socket, io) => {
       // Verificar si la sala tiene espacio para más jugadores
       if (sala.jugadores.length >= sala.maxJugadores) {
         socket.emit("error", "Sala llena");
+        return;
+      }
+
+      // Evitar duplicados
+      const yaEsta = sala.jugadores.some((j) => j.id === usuario.id);
+      if (yaEsta) {
+        socket.emit("error", "Ya estás en esta sala");
         return;
       }
 
@@ -215,7 +222,7 @@ const manejarConexionSalas = (socket, io) => {
       setTimeout(() => {
         io.to(idSala).emit("actualizarSala", sala);
       }, 1000); // 1 segundo de retraso
-    }
+    },
   );
 
   /**
@@ -417,7 +424,7 @@ const manejarDesconexionSalas = async (socket, io) => {
             delete salas[idSala];
             await eliminarSalaDeRedis(idSala); // Eliminar de Redis
             console.log(
-              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`
+              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`,
             );
           }
         }, 5000);
