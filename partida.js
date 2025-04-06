@@ -143,7 +143,7 @@ class Partida {
    * - Si hay empate en la segunda votación: "Segundo empate consecutivo, no se elige alguacil."
    */
   elegirAlguacil() {
-    if (this.turno !== "dia" || !this.votacionAlguacilActiva) return;
+    if (this.turno !== "dia") return;
     const conteoVotos = {};
     for (const votante in this.votosAlguacil) {
       const votado = this.votosAlguacil[votante];
@@ -204,7 +204,7 @@ class Partida {
     // Verificar si todos jugadores han votado
     if (this.verificarVotos("alguacil")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.elegirAlguacil(); // Resuelve la votación de alguacil
+      //this.elegirAlguacil(); // Resuelve la votación de alguacil
     }
   }
 
@@ -228,7 +228,7 @@ class Partida {
     // Verificar si todos los jugadores han votado
     if (this.verificarVotos("dia")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.resolverVotosDia(); // Resuelve la votación de día
+      //this.resolverVotosDia(); // Resuelve la votación de día
     }
   }
 
@@ -254,7 +254,7 @@ class Partida {
     // Verificar si todos los hombres lobos han votado
     if (this.verificarVotos("noche")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.resolverVotosNoche(); // Resuelve la votación de noche
+      //this.resolverVotosNoche(); // Resuelve la votación de noche
     }
   }
 
@@ -670,28 +670,29 @@ class Partida {
   // Método para iniciar la votación del alguacil
   iniciarVotacionAlguacil() {
     this.votacionAlguacilActiva = true;
-    this.temporizadorVotacion = setTimeout(() => {
+    /*this.temporizadorVotacion = setTimeout(() => {
       this.votacionAlguacilActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
     }, this.tiempoLimiteVotacion); // Tiempo límite para la votación del alguacil
+    */
   }
 
   // Método para iniciar la votación de los hombres lobos en la noche
   iniciarVotacionLobos() {
     this.votacionLobosActiva = true;
-    this.temporizadorVotacion = setTimeout(() => {
+    /*this.temporizadorVotacion = setTimeout(() => {
       this.votacionLobosActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteVotacion);
+    }, this.tiempoLimiteVotacion);*/
   }
 
   // Método para iniciar la votación en el día
   iniciarVotacion() {
     this.votacionActiva = true;
-    this.temporizadorVotacion = setTimeout(() => {
+    /*this.temporizadorVotacion = setTimeout(() => {
       this.votacionActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteVotacion);
+    }, this.tiempoLimiteVotacion);*/
   }
 
   // Método para iniciar la habilidad de la vidente
