@@ -226,7 +226,7 @@ const manejarConexionPartidas = (socket, io) => {
         },
       });
 
-      await manejarFasesPartida(nuevaPartida, idSala);
+      await manejarFasesPartida(nuevaPartida, idSala, io);
     } catch (error) {
       console.error("Error en iniciarPartida:", error);
       socket.emit("error", "Error interno del servidor");
@@ -505,7 +505,7 @@ const manejarDesconexionPartidas = (socket, io) => {
 // Cargar partidas al iniciar el servidor
 cargarPartidasDesdeRedis();
 
-const manejarFasesPartida = async (partida, idSala) => {
+const manejarFasesPartida = async (partida, idSala, io) => {
   // Definición de funciones auxiliares
 
   // Función auxiliar para verificar el fin de la partida
@@ -537,7 +537,7 @@ const manejarFasesPartida = async (partida, idSala) => {
         clearInterval(checkVotacionAlguacil);
         const resultadoAlguacil = partida.elegirAlguacil();
         
-        if (resultadoAlguacil.includes("Empate")) {
+        if (resultadoAlguacil && typeof resultadoAlguacil === 'object' && resultadoAlguacil.mensaje && resultadoAlguacil.alguacil && resultadoAlguacil.mensaje.includes("Empate")) {
           // Notificar del primer empate y reiniciar la votación
           io.to(idSala).emit("empateVotacionAlguacil", { mensaje: resultadoAlguacil });
           partida.iniciarVotacionAlguacil(); // Reiniciar votación
@@ -547,7 +547,7 @@ const manejarFasesPartida = async (partida, idSala) => {
             if (partida.verificarVotos("alguacil") || !partida.votacionAlguacilActiva) {
               clearInterval(checkSegundaVotacionAlguacil);
               const resultadoAlguacil2 = partida.elegirAlguacil();
-              if (resultadoAlguacil2.includes("Segundo")) {
+              if (resultadoAlguacil2 && resultadoAlguacil2.mensaje && resultadoAlguacil2.mensaje.includes("Segundo")) {
                 // Notificar del segundo empate. No se elige a ningún jugador como alguacil.
                 io.to(idSala).emit("segundoEmpateVotacionAlguacil", { mensaje: resultadoAlguacil2 });
               } else {
