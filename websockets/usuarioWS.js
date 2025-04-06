@@ -151,6 +151,34 @@ const manejarConexionUsuarios = (socket, io) => {
   });
 };
 
+const manejarAmigos = (socket, io) => {
+  /**
+   * Escucha el evento "solicitudAmistad" para gestionar el envío de solicitudes de amistad en tiempo real.
+   *
+   * @event solicitudAmistad
+   *
+   * @param {Object} datos - Datos de la solicitud de amistad.
+   * @param {number} datos.idEmisor - ID del usuario que envía la solicitud.
+   * @param {number} datos.idReceptor - ID del usuario que debe recibir la solicitud.
+   *
+   * @emits nuevaSolicitud - Emite este evento al usuario receptor si está en línea.
+   * @param {Object} payload - Contiene el ID del usuario emisor.
+   * @param {number} payload.idEmisor - ID del usuario que envía la solicitud.
+   */
+  socket.on("solicitudAmistad", ({ idEmisor, idReceptor }) => {
+    if (usuariosConectados[idReceptor]) {
+      io.to(usuariosConectados[idReceptor]).emit("nuevaSolicitud", {
+        idEmisor,
+      });
+      console.log(
+        `Solicitud de amistad enviada desde ${idEmisor} a ${idReceptor}`
+      );
+    } else {
+      console.log(`Usuario receptor ${idReceptor} no está conectado.`);
+    }
+  });
+};
+
 // Maneja la desconexión de usuarios
 const manejarDesconexionUsuarios = (socket, salas, io) => {
   /**
@@ -221,6 +249,7 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
 };
 
 module.exports = {
+  manejarAmigos,
   manejarReconexionUsuarios,
   manejarConexionUsuarios,
   manejarDesconexionUsuarios,
