@@ -6,6 +6,38 @@ const JuegaDAO = require("../dao/juegaDao"); // Importar el DAO de juega
 
 let partidas = {}; // Almacenamiento en memoria de las partidas
 
+/**
+ * Convierte de forma segura un objeto a una cadena JSON, omitiendo funciones y referencias circulares.
+ *
+ * @description Esta función es una herramienta auxiliar para evitar que el backend implosione por dependencias circulares,
+ *            especialmente al guardar temporizadores (timers) y otros objetos que puedan causar referencias circulares.
+ *
+ * @param {any} obj - El objeto que se desea convertir a cadena JSON.
+ * @returns {string} La representación en formato JSON del objeto, sin funciones ni referencias circulares.
+ */
+function safeStringify(obj) {
+  const vistos = new WeakSet();
+  return JSON.stringify(obj, (clave, valor) => {
+    // Omitir funciones
+    if (typeof valor === "function") {
+      return undefined;
+    }
+    // Omitir objetos que sean temporizadores o tengan referencias circulares
+    if (typeof valor === "object" && valor !== null) {
+      // Si es un temporizador (timer) u objeto similar, se verifica el nombre del constructor
+      if (valor.constructor && valor.constructor.name === "Timeout") {
+        return undefined;
+      }
+      // Omitir si ya se ha visto este objeto
+      if (vistos.has(valor)) {
+        return undefined;
+      }
+      vistos.add(valor);
+    }
+    return valor;
+  });
+}
+
 // Función para cargar partidas desde Redis al iniciar
 async function cargarPartidasDesdeRedis() {
   try {
@@ -19,10 +51,10 @@ async function cargarPartidasDesdeRedis() {
   }
 }
 
-// Función para guardar las partidas en Redis
+// Función para guardar las partidas en Redis usando safeStringify
 async function guardarPartidasEnRedis() {
   try {
-    await redisClient.set("partidas", JSON.stringify(partidas));
+    await redisClient.set("partidas", safeStringify(partidas));
   } catch (error) {
     console.error("Error al guardar partidas en Redis:", error);
   }
@@ -65,6 +97,9 @@ function obtenerPartida(socket, idPartida) {
 
 // manejarConexionPartidas
 const manejarConexionPartidas = (socket, io) => {
+  socket.onAny((event, ...args) => {
+    console.log(`[Backend] Received event: ${event}`, args);
+  });
   /**
    * Inicia una partida en la sala especificada.
    * @event iniciarPartida
@@ -275,15 +310,43 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {Object} partida - Estado actualizado de la partida.
    */
   socket.on("votarAlguacil", async ({ idPartida, idJugador, idObjetivo }) => {
-    const partida = obtenerPartida(socket, partidas, idPartida);
+    const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
+
+    console.log(
+      `[Backend] Recibido votarAlguacil de idJugador: ${idJugador} para idObjetivo: ${idObjetivo}`
+    );
 
     if (partida.votacionAlguacilActiva === true) {
       partida.votaAlguacil(idJugador, idObjetivo);
-      io.to(idPartida).emit("votoAlguacilRegistrado", { estado: partida });
+      console.log(
+        `[Backend] votosAlguacil actuales: ${JSON.stringify(
+          partida.votosAlguacil
+        )}`
+      );
 
+      const estadoSanitizado = {
+        turno: partida.turno,
+        votacionAlguacilActiva: partida.votacionAlguacilActiva,
+        votosAlguacil: partida.votosAlguacil,
+        jugadores: partida.jugadores.map((j) => ({
+          id: j.id,
+          nombre: j.nombre,
+          avatar: j.avatar,
+          rol: j.rol,
+          estaVivo: j.estaVivo,
+          esAlguacil: j.esAlguacil,
+        })),
+      };
+      io.to(idPartida).emit("votoAlguacilRegistrado", {
+        estado: estadoSanitizado,
+      });
       // Guardar cambios en Redis después de registrar un voto para elegir alguacil
       await guardarPartidasEnRedis();
+    } else {
+      console.log(
+        "[Backend] votacionAlguacilActiva es false, no se registra el voto."
+      );
     }
   });
 
@@ -539,10 +602,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         clearInterval(checkVotacionAlguacil);
         const resultadoAlguacil = partida.elegirAlguacil();
 
-        if (resultadoAlguacil.includes("Empate")) {
+        if (resultadoAlguacil.mensaje.includes("Empate")) {
           // Notificar del primer empate y reiniciar la votación
           io.to(idSala).emit("empateVotacionAlguacil", {
-            mensaje: resultadoAlguacil,
+            mensaje: resultadoAlguacil.mensaje,
           });
           partida.iniciarVotacionAlguacil(); // Reiniciar votación
 
@@ -554,10 +617,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             ) {
               clearInterval(checkSegundaVotacionAlguacil);
               const resultadoAlguacil2 = partida.elegirAlguacil();
-              if (resultadoAlguacil2.includes("Segundo")) {
+              if (resultadoAlguacil2.mensaje.includes("Segundo")) {
                 // Notificar del segundo empate. No se elige a ningún jugador como alguacil.
                 io.to(idSala).emit("segundoEmpateVotacionAlguacil", {
-                  mensaje: resultadoAlguacil2,
+                  mensaje: resultadoAlguacil2.mensaje,
                 });
               } else {
                 // Notificar quien es el alguacil elegido
