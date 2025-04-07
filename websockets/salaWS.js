@@ -5,10 +5,6 @@ const {
 const crypto = require("crypto");
 const redisClient = require("../config/redis");
 
-const { usuariosConectados } = require("./usuarioWS");
-
-console.log(usuariosConectados); // Ahora puedes acceder a la variable en salaWS.js
-
 let salas = {}; // Almacenamiento en memoria de las salas
 let expulsados = {}; // Registro de jugadores expulsados
 
@@ -121,7 +117,7 @@ const manejarConexionSalas = (socket, io) => {
 
       // Emitir la lista de salas actualizada a todos los clientes conectados
       io.emit("listaSalas", Object.values(salas));
-    },
+    }
   );
 
   /**
@@ -163,7 +159,7 @@ const manejarConexionSalas = (socket, io) => {
       if (expulsados[idSala] && expulsados[idSala].includes(usuario.id)) {
         socket.emit(
           "error",
-          "Estás expulsado de esta sala y no puedes unirte nuevamente.",
+          "Estás expulsado de esta sala y no puedes unirte nuevamente."
         );
         return;
       }
@@ -180,7 +176,7 @@ const manejarConexionSalas = (socket, io) => {
 
       if (!accesoLibre && !accesoPorCodigo && !accesoPorContrasena) {
         console.log(
-          "Acceso denegado: No cumples con los requisitos para unirte a la sala.",
+          "Acceso denegado: No cumples con los requisitos para unirte a la sala."
         );
         return socket.emit("error", "Acceso denegado");
       }
@@ -222,7 +218,7 @@ const manejarConexionSalas = (socket, io) => {
       setTimeout(() => {
         io.to(idSala).emit("actualizarSala", sala);
       }, 1000); // 1 segundo de retraso
-    },
+    }
   );
 
   /**
@@ -424,7 +420,7 @@ const manejarDesconexionSalas = async (socket, io) => {
             delete salas[idSala];
             await eliminarSalaDeRedis(idSala); // Eliminar de Redis
             console.log(
-              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`,
+              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`
             );
           }
         }, 5000);
