@@ -49,10 +49,10 @@ class SugerenciasDAO {
    * @param {number} idUsuario - ID del usuario.
    * @returns {Promise<Array>} Lista de sugerencias del usuario.
    */
-  static async obtenerSugerenciasPorUsuario(idUsuario) {
+  static async obtenerSugerenciasPorUsuario(idUsuario) { //respuesta, revisada Añadido para que el usuario vea si su sugerencia ha sido revisada o no
     try {
       const query = `
-            SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia"
+            SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia", respuesta, revisada 
             FROM "Sugerencias"
             WHERE "idUsuario" = $1
             ORDER BY "fechaSugerencia" DESC
