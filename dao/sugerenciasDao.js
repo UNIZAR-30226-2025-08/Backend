@@ -31,7 +31,7 @@ class SugerenciasDAO {
   static async obtenerSugerencias() {
     try {
       const query = `
-        SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia"
+        SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada
         FROM "Sugerencias"
         ORDER BY "fechaSugerencia" DESC
       `;
@@ -52,11 +52,11 @@ class SugerenciasDAO {
   static async obtenerSugerenciasPorUsuario(idUsuario) {
     try {
       const query = `
-            SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia"
-            FROM "Sugerencias"
-            WHERE "idUsuario" = $1
-            ORDER BY "fechaSugerencia" DESC
-        `;
+        SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada
+        FROM "Sugerencias"
+        WHERE "idUsuario" = $1
+        ORDER BY "fechaSugerencia" DESC
+      `;
       const { rows } = await pool.query(query, [idUsuario]);
       return rows;
     } catch (error) {
@@ -98,11 +98,11 @@ class SugerenciasDAO {
   static async responderSugerencia(idSugerencia, respuesta) {
     try {
       const query = `
-          UPDATE "Sugerencias"
-          SET respuesta = $1
-          WHERE "idSugerencia" = $2
-          RETURNING "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada, respuesta
-        `;
+        UPDATE "Sugerencias"
+        SET respuesta = $1, revisada = true
+        WHERE "idSugerencia" = $2
+        RETURNING *
+      `;
       const { rows } = await pool.query(query, [respuesta, idSugerencia]);
       return rows[0];
     } catch (error) {
@@ -110,7 +110,6 @@ class SugerenciasDAO {
       throw new Error("No se pudo responder la sugerencia.");
     }
   }
-
   /**
    * Obtiene las sugerencias que no han sido revisadas.
    * Útil si el administrador solo quiere mirar las no revisadas
