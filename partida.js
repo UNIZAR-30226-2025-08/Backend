@@ -39,7 +39,7 @@ class Partida {
     this.votacionLobosActiva = true; // Indica si hay una votación activa para los lobos
     this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
-                                     // la victima elegida por los lobos es la que se elimina al final del turno.
+    // la victima elegida por los lobos es la que se elimina al final del turno.
   }
 
   /**
@@ -132,18 +132,18 @@ class Partida {
    * En caso de empate, se repiten las votaciones una vez.
    *
    * @returns {string} Mensaje si se ha producido un empate.
-   * 
+   *
    * @returns {Object}
    * @returns {string} Mensaje con el resultado de la elección si se ha elegido a un jugador como alguacil.
    * @returns {string} ID del jugador que ha sido elegido como alguacil.
-   * 
+   *
    * - Si hay un ganador claro: Objeto con el mensaje "El jugador X ha sido elegido como alguacil."
    *    y el ID del jugador en el atributo 'alguacil'.
    * - Si hay empate en la primera votación: "Empate en la elección del alguacil, se repiten las votaciones."
    * - Si hay empate en la segunda votación: "Segundo empate consecutivo, no se elige alguacil."
    */
   elegirAlguacil() {
-    if (this.turno !== "dia" || !this.votacionAlguacilActiva) return;
+    if (this.turno !== "dia") return;
     const conteoVotos = {};
     for (const votante in this.votosAlguacil) {
       const votado = this.votosAlguacil[votante];
@@ -204,7 +204,7 @@ class Partida {
     // Verificar si todos jugadores han votado
     if (this.verificarVotos("alguacil")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.elegirAlguacil(); // Resuelve la votación de alguacil
+      //this.elegirAlguacil(); // Resuelve la votación de alguacil !!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -216,7 +216,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   vota(idJugador, idObjetivo) {
-    if (this.turno !== "dia" || !this.votacionActiva) return;
+    if (this.turno !== "dia") return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
@@ -228,7 +228,7 @@ class Partida {
     // Verificar si todos los jugadores han votado
     if (this.verificarVotos("dia")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.resolverVotosDia(); // Resuelve la votación de día
+      //this.resolverVotosDia(); // Resuelve la votación de día !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -240,7 +240,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   votaNoche(idJugador, idObjetivo) {
-    if (this.turno !== "noche" || !this.votacionLobosActiva) return;
+    if (this.turno !== "noche") return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
@@ -254,7 +254,7 @@ class Partida {
     // Verificar si todos los hombres lobos han votado
     if (this.verificarVotos("noche")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      this.resolverVotosNoche(); // Resuelve la votación de noche
+      //this.resolverVotosNoche(); // Resuelve la votación de noche !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -265,11 +265,11 @@ class Partida {
    * @param {string} idJugador - ID del jugador vidente.
    * @param {string} idObjetivo - ID del jugador cuyo rol se quiere revelar.
    * @returns {string} Mensaje con una advertencia si la acción no es válida.
-   * 
+   *
    * @returns {Object}
    * @returns {string} Mensaje con el rol revelado.
    * @returns {string} Rol del jugador seleccionado.
-   * 
+   *
    * - Si el jugador seleccionado esta muerto : 'Solo puedes ver el rol de un jugador vivo.'
    * - Si el jugador no puede realizar dicha acción: 'No puedes usar esta habilidad.'
    * - Si la acción es correcta: Objeto con el mensaje 'El jugador ID es ROL' Siendo ROL el rol del jugador seleccionado
@@ -295,7 +295,7 @@ class Partida {
     return {
       mensaje: `El jugador ${idObjetivo} es ${objetivo.rol}.`,
       rol: objetivo.rol,
-    }
+    };
   }
 
   /**
@@ -308,9 +308,9 @@ class Partida {
 
   /**
    * Devuelve la victima elegida por los lobos si el jugador que llama a esta función es bruja.
-   * 
+   *
    * @param {string} idJugador - ID del jugador bruja.
-   * 
+   *
    * @returns {Object}
    * @returns {string} Mensaje de error si el jugador no es bruja, no es de noche o está muerto.
    * @returns {string} ID de la victima elegida por los lobos.
@@ -329,8 +329,7 @@ class Partida {
         error:
           "Acción no permitida. No eres la bruja, no es de noche o estás muerto.",
       };
-    }
-    else {
+    } else {
       return {
         mensaje: `La victima elegida por los lobos es ${this.jugadores[this.victimaElegidaLobos].nombre}.`,
         victima: this.victimaElegidaLobos,
@@ -374,7 +373,7 @@ class Partida {
       }
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo
+        (id) => id !== idObjetivo,
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
@@ -440,11 +439,11 @@ class Partida {
    * En caso de empate, se repiten las votaciones una vez.
    *
    * @returns {string} Mensaje si se ha producido un empate.
-   * 
+   *
    * @returns {Object}
    * @returns {string} Mensaje con el resultado de la elección si se ha elegido a un jugador para ser eliminado.
    * @returns {string} ID del jugador que ha sido elegido para ser eliminado.
-   * 
+   *
    * - Si hay un ganador: Objeto con el mensaje "El jugador X será eliminado al final del día."
    *    y el ID del jugador en el atributo 'jugadorAEliminar'.
    * - Si hay empate en la primera votación: "Empate, se repiten las votaciones."
@@ -480,7 +479,7 @@ class Partida {
       return {
         mensaje: `El jugador ${candidatos[0]} será eliminado al final del día.`,
         jugadorAEliminar: candidatos[0],
-      }
+      };
     } else {
       if (this.repetirVotosDia) {
         this.votacionActiva = false; // Desactivar la votación de día
@@ -516,7 +515,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo
+      (j) => j.rol === "Hombre lobo" && j.estaVivo,
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -537,12 +536,12 @@ class Partida {
     }
   }
 
-   /**
+  /**
    * (Método que usa partidaWS) Prepara los resultados de la votación nocturna para los hombres lobos.
    * @param {string} mensaje - Contenido del mensaje.
    * @returns {Array<Object>} - Preparación de los resultados de la votación nocturna para los hombres lobos.
    */
-   prepararResultadoVotacionNoche(mensaje) {
+  prepararResultadoVotacionNoche(mensaje) {
     const preparacionResultado = [];
     this.jugadores.forEach((j) => {
       if (j.rol === "Hombre lobo" && j.estaVivo) {
@@ -597,10 +596,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo"
+      (j) => j.estaVivo && j.rol === "Hombre lobo",
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo"
+      (j) => j.estaVivo && j.rol !== "Hombre lobo",
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -646,7 +645,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo"
+        (j) => j.estaVivo && j.rol === "Hombre lobo",
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {

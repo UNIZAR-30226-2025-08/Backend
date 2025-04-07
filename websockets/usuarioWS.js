@@ -1,5 +1,6 @@
 const { obtenerAmigos } = require("../dao/amistadDao"); // Función para obtener amigos de un usuario
 let usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
+const { salas, guardarSalasEnRedis } = require("./salaWS");
 
 /* Tiempo de reconexión 20 seg */
 const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
@@ -37,7 +38,7 @@ const manejarReconexionUsuarios = (socket, usuariosConectados, io) => {
       usuariosConectados[idUsuario] = socket.id;
 
       // Emitir a los amigos del usuario que ahora está en línea
-      const amigos = await obtenerAmigos(idUsuario); // Supongamos que tienes una función para obtener amigos
+      const amigos = await obtenerAmigos(idUsuario);
       amigos.forEach((idAmigo) => {
         if (usuariosConectados[idAmigo]) {
           io.to(usuariosConectados[idAmigo]).emit("estadoAmigo", {
@@ -62,6 +63,7 @@ const manejarReconexionUsuarios = (socket, usuariosConectados, io) => {
             console.log(
               `Usuario ${idUsuario} se reconectó a la sala ${idSala}`
             );
+            await guardarSalasEnRedis();
           }
         } else {
           console.log(
@@ -151,6 +153,86 @@ const manejarConexionUsuarios = (socket, io) => {
   });
 };
 
+const manejarAmigos = (socket, io) => {
+  /**
+   * Escucha el evento "solicitudAmistad" para gestionar el envío de solicitudes de amistad en tiempo real.
+   *
+   * @event solicitudAmistad
+   *
+   * @param {Object} datos - Datos de la solicitud de amistad.
+   * @param {number} datos.idEmisor - ID del usuario que envía la solicitud.
+   * @param {number} datos.idReceptor - ID del usuario que debe recibir la solicitud.
+   *
+   * @emits nuevaSolicitud - Emite este evento al usuario receptor si está en línea.
+   * @param {Object} payload - Contiene el ID del usuario emisor.
+   * @param {number} payload.idEmisor - ID del usuario que envía la solicitud.
+   */
+  socket.on("solicitudAmistad", ({ idEmisor, idReceptor }) => {
+    if (usuariosConectados[idReceptor]) {
+      io.to(usuariosConectados[idReceptor]).emit("nuevaSolicitud", {
+        idEmisor,
+      });
+      console.log(
+        `Solicitud de amistad enviada desde ${idEmisor} a ${idReceptor}`
+      );
+    } else {
+      console.log(`Usuario receptor ${idReceptor} no está conectado.`);
+    }
+  });
+
+  /**
+   * Invita a un amigo a una sala.
+   * @event invitarASala
+   *
+   * @param {Object} datos - Datos de la invitación.
+   * @param {number} datos.idAmigo - ID del usuario que debe recibir la invitación.
+   * @param {number} datos.idSala - ID de la sala que se invita al usuario.
+   * @param {number} datos.idInvitador - ID del usuario que invita al amigo.
+   *
+   * @emits error
+   * @param {string} error.mensaje - Mensaje de error.
+   *
+   * @emits invitacionSala
+   * @param {Object} invitacion - Datos de la invitación enviada.
+   * @param {number} invitacion.idSala - ID de la sala invitada.
+   * @param {number} invitacion.idInvitador - ID del usuario que invitó al amigo.
+   * @param {string} invitacion.codigoInvitacion - Código de invitación de la sala.
+   *
+   * @emits invitacionRechazada
+   * @param {Object} invitacion - Datos de la invitación que no se pudo enviar.
+   * @param {number} invitacion.idAmigo - ID del usuario que no está en línea.
+   */
+  socket.on("invitarASala", ({ idAmigo, idSala, idInvitador }) => {
+    const socketAmigo = usuariosConectados[idAmigo];
+    const sala = salas[idSala];
+
+    if (!sala) {
+      io.to(usuariosConectados[idInvitador]).emit("error", "La sala no existe");
+      return;
+    }
+
+    if (socketAmigo) {
+      io.to(socketAmigo).emit("invitacionSala", {
+        idSala,
+        idInvitador, // para que el frontend sepa quién lo invitó
+        codigoInvitacion: sala.codigoInvitacion, // Enviamos el código de invitación de la sala
+      });
+      console.log(
+        `Invitación enviada de ${idInvitador} a ${idAmigo} para sala ${idSala}`
+      );
+    } else {
+      // Si el usuario no está en línea, no se puede enviar la invitación
+      // Avisar al invitador de ello
+      io.to(usuariosConectados[idInvitador]).emit("invitacionRechazada", {
+        idAmigo,
+      });
+      console.log(
+        `Usuario ${idAmigo} no está en línea. No se pudo enviar la invitación.`
+      );
+    }
+  });
+};
+
 // Maneja la desconexión de usuarios
 const manejarDesconexionUsuarios = (socket, salas, io) => {
   /**
@@ -165,7 +247,7 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
    * @param {number} amigo.idUsuario - ID del usuario que se ha desconectado.
    * @param {boolean} amigo.en_linea - Estado de conexión (false cuando se desconecta).
    */
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log(`Usuario desconectado: ${socket.id}`);
 
     // Buscar en todas las salas si existe un usuario con ese socketId
@@ -187,6 +269,7 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
             // Si la sala queda vacía, eliminamos la sala
             if (sala.jugadores.length === 0) {
               delete salas[idSala];
+              guardarSalasEnRedis();
               console.log(`Sala ${idSala} eliminada por falta de jugadores`);
             } else if (sala.lider === usuario.id) {
               // Si el líder de la sala se desconecta, asignar un nuevo líder
@@ -221,6 +304,7 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
 };
 
 module.exports = {
+  manejarAmigos,
   manejarReconexionUsuarios,
   manejarConexionUsuarios,
   manejarDesconexionUsuarios,

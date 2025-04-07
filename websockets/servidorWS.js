@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 
 const {
+  manejarAmigos,
   manejarReconexionUsuarios,
   manejarConexionUsuarios,
   manejarDesconexionUsuarios,
@@ -36,6 +37,7 @@ const ServidorWS = (server) => {
     manejarConexionUsuarios(socket, io);
     manejarConexionSalas(socket, io);
     manejarConexionPartidas(socket, io);
+    manejarAmigos(socket, io);
 
     // Evento de desconexión
     socket.on("disconnect", () => {
@@ -52,7 +54,7 @@ const ServidorWS = (server) => {
 
 module.exports = ServidorWS;
 
-// Iniciar la partida
+// Iniciar la partida !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /*socket.on("iniciarPartida", async ({ idPartida }) => {
       if (salas[idPartida]) {
         // Obtener jugadores de la sala

@@ -5,10 +5,6 @@ const {
 const crypto = require("crypto");
 const redisClient = require("../config/redis");
 
-const { usuariosConectados } = require("./usuarioWS");
-
-console.log(usuariosConectados); // Ahora puedes acceder a la variable en salaWS.js
-
 let salas = {}; // Almacenamiento en memoria de las salas
 let expulsados = {}; // Registro de jugadores expulsados
 
@@ -155,7 +151,7 @@ const manejarConexionSalas = (socket, io) => {
     async ({ idSala, usuario, contrasena, codigoInvitacion }) => {
       const sala = salas[idSala];
       if (!sala) {
-        socket.emit("error", "Sala inexistente");
+        socket.emit("error", "La sala no existe");
         return;
       }
 
@@ -188,6 +184,13 @@ const manejarConexionSalas = (socket, io) => {
       // Verificar si la sala tiene espacio para más jugadores
       if (sala.jugadores.length >= sala.maxJugadores) {
         socket.emit("error", "Sala llena");
+        return;
+      }
+
+      // Evitar duplicados
+      const yaEsta = sala.jugadores.some((j) => j.id === usuario.id);
+      if (yaEsta) {
+        socket.emit("error", "Ya estás en esta sala");
         return;
       }
 
