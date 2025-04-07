@@ -1,4 +1,4 @@
-const { salas, guardarSalasEnRedis } = require("./salaWS");
+const { getSalas, salas, guardarSalasEnRedis } = require("./salaWS");
 const Partida = require("../partida"); // Importar la clase Partida
 const redisClient = require("../config/redis"); // Importar el cliente de Redis
 const PartidaDAO = require("../dao/partidaDao"); // Importar el DAO de Partida
@@ -93,7 +93,7 @@ const manejarConexionPartidas = (socket, io) => {
    */
   socket.on("iniciarPartida", async ({ idSala, idLider }) => {
     try {
-      const sala = salas[idSala];
+      const sala = getSalas()[idSala];
 
       if (!sala) {
         console.log(salas);
@@ -105,7 +105,7 @@ const manejarConexionPartidas = (socket, io) => {
       if (sala.lider !== idLider) {
         socket.emit(
           "error",
-          "No tienes permisos para iniciar la partida. Debes de ser lider.",
+          "No tienes permisos para iniciar la partida. Debes de ser lider."
         );
         return;
       }
@@ -168,46 +168,46 @@ const manejarConexionPartidas = (socket, io) => {
               JuegaDAO.asignarUsuarioAPartida(
                 jugador.id,
                 partida.idPartida,
-                "lobo",
+                "lobo"
               );
               break;
             case "Aldeano":
               JuegaDAO.asignarUsuarioAPartida(
                 jugador.id,
                 partida.idPartida,
-                "aldeano",
+                "aldeano"
               );
               break;
             case "Vidente":
               JuegaDAO.asignarUsuarioAPartida(
                 jugador.id,
                 partida.idPartida,
-                "vidente",
+                "vidente"
               );
               break;
             case "Bruja":
               JuegaDAO.asignarUsuarioAPartida(
                 jugador.id,
                 partida.idPartida,
-                "bruja",
+                "bruja"
               );
               break;
             case "Cazador":
               JuegaDAO.asignarUsuarioAPartida(
                 jugador.id,
                 partida.idPartida,
-                "cazador",
+                "cazador"
               );
               break;
           }
-        }),
+        })
       );
 
       await guardarPartidasEnRedis();
 
       console.log(
         "Jugadores que se envían al frontend:",
-        nuevaPartida.jugadores,
+        nuevaPartida.jugadores
       );
 
       // Notificar a todos que la partida ha comenzado
@@ -310,14 +310,14 @@ const manejarConexionPartidas = (socket, io) => {
       // Enviar mensaje privado entre hombres lobos
       const preparacionMensajes = partida.prepararMensajesChatNoche(
         idJugador,
-        mensaje,
+        mensaje
       );
       preparacionMensajes.forEach(
         ({ socketId, nombre, mensaje, timestamp }) => {
           socket
             .to(socketId)
             .emit("mensajePrivado", { nombre, mensaje, timestamp });
-        },
+        }
       );
     } else {
       // Enviar mensaje público
@@ -359,7 +359,7 @@ const manejarConexionPartidas = (socket, io) => {
         console.error("Error en videnteRevela:", error);
         callback({ mensaje: "Error al revelar el rol", rol: null });
       }
-    },
+    }
   );
 
   /*  NECESITAMOS ESTA FUNCIÓN???? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -426,7 +426,7 @@ const manejarConexionPartidas = (socket, io) => {
 
       // Guardar cambios en Redis después de usar la poción de bruja
       guardarPartidasEnRedis();
-    },
+    }
   );
 
   socket.on(
@@ -440,7 +440,7 @@ const manejarConexionPartidas = (socket, io) => {
 
       // Guardar cambios en Redis después de usar la poción de bruja
       guardarPartidasEnRedis();
-    },
+    }
   );
 
   socket.on(
@@ -454,7 +454,7 @@ const manejarConexionPartidas = (socket, io) => {
 
       // Guardar cambios en Redis después de elegir sucesor
       guardarPartidasEnRedis();
-    },
+    }
   );
 
   socket.on("obtenerEstadoPartida", ({ idPartida }) => {
@@ -484,11 +484,11 @@ const manejarDesconexionPartidas = (socket, io) => {
     if (jugador) {
       // Eliminar al jugador de la partida
       partida.jugadores = partida.jugadores.filter(
-        (j) => j.socketId !== socket.id,
+        (j) => j.socketId !== socket.id
       );
       io.to(idPartida).emit("actualizarPartida", partida);
       console.log(
-        `Jugador ${jugador.id} desconectado de la partida ${idPartida}`,
+        `Jugador ${jugador.id} desconectado de la partida ${idPartida}`
       );
 
       // Notificar a todos los jugadores de la partida que un jugador ha salido

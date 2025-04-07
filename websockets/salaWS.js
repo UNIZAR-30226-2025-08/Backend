@@ -5,6 +5,8 @@ const {
 const crypto = require("crypto");
 const redisClient = require("../config/redis");
 
+const getSalas = () => salas;
+
 let salas = {}; // Almacenamiento en memoria de las salas
 let expulsados = {}; // Registro de jugadores expulsados
 
@@ -449,4 +451,5 @@ module.exports = {
   manejarDesconexionSalas,
   guardarSalasEnRedis,
   salas,
+  getSalas,
 };

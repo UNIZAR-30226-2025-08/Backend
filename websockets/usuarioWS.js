@@ -1,6 +1,6 @@
 const { obtenerAmigos } = require("../dao/amistadDao"); // Función para obtener amigos de un usuario
 let usuariosConectados = {}; // Almacena usuarios en línea { idUsuario: socketId }
-const { salas, guardarSalasEnRedis } = require("./salaWS");
+const { getSalas, salas, guardarSalasEnRedis } = require("./salaWS");
 
 /* Tiempo de reconexión 20 seg */
 const reconexionTimeout = 20000; // Tiempo en milisegundos para esperar reconexión (ej. 20 segundos)
@@ -50,7 +50,7 @@ const manejarReconexionUsuarios = (socket, usuariosConectados, io) => {
 
       console.log(`Usuario ${idUsuario} se reconectó`);
       if (idSala) {
-        const sala = salas[idSala];
+        const sala = getSalas()[idSala];
         if (sala) {
           const usuario = sala.jugadores.find((j) => j.id === idUsuario);
           // Si el usuario existe y está marcado como desconectado
@@ -204,10 +204,14 @@ const manejarAmigos = (socket, io) => {
    */
   socket.on("invitarASala", ({ idAmigo, idSala, idInvitador }) => {
     const socketAmigo = usuariosConectados[idAmigo];
-    const sala = salas[idSala];
+    const sala = getSalas()[idSala];
+    console.log(sala);
 
     if (!sala) {
       io.to(usuariosConectados[idInvitador]).emit("error", "La sala no existe");
+      console.log(
+        `Error: La sala ${idSala} no existe. No se puede enviar la invitación.`
+      );
       return;
     }
 
@@ -252,7 +256,7 @@ const manejarDesconexionUsuarios = (socket, salas, io) => {
 
     // Buscar en todas las salas si existe un usuario con ese socketId
     for (const idSala in salas) {
-      const sala = salas[idSala];
+      const sala = getSalas()[idSala];
       const usuario = sala.jugadores.find((j) => j.socketId === socket.id);
       if (usuario) {
         // Marcar al usuario como desconectado
