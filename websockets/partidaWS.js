@@ -579,7 +579,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         ganador: resultado.ganador,
       });
       eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
-      delete partida; // Eliminar de la memoria
+      partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria
+      //delete partida; // Eliminar de la memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       return true;
     }
     return false;

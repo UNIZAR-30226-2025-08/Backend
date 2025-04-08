@@ -1,0 +1,11 @@
+{
+  "source": {
+    "include": ["."],
+    "includePattern": "^(?!.*node_modules).*\\.js$",
+    "excludePattern": "(^|\\/|\\\\)(node_modules|\\.git|docs|tests|\\.github)($|\\/)"
+  },
+  "opts": {
+    "destination": "./docs",
+    "recurse": true
+  }
+}
