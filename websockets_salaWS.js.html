@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: websockets/salaWS.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: websockets/salaWS.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const {
+  generarCodigoInvitacion,
+  validarCodigoInvitacion,
+} = require("../utils/invitaciones");
+const crypto = require("crypto");
+const redisClient = require("../config/redis");
+
+const getSalas = () => salas;
+
+let salas = {}; // Almacenamiento en memoria de las salas
+let expulsados = {}; // Registro de jugadores expulsados
+
+/**
+ * @file salaWS.js
+ * @description Websockets para la gestion de salas.
+ * @module API_WB_Salas
+ */
+
+// Función para cargar salas desde Redis al iniciar
+async function cargarSalasDesdeRedis() {
+  try {
+    const salasRedis = await redisClient.get("salas");
+    if (salasRedis) {
+      salas = JSON.parse(salasRedis);
+      console.log("Salas cargadas desde Redis");
+    }
+  } catch (error) {
+    console.error("Error al cargar salas desde Redis:", error);
+  }
+}
+
+// Función para guardar las salas en Redis
+async function guardarSalasEnRedis() {
+  try {
+    await redisClient.set("salas", JSON.stringify(salas));
+  } catch (error) {
+    console.error("Error al guardar salas en Redis:", error);
+  }
+}
+
+// Función para eliminar una sala de Redis
+async function eliminarSalaDeRedis(idSala) {
+  try {
+    const salasRedis = await redisClient.get("salas");
+    if (salasRedis) {
+      const salasActuales = JSON.parse(salasRedis);
+      delete salasActuales[idSala];
+      await redisClient.set("salas", JSON.stringify(salasActuales));
+      console.log(`Sala ${idSala} eliminada de Redis`);
+    }
+  } catch (error) {
+    console.error("Error al eliminar sala de Redis:", error);
+  }
+}
+
+const manejarConexionSalas = (socket, io) => {
+  /**
+   * Crea una nueva sala de juego.
+   * @event crearSala
+   *
+   * @param {Object} datos - Datos de la sala a crear.
+   * @param {string} datos.nombreSala - Nombre de la sala.
+   * @param {string} datos.tipo - Tipo de la sala ("publica" o "privada").
+   * @param {string} [datos.contrasena] - Contraseña de la sala (solo si es privada).
+   * @param {number} datos.maxJugadores - Número máximo de jugadores permitidos.
+   * @param {number} datos.maxRoles - Número máximo de jugadores para cada rol.
+   * @param {Object} datos.usuario - Datos del usuario que crea la sala.
+   * @param {number} datos.usuario.id - ID del usuario creador.
+   *
+   *
+   * @emits salaCreada
+   * @param {Object} res - Objeto de respuesta HTTP.
+   * @param {Object} res.sala - Datos de la sala creada.
+   * @param {string} res.sala.id - ID único de la sala.
+   * @param {string} res.sala.nombre - Nombre de la sala.
+   * @param {string} res.sala.tipo - Tipo de la sala.
+   * @param {string|null} res.sala.codigoInvitacion - Código de invitación si la sala es privada.
+   * @param {Object[]} res.sala.jugadores - Lista de jugadores en la sala.
+   * @param {number} res.sala.lider - ID del usuario que creó la sala.
+   *
+   * @emits listaSalas
+   * @param {Object[]} salas - Lista actualizada de todas las salas disponibles.
+   */
+  socket.on(
+    "crearSala",
+    async ({
+      nombreSala,
+      tipo,
+      contrasena,
+      maxJugadores,
+      maxRoles,
+      usuario,
+    }) => {
+      const idSala = `sala_${crypto.randomUUID()}`; // Generar un ID único para la sala
+      const codigoInvitacion = generarCodigoInvitacion(); // Generar un código de invitación aleatorio
+
+      // Guardar sala en memoria
+      salas[idSala] = {
+        id: idSala,
+        nombre: nombreSala,
+        tipo,
+        contrasena,
+        maxJugadores,
+        maxRoles,
+        jugadores: [
+          { ...usuario, avatar: usuario.avatar, socketId: socket.id },
+        ],
+        lider: usuario.id,
+        codigoInvitacion,
+        enPartida: false,
+      };
+
+      await guardarSalasEnRedis(); // Guardar en Redis después de crear sala
+
+      console.log(`Sala creada: ${idSala} (${nombreSala})`);
+      socket.join(idSala);
+
+      socket.emit("salaCreada", salas[idSala]); // Confirmar al creador
+
+      // Emitir la lista de salas actualizada a todos los clientes conectados
+      io.emit("listaSalas", Object.values(salas));
+    }
+  );
+
+  /**
+   * Unirse a una sala existente.
+   * @event unirseSala
+   *
+   * @param {Object} datos - Datos para unirse a la sala.
+   * @param {string} datos.idSala - ID de la sala a la que se quiere unir.
+   * @param {Object} datos.usuario - Datos del usuario que se une.
+   * @param {number} datos.usuario.id - ID del usuario.
+   * @param {string} datos.usuario.nombre - Nombre del usuario.
+   * @param {string} datos.contrasena - Contraseña de la sala (si la sala es privada).
+   * @param {string} datos.codigoInvitacion - Código de invitación de la sala.
+   *
+   * @emits error
+   * @param {string} mensaje - Mensaje de error si la sala no existe, está llena o el usuario ha sido expulsado.
+   *
+   * @emits salaActualizada
+   * @param {Object} res.sala - Estado actualizado de la sala después de unirse.
+   *
+   * @emits jugadorUnido
+   * @param {Object} jugador - Datos del jugador que se ha unido.
+   * @param {string} jugador.nombre - Nombre del jugador.
+   * @param {number} jugador.id - ID del jugador.
+   *
+   * @emits actualizarSala
+   * @param {Object} res.sala - Estado actualizado de la sala tras la unión del nuevo jugador.
+   */
+  socket.on(
+    "unirseSala",
+    async ({ idSala, usuario, contrasena, codigoInvitacion }) => {
+      const sala = salas[idSala];
+      if (!sala) {
+        socket.emit("error", "La sala no existe");
+        return;
+      }
+
+      // Verificar si el jugador está expulsado
+      if (expulsados[idSala] &amp;&amp; expulsados[idSala].includes(usuario.id)) {
+        socket.emit(
+          "error",
+          "Estás expulsado de esta sala y no puedes unirte nuevamente."
+        );
+        return;
+      }
+
+      // Permitir el acceso directo a salas públicas
+      const accesoLibre = sala.tipo === "publica";
+
+      // Permitir acceso a cualquier sala (pública o privada) si se tiene un código de invitación válido
+      const accesoPorCodigo = validarCodigoInvitacion(sala, codigoInvitacion);
+
+      // Permitir acceso a salas privadas con la contraseña correcta
+      const accesoPorContrasena =
+        sala.tipo === "privada" &amp;&amp; sala.contrasena === contrasena;
+
+      if (!accesoLibre &amp;&amp; !accesoPorCodigo &amp;&amp; !accesoPorContrasena) {
+        console.log(
+          "Acceso denegado: No cumples con los requisitos para unirte a la sala."
+        );
+        return socket.emit("error", "Acceso denegado");
+      }
+
+      // Verificar si la sala tiene espacio para más jugadores
+      if (sala.jugadores.length >= sala.maxJugadores) {
+        socket.emit("error", "Sala llena");
+        return;
+      }
+
+      // Evitar duplicados
+      const yaEsta = sala.jugadores.some((j) => j.id === usuario.id);
+      if (yaEsta) {
+        socket.emit("error", "Ya estás en esta sala");
+        return;
+      }
+
+      // Agregar el jugador a la sala
+      sala.jugadores.push({
+        ...usuario,
+        avatar: usuario.avatar,
+        socketId: socket.id,
+      });
+      socket.join(idSala);
+
+      await guardarSalasEnRedis(); // Guardar cambios en Redis
+
+      // Notificar al usuario que se unió
+      socket.emit("salaActualizada", sala);
+
+      // Notificar a todos los jugadores de la sala que un nuevo jugador se ha unido
+      io.to(idSala).emit("jugadorUnido", {
+        nombre: usuario.nombre,
+        id: usuario.id,
+        avatar: usuario.avatar,
+      });
+
+      // Retrasar la actualización de la sala para disimular la reconexión
+      setTimeout(() => {
+        io.to(idSala).emit("actualizarSala", sala);
+      }, 1000); // 1 segundo de retraso
+    }
+  );
+
+  /**
+   * Obtener la información de una sala.
+   * @event obtenerSala
+   *
+   * @param {string} idSala - ID de la sala a consultar.
+   * @param {Function} callback - Función de callback para devolver la información de la sala.
+   *
+   * @callback callback
+   * @param {Object|null} sala - Datos de la sala si existe, o null si no se encuentra.
+   */
+  socket.on("obtenerSala", (idSala, callback) => {
+    const sala = salas[idSala];
+    if (!sala) return callback(null);
+
+    // Devolver la sala con su estado actualizado
+    callback({
+      ...sala,
+      jugadores: sala.jugadores.map((j) => ({
+        id: j.id,
+        listo: j.listo ?? "No listo",
+        socketId: j.socketId,
+      })),
+    });
+  });
+
+  /**
+   * Marcar el estado de un jugador como listo o no listo dentro de la sala.
+   * @event marcarEstado
+   *
+   * @param {Object} datos - Datos para actualizar el estado del jugador.
+   * @param {string} datos.idSala - ID de la sala.
+   * @param {number} datos.idUsuario - ID del usuario.
+   * @param {boolean} datos.estado - Nuevo estado del jugador (listo o no listo).
+   *
+   * @emits error
+   * @param {string} mensaje - Mensaje de error si la sala no existe o el jugador no está en la sala.
+   *
+   * @emits estadoCambiado
+   * @param {Object} res - Confirmación del cambio de estado.
+   * @param {number} res.idUsuario - ID del usuario cuyo estado cambió.
+   * @param {boolean} res.estado - Estado actualizado del usuario.
+   *
+   * @emits actualizarSala
+   * @param {Object} sala - Estado actualizado de la sala.
+   */
+  socket.on("marcarEstado", async ({ idSala, idUsuario, estado }) => {
+    const sala = salas[idSala];
+    if (!sala) {
+      // Sala no encontrada
+      socket.emit("error", "La sala no existe.");
+      return;
+    }
+
+    const jugador = sala.jugadores.find((j) => j.id === idUsuario);
+    if (!jugador) {
+      socket.emit("error", "El jugador no está en la sala.");
+      return;
+    }
+
+    // Cambiar el estado del jugador
+    jugador.listo = estado;
+
+    await guardarSalasEnRedis(); // Guardar cambios en Redis
+
+    socket.emit("estadoCambiado", { idUsuario, estado }); // Confirmar al usuario
+    io.to(idSala).emit("actualizarSala", sala); // Actualizar a todos
+  });
+
+  /**
+   * Obtener la lista de salas disponibles.
+   * @event obtenerSalas
+   *
+   * @emits listaSalas
+   * @param {Object[]} salas - Lista de salas disponibles.
+   */
+  socket.on("obtenerSalas", () => {
+    socket.emit("listaSalas", Object.values(salas));
+  });
+
+  /**
+   * Expulsar a un jugador de la sala.
+   * @event expulsarJugador
+   *
+   * @param {Object} datos - Datos de la expulsión.
+   * @param {string} datos.idSala - ID de la sala.
+   * @param {number} datos.idLider - ID del líder de la sala.
+   * @param {number} datos.idExpulsado - ID del usuario a expulsar.
+   *
+   * @emits actualizarSala
+   * @param {Object} sala - Estado actualizado de la sala después de la expulsión.
+   *
+   * @emits expulsadoDeSala
+   * @param {number} idExpulsado - ID del usuario expulsado.
+   *
+   * @emits redirigirExpulsado
+   * @param {number} idExpulsado - ID del usuario expulsado.
+   */
+  socket.on("expulsarJugador", async ({ idSala, idLider, idExpulsado }) => {
+    const sala = salas[idSala];
+    if (!sala || sala.lider !== idLider) return; // Sala no encontrada o el usuario que solicita la expulsión no es el líder
+
+    // Registrar al expulsado
+    if (!expulsados[idSala]) {
+      expulsados[idSala] = [];
+    }
+    expulsados[idSala].push(idExpulsado); // Agregar a la lista de expulsados
+
+    // Eliminar al jugador de la sala
+    sala.jugadores = sala.jugadores.filter((j) => j.id !== idExpulsado);
+
+    await guardarSalasEnRedis(); // Guardar cambios en Redis
+
+    // Notificar a todos los jugadores de la sala
+    io.to(idSala).emit("actualizarSala", sala);
+
+    // Notificar al usuario que ha sido expulsado
+    io.to(idSala).emit("expulsadoDeSala", { idExpulsado });
+  });
+
+  /**
+   * Salir de una sala.
+   * @event salirSala
+   *
+   * @param {Object} datos - Datos de la salida.
+   * @param {string} datos.idSala - ID de la sala.
+   * @param {number} datos.idUsuario - ID del usuario que sale.
+   *
+   * @emits listaSalas
+   * @param {Object[]} salas - Lista actualizada de salas después de la salida.
+   *
+   * @emits actualizarSala
+   * @param {Object} sala - Estado actualizado de la sala después de la salida.
+   *
+   * @emits salaAbandonada
+   * @param {Object} res - Confirmación de la salida.
+   * @param {string} res.mensaje - Mensaje de confirmación de salida.
+   *
+   * @emits jugadorSalido
+   * @param {Object} jugador - Datos del jugador que salió.
+   * @param {string} jugador.nombre - Nombre del jugador.
+   * @param {number} jugador.id - ID del jugador.
+   */
+  socket.on("salirSala", async ({ idSala, idUsuario }) => {
+    const sala = salas[idSala];
+    if (!sala) return; // Sala no encontrada
+
+    // Buscar al jugador que está saliendo
+    const jugador = sala.jugadores.find((j) => j.id === idUsuario);
+    if (!jugador) return; // Jugador no encontrado
+
+    // Eliminar al jugador de la sala
+    sala.jugadores = sala.jugadores.filter((j) => j.id !== idUsuario);
+
+    // Si la sala queda vacía, eliminarla
+    if (sala.jugadores.length === 0) {
+      delete salas[idSala];
+      await eliminarSalaDeRedis(idSala); // Eliminar de Redis
+      console.log(`Sala ${idSala} eliminada por falta de jugadores`);
+    } else if (sala.lider === idUsuario) {
+      // Asignar un nuevo líder si el actual sale
+      sala.lider = sala.jugadores[0].id;
+      await guardarSalasEnRedis();
+    }
+
+    // Notificar a todos los clientes la lista de salas actualizada
+    io.emit("listaSalas", Object.values(salas));
+
+    // Notificar a los jugadores restantes
+    io.to(idSala).emit("actualizarSala", sala);
+
+    // Notificar al cliente que salió
+    socket.leave(idSala);
+    socket.emit("salaAbandonada", { mensaje: "Has salido de la sala" });
+
+    // Notificar a todos los jugadores de la sala que un jugador ha salido
+    io.to(idSala).emit("jugadorSalido", {
+      nombre: jugador.nombre,
+      id: idUsuario,
+    });
+  });
+};
+
+// Manejar desconexión de jugadores
+const manejarDesconexionSalas = async (socket, io) => {
+  for (const idSala in salas) {
+    const sala = salas[idSala];
+    const jugador = sala.jugadores.find((j) => j.socketId === socket.id);
+    if (jugador) {
+      // Eliminar al jugador de la sala
+      sala.jugadores = sala.jugadores.filter((j) => j.socketId !== socket.id);
+
+      // Si la sala queda vacía, eliminarla
+      if (sala.jugadores.length === 0) {
+        setTimeout(async () => {
+          // Verificar nuevamente si la sala sigue vacía antes de eliminarla
+          if (sala.jugadores.length === 0) {
+            delete salas[idSala];
+            await eliminarSalaDeRedis(idSala); // Eliminar de Redis
+            console.log(
+              `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`
+            );
+          }
+        }, 5000);
+      } else {
+        await guardarSalasEnRedis(); // Guardar cambios si la sala sigue existiendo
+      }
+
+      io.to(idSala).emit("actualizarSala", sala);
+      console.log(`Jugador ${jugador.id} desconectado de la sala ${idSala}`);
+
+      // Notificar a todos los jugadores de la sala que un jugador ha salido
+      io.to(idSala).emit("jugadorSalido", {
+        nombre: jugador.nombre,
+        id: jugador.id,
+      });
+      break;
+    }
+  }
+};
+
+// Cargar salas al iniciar el servidor
+cargarSalasDesdeRedis();
+
+module.exports = {
+  manejarConexionSalas,
+  manejarDesconexionSalas,
+  guardarSalasEnRedis,
+  salas,
+  getSalas,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

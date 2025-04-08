@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: dao/amistadDao.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: dao/amistadDao.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const pool = require("../config/db");
+
+class AmistadDAO {
+  /**
+   * Agrega una relación de amistad entre dos usuarios.
+   * Se almacena siempre en la forma (idUsuarioMenor, idUsuarioMayor).
+   * @param {number} idUsuario1 - ID del usuario 1.
+   * @param {number} idUsuario2 - ID del usuario 2.
+   * @param {object} client - Cliente opcional para transacción.
+   * @returns {Promise&lt;Object>} Amistad creada.
+   */
+  static async agregarAmigo(idUsuario1, idUsuario2, client = null) {
+    const connection = client || (await pool.connect());
+
+    try {
+      if (idUsuario1 === idUsuario2) {
+        throw new Error("No puedes agregarte como amigo a ti mismo.");
+      }
+
+      // Asegurar que siempre idUsuarioMenor &lt; idUsuarioMayor
+      const [idUsuarioMenor, idUsuarioMayor] =
+        idUsuario1 &lt; idUsuario2
+          ? [idUsuario1, idUsuario2]
+          : [idUsuario2, idUsuario1];
+
+      // Verificar si ya son amigos
+      const checkQuery = `SELECT * FROM "Amistad" WHERE "idUsuario1" = $1 AND "idUsuario2" = $2`;
+      const { rows: existingFriends } = await connection.query(checkQuery, [
+        idUsuarioMenor,
+        idUsuarioMayor,
+      ]);
+
+      if (existingFriends.length > 0) {
+        throw new Error("Estos usuarios ya son amigos.");
+      }
+
+      // Insertar la amistad
+      const insertQuery = `INSERT INTO "Amistad" ("idUsuario1", "idUsuario2") VALUES ($1, $2) RETURNING *`;
+      const { rows } = await connection.query(insertQuery, [
+        idUsuarioMenor,
+        idUsuarioMayor,
+      ]);
+
+      return rows[0];
+    } catch (error) {
+      console.error("Error al agregar amigo:", error);
+      throw new Error("No se pudo agregar la amistad.");
+    } finally {
+      if (!client) {
+        connection.release();
+      }
+    }
+  }
+
+  /**
+   * Elimina una amistad entre dos usuarios.
+   * @param {number} idUsuario1 - ID del usuario 1.
+   * @param {number} idUsuario2 - ID del usuario 2.
+   * @returns {Promise&lt;void>}
+   */
+  static async eliminarAmigo(idUsuario1, idUsuario2) {
+    try {
+      const [idUsuarioMenor, idUsuarioMayor] =
+        idUsuario1 &lt; idUsuario2
+          ? [idUsuario1, idUsuario2]
+          : [idUsuario2, idUsuario1];
+
+      const query = `DELETE FROM "Amistad" WHERE "idUsuario1" = $1 AND "idUsuario2" = $2`;
+      const { rowCount } = await pool.query(query, [
+        idUsuarioMenor,
+        idUsuarioMayor,
+      ]);
+
+      if (rowCount === 0) {
+        throw new Error("No existe una amistad entre estos usuarios.");
+      }
+    } catch (error) {
+      console.error("Error al eliminar amigo:", error);
+      throw new Error("No se pudo eliminar la amistad.");
+    }
+  }
+
+  /**
+   * Obtiene la lista de amigos de un usuario.
+   * @param {number} idUsuario - ID del usuario.
+   * @returns {Promise&lt;number[]>} Lista de IDs de amigos.
+   */
+  static async obtenerAmigos(idUsuario) {
+    try {
+      const query = `
+        SELECT CASE 
+          WHEN "idUsuario1" = $1 THEN "idUsuario2"
+          ELSE "idUsuario1"
+        END AS amigo
+        FROM "Amistad"
+        WHERE "idUsuario1" = $1 OR "idUsuario2" = $1`;
+
+      const { rows } = await pool.query(query, [idUsuario]);
+
+      return rows.map((row) => row.amigo); // Devolver solo los IDs de amigos
+    } catch (error) {
+      console.error("Error al obtener amigos:", error);
+      throw new Error("No se pudo obtener la lista de amigos.");
+    }
+  }
+  /**
+   * Obtiene la lista de amigos de un usuario con sus datos básicos y estadísticas.
+   * Se consultan los datos de la tabla "Usuario" y se complementa con las estadísticas
+   * obtenidas a partir de las tablas "Juega" y "Partida".
+   * @param {number} idUsuario - ID del usuario.
+   * @returns {Promise&lt;Array>} Lista de objetos, cada uno con la información del amigo y sus estadísticas.
+   */
+  static async obtenerAmigosConEstadisticas(idUsuario) {
+    try {
+      const query = `
+        SELECT u."idUsuario", u.nombre, u.correo, u.avatar, u."fechaCreacion"
+        FROM "Usuario" u
+        JOIN "Amistad" a 
+          ON ((a."idUsuario1" = $1 AND u."idUsuario" = a."idUsuario2")
+           OR (a."idUsuario2" = $1 AND u."idUsuario" = a."idUsuario1"))
+      `;
+      const { rows } = await pool.query(query, [idUsuario]);
+
+      // Para cada amigo, obtenemos sus estadísticas mediante el DAO de Estadísticas
+      const EstadisticasDAO = require("./estadisticasDao");
+      const amigosConStats = await Promise.all(
+        rows.map(async (friend) => {
+          const stats = await EstadisticasDAO.obtenerEstadisticasAmigo(
+            friend.idUsuario
+          );
+          return {
+            ...friend,
+            estadisticas: stats,
+          };
+        })
+      );
+
+      return amigosConStats;
+    } catch (error) {
+      console.error("Error al obtener amigos con estadísticas:", error);
+      throw new Error(
+        "No se pudo obtener la lista de amigos con estadísticas."
+      );
+    }
+  }
+}
+
+module.exports = AmistadDAO;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

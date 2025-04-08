@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: dao/solicitudAmistadDao.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: dao/solicitudAmistadDao.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const pool = require("../config/db");
+const AmistadDAO = require("./amistadDao");
+
+class SolicitudAmistadDAO {
+  /**
+   * Envía una solicitud de amistad.
+   * Si existe una solicitud en sentido contrario, se crea la amistad automáticamente.
+   * @param {number} idEmisor - ID del usuario que envía la solicitud.
+   * @param {number} idReceptor - ID del usuario que la recibe.
+   * @returns {Promise&lt;Object|null>} Devuelve la solicitud creada o null si se creó una amistad directamente.
+   */
+  static async enviarSolicitud(idEmisor, idReceptor) {
+    const client = await pool.connect(); // cliente para la transacción
+
+    try {
+      if (idEmisor === idReceptor) {
+        throw new Error(
+          "No puedes enviarte una solicitud de amistad a ti mismo."
+        );
+      }
+
+      await client.query("BEGIN");
+
+      // Verificar si ya existe una solicitud en este sentido
+      const checkQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rows: existingRequests } = await client.query(checkQuery, [
+        idEmisor,
+        idReceptor,
+      ]);
+
+      if (existingRequests.length > 0) {
+        throw new Error("Ya existe una solicitud de amistad pendiente.");
+      }
+
+      // Verificar si hay una solicitud en sentido contrario
+      const checkReverseQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rows: reverseRequests } = await client.query(checkReverseQuery, [
+        idReceptor,
+        idEmisor,
+      ]);
+
+      if (reverseRequests.length > 0) {
+        // Si hay una solicitud mutua, se crea la amistad y se eliminan ambas solicitudes
+        await AmistadDAO.agregarAmigo(idEmisor, idReceptor, client);
+        await client.query(
+          `DELETE FROM "SolicitudAmistad" 
+          WHERE ("idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2) OR ("idUsuarioEmisor" = $2 AND "idUsuarioReceptor" = $1)`,
+          [idEmisor, idReceptor]
+        );
+
+        await client.query("COMMIT");
+        return null; // No se devuelve una solicitud porque se creó una amistad directamente
+      }
+
+      // Insertar nueva solicitud de amistad
+      const insertQuery = `INSERT INTO "SolicitudAmistad" ("idUsuarioEmisor", "idUsuarioReceptor") VALUES ($1, $2) RETURNING *`;
+      const { rows } = await client.query(insertQuery, [idEmisor, idReceptor]);
+
+      await client.query("COMMIT");
+      return rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error al enviar solicitud de amistad:", error);
+      throw new Error(error.message);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Acepta una solicitud de amistad y la convierte en una relación de amistad.
+   * @param {number} idEmisor - ID del usuario emisor.
+   * @param {number} idReceptor - ID del usuario receptor.
+   * @returns {Promise&lt;void>}
+   */
+  static async aceptarSolicitud(idEmisor, idReceptor) {
+    const client = await pool.connect(); // Para manejar transacciones
+
+    try {
+      await client.query("BEGIN");
+
+      // Verificar si la solicitud existe
+      const checkQuery = `SELECT * FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rows } = await client.query(checkQuery, [idEmisor, idReceptor]);
+
+      if (rows.length === 0) {
+        throw new Error("La solicitud de amistad no existe.");
+      }
+
+      // Insertar la nueva amistad usando el DAO de Amistad
+      await AmistadDAO.agregarAmigo(idEmisor, idReceptor, client);
+
+      // Eliminar la solicitud de amistad
+      await client.query(
+        `
+        DELETE FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`,
+        [idEmisor, idReceptor]
+      );
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error al aceptar la solicitud de amistad:", error);
+      throw new Error("No se pudo aceptar la solicitud de amistad.");
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Rechaza una solicitud de amistad eliminándola de la base de datos.
+   * @param {number} idEmisor - ID del usuario que envió la solicitud.
+   * @param {number} idReceptor - ID del usuario que recibió la solicitud.
+   * @returns {Promise&lt;void>}
+   */
+  static async rechazarSolicitud(idEmisor, idReceptor) {
+    try {
+      const query = `DELETE FROM "SolicitudAmistad" WHERE "idUsuarioEmisor" = $1 AND "idUsuarioReceptor" = $2`;
+      const { rowCount } = await pool.query(query, [idEmisor, idReceptor]);
+
+      if (rowCount === 0) {
+        throw new Error("No existe una solicitud de amistad para rechazar.");
+      }
+    } catch (error) {
+      console.error("Error al rechazar la solicitud de amistad:", error);
+      throw new Error("No se pudo rechazar la solicitud de amistad.");
+    }
+  }
+
+  /**
+   * Lista las solicitudes de amistad recibidas por un usuario.
+   * @param {number} idUsuario - ID del usuario receptor.
+   * @returns {Promise&lt;Array>} Array de solicitudes de amistad con datos del emisor.
+   */
+  static async listarSolicitudes(idUsuario) {
+    try {
+      const query = `
+          SELECT s.*, u.nombre AS "nombreEmisor", u.avatar AS "avatarEmisor"
+          FROM "SolicitudAmistad" s
+          JOIN "Usuario" u ON s."idUsuarioEmisor" = u."idUsuario"
+          WHERE s."idUsuarioReceptor" = $1
+          ORDER BY s."fechaSolicitud" DESC
+        `;
+      const { rows } = await pool.query(query, [idUsuario]);
+      return rows;
+    } catch (error) {
+      console.error("Error al listar solicitudes de amistad:", error);
+      throw new Error("No se pudieron listar las solicitudes de amistad.");
+    }
+  }
+}
+
+module.exports = SolicitudAmistadDAO;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

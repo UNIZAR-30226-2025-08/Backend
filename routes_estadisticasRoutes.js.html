@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: routes/estadisticasRoutes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: routes/estadisticasRoutes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const express = require("express");
+const router = express.Router();
+const EstadisticasDAO = require("../dao/estadisticasDao");
+
+/**
+ * @file EstadisticasRoutes.js
+ * @description Endpoints para la obtención de estadísticas de usuario.
+ * @module API_Estadisticas
+ */
+
+/**
+ * Obtiene las estadísticas de un usuario (amigo) a partir de su ID.
+ * Las estadísticas se calculan utilizando los datos de las tablas "Juega" y "Partida".
+ * @function GET /api/estadisticas/obtener/:idUsuario
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {number} req.params.idUsuario - ID del usuario para el cual se desean obtener estadísticas.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El ID de usuario debe ser un número válido.
+ * @throws {500} Error interno al obtener las estadísticas del usuario.
+ *
+ * @returns {Object} JSON con las estadísticas del usuario.
+ * @returns {number} res.stats.partidasGanadas - Número de partidas ganadas.
+ * @returns {number} res.stats.partidasTotales - Total de partidas jugadas.
+ * @returns {number} res.stats.porcentajeVictorias - Porcentaje de victorias.
+ * @returns {Object[]} res.stats.rolesMasJugados - Array con los roles más jugados y su cantidad.
+ */
+router.get("/obtener/:idUsuario", async (req, res) => {
+  try {
+    // Convertimos el parámetro a número para asegurar que es válido
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+    if (isNaN(idUsuario)) {
+      return res
+        .status(400)
+        .json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    // Se obtienen las estadísticas del usuario (amigo) a través del DAO
+    const stats = await EstadisticasDAO.obtenerEstadisticasAmigo(idUsuario);
+
+    res.status(200).json({ mensaje: "Estadísticas obtenidas", stats });
+  } catch (error) {
+    console.error("Error en ruta de estadísticas:", error);
+    res.status(500).json({
+      error: { mensaje: "Error obteniendo estadísticas del usuario" },
+    });
+  }
+});
+
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: routes/solicitudAmistadRoutes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: routes/solicitudAmistadRoutes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const express = require("express");
+const router = express.Router();
+const SolicitudAmistadDAO = require("../dao/solicitudAmistadDao");
+const UsuarioDAO = require("../dao/usuarioDao");
+
+/**
+ * @file SolicitudAmistadRoutes.js
+ * @description Endpoints para gestionar solicitudes de amistad.
+ * @module API_SolicitudAmistad
+ */
+
+/**
+ * Envía una solicitud de amistad.
+ *
+ * Recibe los IDs del usuario emisor y del usuario receptor, y procesa el envío de la solicitud.
+ * Si existe una solicitud en sentido contrario, se crea la amistad automáticamente y se retorna null.
+ *
+ * @function POST /api/solicitud/enviar
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos necesarios.
+ * @param {number} req.body.idEmisor - ID del usuario que envía la solicitud.
+ * @param {number} req.body.idReceptor - ID del usuario que recibe la solicitud.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {500} Error interno al enviar la solicitud de amistad.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de que la solicitud fue enviada.
+ * @param {Object|null} res.solicitud - Datos de la solicitud creada, o null si se creó la amistad automáticamente.
+ * @param {number} [res.solicitud.idSolicitud] - ID único de la solicitud (según la estructura de la tabla).
+ * @param {number} [res.solicitud.idUsuarioEmisor] - ID del usuario emisor.
+ * @param {number} [res.solicitud.idUsuarioReceptor] - ID del usuario receptor.
+ * @param {string} [res.solicitud.fechaSolicitud] - Fecha de envío de la solicitud en formato ISO.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/enviar", async (req, res) => {
+  const { idEmisor, idReceptor } = req.body;
+  try {
+    const solicitud = await SolicitudAmistadDAO.enviarSolicitud(
+      idEmisor,
+      idReceptor
+    );
+    res.status(200).json({ mensaje: "Solicitud enviada", solicitud });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Acepta una solicitud de amistad.
+ *
+ * Recibe los IDs del usuario emisor y receptor y procesa la aceptación de la solicitud,
+ * creando la amistad y eliminando la solicitud de la base de datos.
+ *
+ * @function POST /api/solicitud/aceptar
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos necesarios.
+ * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
+ * @param {number} req.body.idReceptor - ID del usuario que recibe y acepta la solicitud.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {500} Error interno al aceptar la solicitud de amistad.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación indicando que la solicitud fue aceptada y la amistad creada.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/aceptar", async (req, res) => {
+  const { idEmisor, idReceptor } = req.body;
+  try {
+    await SolicitudAmistadDAO.aceptarSolicitud(idEmisor, idReceptor);
+    res
+      .status(200)
+      .json({ mensaje: "Solicitud de amistad aceptada y amistad creada." });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error al aceptar la solicitud de amistad." });
+  }
+});
+
+/**
+ * Rechaza una solicitud de amistad.
+ *
+ * Recibe los IDs del usuario emisor y receptor y elimina la solicitud de amistad de la base de datos.
+ *
+ * @function POST /api/solicitud/rechazar
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos necesarios.
+ * @param {number} req.body.idEmisor - ID del usuario que envió la solicitud.
+ * @param {number} req.body.idReceptor - ID del usuario que recibe y rechaza la solicitud.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {500} Error interno al rechazar la solicitud de amistad.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación indicando que la solicitud fue rechazada.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/rechazar", async (req, res) => {
+  const { idEmisor, idReceptor } = req.body;
+  try {
+    await SolicitudAmistadDAO.rechazarSolicitud(idEmisor, idReceptor);
+    res.status(200).json({ mensaje: "Solicitud de amistad rechazada." });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error al rechazar la solicitud de amistad." });
+  }
+});
+
+/**
+ * Lista las solicitudes de amistad recibidas por un usuario.
+ * @function GET /api/solicitud/listar/:idUsuario
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {number} req.params.idUsuario - ID del usuario receptor.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {500} Error interno al listar las solicitudes de amistad.
+ *
+ * @returns {Object} JSON con las solicitudes de amistad.
+ * @returns {Array} res.solicitudes - Array de solicitudes de amistad con datos del emisor.
+ */
+router.get("/listar/:idUsuario", async (req, res) => {
+  try {
+    const idUsuario = parseInt(req.params.idUsuario, 10);
+    if (isNaN(idUsuario)) {
+      return res
+        .status(400)
+        .json({ error: "El ID de usuario debe ser un número válido." });
+    }
+    const solicitudes = await SolicitudAmistadDAO.listarSolicitudes(idUsuario);
+    res.status(200).json({ solicitudes });
+  } catch (error) {
+    console.error("Error al listar solicitudes de amistad:", error);
+    res.status(500).json({
+      error: { mensaje: "Error al listar solicitudes de amistad." },
+    });
+  }
+});
+
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

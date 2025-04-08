@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: routes/juegaRoutes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: routes/juegaRoutes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const express = require("express");
+const router = express.Router();
+const JuegaDAO = require("../dao/juegaDao");
+
+/**
+ * @file JuegaRoutes.js
+ * @description Endpoints para la gestión de usuarios en partidas.
+ * @module API_Juega
+ */
+
+/**
+ * Asigna un usuario a una partida con un rol específico.
+ * @function POST /api/juega/asignar
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos de la asignación.
+ * @param {number} req.body.idUsuario - ID del usuario a asignar.
+ * @param {number} req.body.idPartida - ID de la partida donde se asignará al usuario.
+ * @param {string} req.body.rolJugado - Rol del usuario en la partida.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} Los datos requeridos están incompletos o no son válidos.
+ * @throws {500} Error interno al asignar el usuario a la partida.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.mensaje - Mensaje de confirmación de la asignación.
+ * @param {Object} res.juega - Objeto con los datos de la asignación.
+ * @param {number} res.juega.idUsuario - ID del usuario asignado.
+ * @param {number} res.juega.idPartida - ID de la partida a la que fue asignado.
+ * @param {string} res.juega.rolJugado - Rol asignado al usuario en la partida.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/asignar", async (req, res) => {
+  const { idUsuario, idPartida, rolJugado } = req.body;
+  try {
+    const juega = await JuegaDAO.asignarUsuarioAPartida(
+      idUsuario,
+      idPartida,
+      rolJugado
+    );
+    res.status(200).json({ mensaje: "Usuario asignado a la partida", juega });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Obtiene todas las partidas en las que ha participado un usuario.
+ * @function GET /api/juega/usuario/:idUsuario
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.params - Parámetros de la URL.
+ * @param {number} req.params.idUsuario - ID del usuario cuyas partidas se desean consultar.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El ID del usuario no es válido.
+ * @throws {404} No se encontraron partidas para el usuario.
+ * @throws {500} Error interno al obtener las partidas.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {Object[]} res.partidas - Lista de partidas en las que participó el usuario.
+ * @param {number} res.partidas[].idPartida - ID único de la partida.
+ * @param {string} res.partidas[].nombre - Nombre de la partida.
+ * @param {string} res.partidas[].fecha - Fecha de la partida en formato ISO.
+ * @param {string} res.partidas[].tipo - Tipo de partida ("publica" o "privada").
+ * @param {string} res.partidas[].estado - Estado actual de la partida ("en_curso" o "terminada").
+ * @param {string} [res.partidas[].ganadores] - Facción ganadora de la partida (opcional, `null` si aún no ha terminado).
+ * @param {string} res.partidas[].rolJugado - Rol que jugó el usuario en la partida.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.get("/usuario/:idUsuario", async (req, res) => {
+  try {
+    const idUsuario = parseInt(req.params.idUsuario, 10); // Convertir a número
+
+    if (isNaN(idUsuario)) {
+      return res
+        .status(400)
+        .json({ error: "El ID de usuario debe ser un número válido." });
+    }
+
+    const partidas = await JuegaDAO.obtenerPartidasDeUsuario(idUsuario);
+    res.status(200).json(partidas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 08 2025 10:19:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
