@@ -19,7 +19,7 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      - name: Generar JSDoc
+      - name: Generar JSDoc del backend
         run: npm run docs
 
       - name: Desplegar JSDoc en GitHub Pages
