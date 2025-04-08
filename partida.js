@@ -177,13 +177,20 @@ class Partida {
       if (this.repetirVotacionAlguacil) {
         this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-        return "Segundo empate consecutivo, no se elige alguacil.";
+        return {
+          alguacil: null,
+          mensaje: "Segundo empate consecutivo, no se elige alguacil.",
+        };
       } else {
         this.repetirVotacionAlguacil = true;
         this.votosAlguacil = {}; // Resetear votos para repetir elección
         this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-        return "Empate en la elección del alguacil, se repiten las votaciones.";
+        return {
+          alguacil: null,
+          mensaje:
+            "Empate en la elección del alguacil, se repiten las votaciones.",
+        };
       }
     }
   }
@@ -331,7 +338,9 @@ class Partida {
       };
     } else {
       return {
-        mensaje: `La victima elegida por los lobos es ${this.jugadores[this.victimaElegidaLobos].nombre}.`,
+        mensaje: `La victima elegida por los lobos es ${
+          this.jugadores[this.victimaElegidaLobos].nombre
+        }.`,
         victima: this.victimaElegidaLobos,
       };
     }
@@ -373,7 +382,7 @@ class Partida {
       }
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo,
+        (id) => id !== idObjetivo
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
@@ -515,7 +524,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo,
+      (j) => j.rol === "Hombre lobo" && j.estaVivo
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -596,10 +605,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo",
+      (j) => j.estaVivo && j.rol === "Hombre lobo"
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo",
+      (j) => j.estaVivo && j.rol !== "Hombre lobo"
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -645,7 +654,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo",
+        (j) => j.estaVivo && j.rol === "Hombre lobo"
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {
