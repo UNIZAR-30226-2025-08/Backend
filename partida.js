@@ -36,7 +36,7 @@ class Partida {
     this.tiempoLimiteVotacion = 30000; // Tiempo límite para la votación en milisegundos (30 segundos)
     this.tiempoLimiteHabilidad = 15000; // Tiempo límite para usar habilidades en milisegundos (15 segundos)
     this.votacionAlguacilActiva = true; // Indica si hay una votación activa para elegir al alguacil
-    this.votacionLobosActiva = true; // Indica si hay una votación activa para los lobos
+    this.votacionLobosActiva = false; // Indica si hay una votación activa para los lobos
     this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
     // la victima elegida por los lobos es la que se elimina al final del turno.
@@ -128,19 +128,20 @@ class Partida {
   }
 
   /**
-   * (Método de server) Elige al alguacil basándose en los votos de los jugadores.
+   * (Método de partidaWS) Elige al alguacil basándose en los votos de los jugadores.
    * En caso de empate, se repiten las votaciones una vez.
    *
-   * @returns {string} Mensaje si se ha producido un empate.
-   *
    * @returns {Object}
-   * @returns {string} Mensaje con el resultado de la elección si se ha elegido a un jugador como alguacil.
-   * @returns {string} ID del jugador que ha sido elegido como alguacil.
+   * @returns {string} Mensaje informativo si se ha producido un empate o
+   * mensaje con el resultado de la elección si se ha elegido a un jugador como alguacil.
+   * @returns {string} ID del jugador que ha sido elegido como alguacil o null si no hay alguacil elegido.
    *
-   * - Si hay un ganador claro: Objeto con el mensaje "El jugador X ha sido elegido como alguacil."
+   * - Si hay un ganador claro: Objeto con el mensaje "X ha sido elegido como alguacil." (deonde X es el nombre del jugador elegido)
    *    y el ID del jugador en el atributo 'alguacil'.
-   * - Si hay empate en la primera votación: "Empate en la elección del alguacil, se repiten las votaciones."
-   * - Si hay empate en la segunda votación: "Segundo empate consecutivo, no se elige alguacil."
+   * - Si hay empate en la primera votación: Objeto con el mensaje "Empate en la elección del alguacil, se repiten las votaciones."
+   *    y null en el atributo 'alguacil'.
+   * - Si hay empate en la segunda votación: Objeto con el mensaje "Segundo empate consecutivo, no se elige alguacil."
+   *    y null en el atributo 'alguacil'.
    */
   elegirAlguacil() {
     if (this.turno !== "dia") return;
@@ -171,7 +172,7 @@ class Partida {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
         alguacil: candidatos[0],
-        mensaje: `El jugador ${candidatos[0]} ha sido elegido como alguacil.`,
+        mensaje: `${alguacil.nombre} ha sido elegido como alguacil.`,
       };
     } else {
       if (this.repetirVotacionAlguacil) {
@@ -444,19 +445,20 @@ class Partida {
   }
 
   /**
-   * Resuelve la votación del día, determinando qué jugador será eliminado.
+   * (Método que usa partidaWS) Resuelve la votación del día, determinando qué jugador será eliminado.
    * En caso de empate, se repiten las votaciones una vez.
    *
-   * @returns {string} Mensaje si se ha producido un empate.
-   *
    * @returns {Object}
-   * @returns {string} Mensaje con el resultado de la elección si se ha elegido a un jugador para ser eliminado.
-   * @returns {string} ID del jugador que ha sido elegido para ser eliminado.
+   * @returns {string} Mensaje informativo si se ha producido un empate o
+   *                   mensaje con el resultado de la elección si se ha elegido a un jugador para ser eliminado.
+   * @returns {string} ID del jugador que ha sido elegido para ser eliminado o null si no hay ninguno.
    *
-   * - Si hay un ganador: Objeto con el mensaje "El jugador X será eliminado al final del día."
+   * - Si hay un ganador: Objeto con el mensaje "X será eliminado al final del día." (donde X es el nombre del jugador elegido)
    *    y el ID del jugador en el atributo 'jugadorAEliminar'.
-   * - Si hay empate en la primera votación: "Empate, se repiten las votaciones."
-   * - Si hay empate en la segunda votación: "Segundo empate consecutivo, nadie es eliminado."
+   * - Si hay empate en la primera votación: Objeto con el mensaje "Empate, se repiten las votaciones."
+   *    y null en el atributo 'jugadorAEliminar'.
+   * - Si hay empate en la segunda votación: Objeto con el mensaje "Segundo empate consecutivo, nadie es eliminado."
+   *    y null en el atributo 'jugadorAEliminar'.
    */
   resolverVotosDia() {
     if (this.turno !== "dia" || !this.votacionActiva) return;
@@ -486,31 +488,45 @@ class Partida {
       this.votacionActiva = false; // Desactivar la votación de día
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
-        mensaje: `El jugador ${candidatos[0]} será eliminado al final del día.`,
+        mensaje: `${
+          this.jugadores.find((j) => j.id === candidatos[0]).nombre
+        } será eliminado al final del día.`,
         jugadorAEliminar: candidatos[0],
       };
     } else {
       if (this.repetirVotosDia) {
         this.votacionActiva = false; // Desactivar la votación de día
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-        return "Segundo empate consecutivo, nadie es eliminado.";
+        return {
+          mensaje: "Segundo empate consecutivo, nadie es eliminado.",
+          jugadorAEliminar: null,
+        };
       } else {
         this.repetirVotosDia = true;
         this.votos = {}; // Reiniciar votos para repetir la votación
         this.votacionActiva = false; // Desactivar la votación de día
         clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-        return "Empate, se repiten las votaciones.";
+        return {
+          mensaje: "Empate, se repiten las votaciones.",
+          jugadorAEliminar: null,
+        };
       }
     }
   }
 
   /**
-   * Resuelve la votación nocturna de los lobos.
+   * (Método que usa partidaWS) Resuelve la votación nocturna de los lobos.
    * Solo se elimina a un jugador si todos los lobos votan por la misma persona.
    *
-   * @returns {string} Mensaje con el resultado de la votación nocturna.
-   * - Si hay unanimidad: "Los lobos atacaron al jugador X. Será eliminado al final de la noche."
-   * - Si no hay acuerdo: "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
+   * @returns {Object}
+   * @returns {string} Mensaje informativo si no hay unanimidad o
+   *  mensaje con el resultado de la votación si hay unanimidad.
+   * @returns {string} ID del jugador que ha sido elegido para ser eliminado o null si no hay ninguno.
+   *
+   * - Si hay unanimidad: Objeto con el mensaje "Los lobos van a atacar a X. Será eliminado al final de la noche."
+   *    y el ID del jugador en el atributo 'victima'.
+   * - Si no hay acuerdo: Objeto con el mensaje "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
+   *    y null en el atributo 'victima'.
    */
   resolverVotosNoche() {
     if (this.turno !== "noche" || !this.votacionLobosActiva) return;
@@ -537,11 +553,20 @@ class Partida {
       this.victimaElegidaLobos = victimaElegida; // Se guarda la victima elegida por los lobos
       this.votacionLobosActiva = false; // Desactivar la votación
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-      return `Los lobos van a atacar al jugador ${victimaElegida}. Será eliminado al final de la noche.`;
+      return {
+        mensaje: `Los lobos van a atacar a ${
+          this.jugadores.find((j) => j.id === victimaElegida).nombre
+        }. Será eliminado al final de la noche.`,
+        victima: victimaElegida,
+      };
     } else {
       this.votacionLobosActiva = false; // Desactivar la votación
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
-      return "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.";
+      return {
+        mensaje:
+          "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.",
+        victima: null,
+      };
     }
   }
 
@@ -561,7 +586,31 @@ class Partida {
       }
     });
 
-    return preparacionResultado; // Retorna la preparación de los resultados
+    return preparacionResultado; // Devuelve la preparación de los resultados para los hombres lobos
+  }
+
+  /**
+   * (Método que usa partidaWS) Prepara el mensaje que será enviado a las brujas si los hombres lobos eligen
+   * por unanimidad a un jugador para ser eliminado durante la noche.
+   * @param {string} mensaje - Contenido del mensaje.
+   * @returns {Array<Object>} - Preparación del mensaje para las brujas.
+   * @returns {socketId} ID del socket del jugador que recibirá el mensaje.
+   * @returns {string} Mensaje informativo.
+   * @returns {string} ID del jugador que ha sido elegido para ser eliminado.
+   */
+  prepararMensajeBruja(mensaje) {
+    const preparacionResultado = [];
+    this.jugadores.forEach((j) => {
+      if (j.rol === "Bruja" && j.estaVivo) {
+        preparacionResultado.push({
+          socketId: j.socketId,
+          mensaje,
+          victima: this.victimaElegidaLobos,
+        });
+      }
+    });
+
+    return preparacionResultado; // Devuelve la preparación del mensaje para las brujas
   }
 
   /**

@@ -677,14 +677,28 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       const checkVotosLobos = setInterval(async () => {
         if (partida.verificarVotos("noche") || !partida.votacionLobosActiva) {
           clearInterval(checkVotosLobos);
+
           // Indicar a los hombres lobos el resultado de la votación nocturna
           const resultadoVotosNoche = partida.resolverVotosNoche();
           await guardarPartidasEnRedis();
-          const preparacionResultado =
-            partida.prepararResultadoVotacionNoche(resultadoVotosNoche);
+          const preparacionResultado = partida.prepararResultadoVotacionNoche(
+            resultadoVotosNoche.mensaje
+          );
           preparacionResultado.forEach(({ socketId, mensaje }) => {
             io.to(socketId).emit("resultadoVotosNoche", { mensaje });
           });
+
+          // Comunicar a las brujas la víctima elegida por los hombres lobos (si existe)
+          if (resultadoVotosNoche.victima) {
+            const preparacionMensajeBruja = partida.prepararMensajeBruja(
+              resultadoVotosNoche.mensaje
+            );
+            preparacionMensajeBruja.forEach(
+              ({ socketId, mensaje, victima }) => {
+                io.to(socketId).emit("mensajeBruja", { mensaje, victima });
+              }
+            );
+          }
           manejarFaseBruja();
         }
       }, 1000);
@@ -731,10 +745,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           // Resolver votos del día
           const resultadoVotosDia = partida.resolverVotosDia();
           await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
-          if (resultadoVotosDia.includes("Empate")) {
+          if (resultadoVotosDia.mensaje.includes("Empate")) {
             // Notificar del primer empate y reiniciar la votación
             io.to(idSala).emit("empateVotacionDia", {
-              mensaje: resultadoVotosDia,
+              mensaje: resultadoVotosDia.mensaje,
             });
             partida.iniciarVotacion(); // Reiniciar votación
 
@@ -745,10 +759,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 const resultadoVotosDia2 = partida.resolverVotosDia();
                 await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
 
-                if (resultadoVotosDia2.includes("Segundo")) {
+                if (resultadoVotosDia2.mensaje.includes("Segundo")) {
                   // Notificar del segundo empate. No se elige a ningún jugador para ser eliminado.
                   io.to(idSala).emit("segundoEmpateVotacionDia", {
-                    mensaje: resultadoVotosDia2,
+                    mensaje: resultadoVotosDia2.mensaje,
                   });
                 } else {
                   // Notificar quien es el jugador a eliminar
