@@ -372,34 +372,41 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {Object} partida - Chat actualizado de la partida.
    * @param {string} partida.chat - Chat de la partida
    */
-  socket.on("enviarMensaje", async ({ idPartida, idJugador, mensaje }) => {
-    const partida = obtenerPartida(socket, idPartida);
-    if (!partida) return;
+  socket.on(
+    "enviarMensaje",
+    async ({ idPartida, idJugador, nombreJugador, mensaje }) => {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) return;
 
-    idSala = partida.idSala;
+      idSala = partida.idSala;
 
-    if (partida.turno === "noche") {
-      // Enviar mensaje privado entre hombres lobos
-      const preparacionMensajes = partida.prepararMensajesChatNoche(
-        idJugador,
-        mensaje
-      );
-      preparacionMensajes.forEach(
-        ({ socketId, nombre, mensaje, timestamp }) => {
-          socket
-            .to(socketId)
-            .emit("mensajePrivado", { nombre, mensaje, timestamp });
-        }
-      );
-    } else {
-      console.log(`Mensaje enviado al resto ${mensaje}`);
-      // Enviar mensaje público
-      partida.agregarMensajeChatDia(idJugador, mensaje);
-      io.to(idSala).emit("mensajeChat", { chat: partida.chat });
-      // Guardar cambios en Redis después de enviar un mensaje público en el chat
-      await guardarPartidasEnRedis();
+      if (partida.turno === "noche") {
+        // Enviar mensaje privado entre hombres lobos
+        const preparacionMensajes = partida.prepararMensajesChatNoche(
+          idJugador,
+          mensaje
+        );
+        preparacionMensajes.forEach(
+          ({ socketId, nombre, mensaje, timestamp }) => {
+            socket
+              .to(socketId)
+              .emit("mensajePrivado", { nombre, mensaje, timestamp });
+          }
+        );
+      } else {
+        console.log(`Mensaje enviado al resto ${mensaje}`);
+        console.log(`Mensaje enviado al resto ${nombreJugador}`);
+        // Enviar mensaje público
+        partida.agregarMensajeChatDia(idJugador, mensaje);
+        io.to(idSala).emit("mensajeChat", {
+          mensaje: mensaje,
+          nombre: nombreJugador,
+        });
+        // Guardar cambios en Redis después de enviar un mensaje público en el chat
+        await guardarPartidasEnRedis();
+      }
     }
-  });
+  );
 
   /**
    * Revela el rol de un jugador en la partida.
