@@ -7,8 +7,9 @@ class Partida {
    * @param {number} idPartida - Identificador único de la partida.
    * @param {Array<Object>} jugadores - Lista de jugadores con sus respectivos roles.
    */
-  constructor(idPartida, jugadores) {
+  constructor(idPartida, jugadores, idSala) {
     this.idPartida = idPartida;
+    this.idSala = idSala;
     this.estado = "en_curso"; // Estado de la partida ('en_curso', 'terminada')
     this.turno = "dia"; // Fase actual: 'dia' o 'noche'. La partida empieza de día
     this.jugadores = jugadores.map((jugador) => ({

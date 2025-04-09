@@ -190,7 +190,11 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = await PartidaDAO.crearPartida(sala.tipo); // Crear la partida en la base de datos PostgreSQL
 
       // Inicializar el objeto partida
-      const nuevaPartida = new Partida(partida.idPartida, sala.jugadores); // Crear un objeto Partida con los jugadores
+      const nuevaPartida = new Partida(
+        partida.idPartida,
+        sala.jugadores,
+        idSala
+      ); // Crear un objeto Partida con los jugadores
 
       // Guardar la nueva partida en memoria
       partidas[partida.idPartida] = nuevaPartida;
@@ -283,6 +287,7 @@ const manejarConexionPartidas = (socket, io) => {
    */
   socket.on("votar", async ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, idPartida);
+    idSala = partida.idSala;
     if (!partida) return;
 
     if (partida.turno === "dia") {
@@ -290,7 +295,7 @@ const manejarConexionPartidas = (socket, io) => {
     } else {
       partida.votaNoche(idJugador, idObjetivo);
     }
-    io.to(idPartida).emit("votoRegistrado", { estado: partida });
+    io.to(idSala).emit("votoRegistrado", { estado: partida });
 
     // Guardar cambios en Redis después de registrar un voto
     await guardarPartidasEnRedis();
@@ -312,6 +317,8 @@ const manejarConexionPartidas = (socket, io) => {
   socket.on("votarAlguacil", async ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
+
+    idSala = partida.idSala;
 
     console.log(
       `[Backend] Recibido votarAlguacil de idJugador: ${idJugador} para idObjetivo: ${idObjetivo}`
@@ -338,7 +345,7 @@ const manejarConexionPartidas = (socket, io) => {
           esAlguacil: j.esAlguacil,
         })),
       };
-      io.to(idPartida).emit("votoAlguacilRegistrado", {
+      io.to(idSala).emit("votoAlguacilRegistrado", {
         estado: estadoSanitizado,
       });
       // Guardar cambios en Redis después de registrar un voto para elegir alguacil
@@ -369,6 +376,8 @@ const manejarConexionPartidas = (socket, io) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
 
+    idSala = partida.idSala;
+
     if (partida.turno === "noche") {
       // Enviar mensaje privado entre hombres lobos
       const preparacionMensajes = partida.prepararMensajesChatNoche(
@@ -383,9 +392,10 @@ const manejarConexionPartidas = (socket, io) => {
         }
       );
     } else {
+      console.log(`Mensaje enviado al resto ${mensaje}`);
       // Enviar mensaje público
       partida.agregarMensajeChatDia(idJugador, mensaje);
-      io.to(idPartida).emit("mensajeChat", { chat: partida.chat });
+      io.to(idSala).emit("mensajeChat", { chat: partida.chat });
       // Guardar cambios en Redis después de enviar un mensaje público en el chat
       await guardarPartidasEnRedis();
     }
@@ -412,6 +422,8 @@ const manejarConexionPartidas = (socket, io) => {
         if (!partida) {
           return callback({ mensaje: "Partida no encontrada", rol: null });
         }
+
+        idSala = partida.idSala;
 
         const resultado = partida.videnteRevela(idJugador, idObjetivo);
         callback({ mensaje: resultado.mensaje, rol: resultado.rol });
@@ -455,6 +467,8 @@ const manejarConexionPartidas = (socket, io) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
 
+    idSala = partida.idSala;
+
     const resultado = partida.verVictimaElegidaLobos(idJugador);
     callback(resultado);
   });
@@ -484,6 +498,8 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
+      idSala = partida.idSala;
+
       const resultado = partida.usaPocionBruja(idJugador, tipo, idObjetivo);
       callback(resultado);
 
@@ -498,6 +514,8 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
+      idSala = partida.idSala;
+
       const resultado = partida.cazadorDispara(idJugador, idObjetivo);
       callback({ mensaje: resultado });
 
@@ -511,6 +529,8 @@ const manejarConexionPartidas = (socket, io) => {
     ({ idPartida, idJugador, idObjetivo }, callback) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
+
+      idSala = partida.idSala;
 
       const resultado = partida.elegirSucesor(idJugador, idObjetivo);
       callback({ mensaje: resultado });
@@ -543,19 +563,20 @@ const manejarConexionPartidas = (socket, io) => {
 const manejarDesconexionPartidas = (socket, io) => {
   for (const idPartida in partidas) {
     const partida = partidas[idPartida];
+
+    idSala = partida.idSala;
+
     const jugador = partida.jugadores.find((j) => j.socketId === socket.id);
     if (jugador) {
       // Eliminar al jugador de la partida
       partida.jugadores = partida.jugadores.filter(
         (j) => j.socketId !== socket.id
       );
-      io.to(idPartida).emit("actualizarPartida", partida);
-      console.log(
-        `Jugador ${jugador.id} desconectado de la partida ${idPartida}`
-      );
+      io.to(idSala).emit("actualizarPartida", partida);
+      console.log(`Jugador ${jugador.id} desconectado de la partida ${idSala}`);
 
       // Notificar a todos los jugadores de la partida que un jugador ha salido
-      io.to(idPartida).emit("jugadorSalido", {
+      io.to(idSala).emit("jugadorSalido", {
         nombre: jugador.nombre,
         id: jugador.id,
       });
