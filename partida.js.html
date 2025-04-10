@@ -34,6 +34,7 @@ class Partida {
    * Crea una nueva partida.
    * @param {number} idPartida - Identificador único de la partida.
    * @param {Array&lt;Object>} jugadores - Lista de jugadores con sus respectivos roles.
+   * @param {number} idSala - Identificador único de la sala.
    */
   constructor(idPartida, jugadores, idSala) {
     this.idPartida = idPartida;
@@ -53,7 +54,7 @@ class Partida {
       pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de muerte
       haVisto: jugador.rol === "Vidente" ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
     }));
-    this.chat = []; // Mensajes de chat (día: global, noche: solo lobos)
+    this.chat = []; // Mensajes de chat (durante el día los mensajes son públicos)
     this.votosAlguacil = {}; // Votos para elegir al alguacil
     this.votos = {}; // Votos de los jugadores durante el día
     this.repetirVotacionAlguacil = false; // Para empates en elección de alguacil
@@ -112,21 +113,40 @@ class Partida {
   }
 
   /**
-   * (Método que usa partidaWS) Agrega un mensaje al chat de la partida si el turno es de día.
+   * (Método que usa partidaWS) Agrega un mensaje al chat de la partida
+   * si el turno es de día y el jugador está vivo.
    * @param {number} idJugador - ID del jugador que envía el mensaje.
    * @param {string} mensaje - Contenido del mensaje.
    */
   agregarMensajeChatDia(idJugador, mensaje) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
-    if (!jugador || !jugador.estaVivo) return;
+    if (!jugador || !jugador.estaVivo || this.turno !== "dia") return;
 
-    if (this.turno === "dia") {
-      this.chat.push({
-        nombre: jugador.nombre,
-        mensaje,
-        timestamp: Date.now(),
-      });
-    }
+    this.chat.push({
+      nombre: jugador.nombre,
+      mensaje,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * (Método que usa partidaWS) Comprueba si un jugador está vivo.
+   * @param {number} idJugador - ID del jugador que se quiere comprobar.
+   * @returns {boolean} - true si el jugador está vivo, false en caso contrario.
+   */
+  jugadorVivo(idJugador) {
+    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    return jugador &amp;&amp; jugador.estaVivo;
+  }
+
+  /**
+   * (Método que usa partidaWS) Obtiene el nombre de un jugador.
+   * @param {number} idJugador - ID del jugador que se quiere obtener el nombre.
+   * @returns {string} - Nombre del jugador.
+   */
+  obtenerNombreJugador(idJugador) {
+    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    return jugador ? jugador.nombre : null;
   }
 
   /**
@@ -384,6 +404,13 @@ class Partida {
    * @param {string} tipo - Tipo de poción a usar ('curar' o 'matar').
    * @param {string} idObjetivo - ID del jugador afectado por la poción.
    * @returns {Object} - Mensaje de éxito o error.
+   * @returns {Object.error} Mensaje de error si el jugador no es bruja, no es de noche o está muerto.
+   * @returns {Object.error} Mensaje de error si el jugador ya ha usado la poción de curación.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo no está a punto de morir.
+   * @returns {Object.error} Mensaje de error si el jugador ya ha usado la poción de muerte.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo ya está muerto.
+   * @returns {Object.error} Mensaje de error si el tipo de poción es inválido.
+   * @returns {Object.mensaje} Mensaje de éxito si la poción se usa correctamente.
    */
   usaPocionBruja(idJugador, tipo, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
@@ -443,16 +470,25 @@ class Partida {
    *
    * @param {string} idJugador - ID del cazador.
    * @param {string} idObjetivo - ID del jugador al que dispara.
+   *
+   * @returns {Object}
+   * @returns {Object.error} Mensaje de error si el jugador no es cazador o no puede usar la habilidad.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo no es válido.
+   * @returns {Object.mensaje} Mensaje de éxito si el cazador dispara correctamente.
    */
   cazadorDispara(idJugador, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
     if (!jugador || jugador.rol !== "Cazador")
-      return "No puedes usar esta habilidad.";
-    if (!objetivo || !objetivo.estaVivo) return "Jugador erróneo.";
+      return { error: "No puedes usar esta habilidad." };
+    if (!objetivo || !objetivo.estaVivo) return { error: "Jugador erróneo." };
 
     this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
+
+    return {
+      mensaje: `El cazador ha disparado a ${objetivo.nombre}.`,
+    };
   }
 
   /**
@@ -460,17 +496,35 @@ class Partida {
    *
    * @param {string} idJugador - ID del alguacil actual.
    * @param {string} idObjetivo - ID del jugador que será el nuevo alguacil.
+   *
+   * @returns {Object}
+   * @returns {Object.mensaje} Mensaje de error si el jugador no es alguacil.
+   * @returns {Object.mensaje} Mensaje de error si el jugador objetivo no es válido.
+   * @returns {Object.mensaje} Mensaje de éxito si el jugador objetivo se convierte en el nuevo alguacil.
+   * @returns {Object.alguacil} ID del jugador que se convierte en el nuevo alguacil si es exitoso. Null en caso contrario.
    */
   elegirSucesor(idJugador, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
     if (!jugador || !jugador.esAlguacil)
-      return "No puedes usar esta habilidad.";
-    if (!objetivo || !objetivo.estaVivo) return "Jugador erróneo.";
+      return {
+        mensaje: "No puedes usar esta habilidad.",
+        alguacil: null,
+      };
+    if (!objetivo || !objetivo.estaVivo)
+      return {
+        mensaje: "Jugador erróneo.",
+        alguacil: null,
+      };
 
     jugador.esAlguacil = false; // El alguacil deja de serlo
     objetivo.esAlguacil = true; // El objetivo se convierte en el nuevo alguacil
+
+    return {
+      mensaje: `${objetivo.nombre} se convierte en el nuevo alguacil.`,
+      alguacil: idObjetivo,
+    };
   }
 
   /**
@@ -814,13 +868,13 @@ module.exports = Partida; // exportar la clase
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 18:18:55 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Apr 10 2025 10:31:40 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -148,6 +148,697 @@
     
 
     
+    <h4 class="name" id="~event:cazadorDispara">cazadorDispara</h4>
+    
+
+    
+
+
+
+<div class="description">
+    Permite al cazador disparar a un jugador.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>datos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Datos de la acción.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idPartida</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID de la partida en curso.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>idJugador</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del jugador cazador.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>idObjetivo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del jugador objetivo del cazador.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resultado</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Resultado de la acción.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.error</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje de error si no puede usar la habilidad el cazador.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.mensaje</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje con el resultado de la acción si se usa correctamente.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line529">line 529</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<h5>Fires:</h5>
+<ul>
+    <li>event:error - Si se produce un error al disparar.</li>
+
+    <li>event:cazadorDispara - Si el cazador dispara correctamente.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~event:elegirSucesor">elegirSucesor</h4>
+    
+
+    
+
+
+
+<div class="description">
+    Permite al alguacil elegir a su sucesor antes de morir.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>datos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Datos de la acción.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idPartida</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID de la partida en curso.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>idJugador</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del jugador que elige al sucesor.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>idObjetivo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del jugador que será el nuevo alguacil.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje de error si no puede elegir al sucesor.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resultado</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Resultado de la acción.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.mensaje</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje informativo con el resultado de la acción exitosa.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>alguacil</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.alguacil</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del jugador que se convierte en el nuevo alguacil.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line568">line 568</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<h5>Fires:</h5>
+<ul>
+    <li>event:error - Si se produce un error al elegir al sucesor.</li>
+
+    <li>event:elegirSucesor - Si el jugador elige al sucesor correctamente.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="~event:enviarMensaje">enviarMensaje</h4>
     
 
@@ -310,7 +1001,7 @@
 
         <tr>
             
-                <td class="name"><code>data</code></td>
+                <td class="name"><code>datos</code></td>
             
 
             <td class="type">
@@ -326,7 +1017,7 @@
 
             
 
-            <td class="description last">Chat actualizado de la partida.
+            <td class="description last">Datos del objeto mensaje que se envía al frontend.
                 <h6>Properties</h6>
                 
 
@@ -352,7 +1043,7 @@
 
         <tr>
             
-                <td class="name"><code>chat</code></td>
+                <td class="name"><code>mensaje</code></td>
             
 
             <td class="type">
@@ -368,7 +1059,53 @@
 
             
 
-            <td class="description last">Chat de la partida</td>
+            <td class="description last">Contenido del mensaje.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>nombre</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Nombre del jugador que envía el mensaje.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>timestamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Timestamp del mensaje.</td>
         </tr>
 
     
@@ -416,7 +1153,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line360">line 360</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line361">line 361</a>
     </li></ul></dd>
     
 
@@ -1036,6 +1773,294 @@
     
 
     
+    <h4 class="name" id="~event:obtenerEstadoJugadores">obtenerEstadoJugadores</h4>
+    
+
+    
+
+
+
+<div class="description">
+    Obtiene el estado actual de los jugadores de una partida.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>datos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Datos de la acción.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idPartida</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID de la partida en curso.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>datos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Datos del estado de la partida.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje informativo con el resultado de la acción.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>jugadores</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Object></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array de jugadores de la partida.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line612">line 612</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<h5>Fires:</h5>
+<ul>
+    <li>event:error - Si la partida no se encuentra.</li>
+
+    <li>event:estadoJugadores - Si el estado se obtiene correctamente.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="~event:usaPocionBruja">usaPocionBruja</h4>
     
 
@@ -1222,7 +2247,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
         <tr>
             
-                <td class="name"><code>partida</code></td>
+                <td class="name"><code>resultado</code></td>
             
 
             <td class="type">
@@ -1238,7 +2263,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
             
 
-            <td class="description last">Estado actualizado de la partida.
+            <td class="description last">Resultado de la acción.
                 <h6>Properties</h6>
                 
 
@@ -1264,13 +2289,36 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
         <tr>
             
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.error</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje de error si no puede usar la poción la supuesta bruja.</td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>mensaje</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Object.mensaje</span>
 
 
             
@@ -1280,53 +2328,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
             
 
-            <td class="description last">Mensaje con el resultado de la acción.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>tipo</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Tipo de poción ('curar' o 'eliminar').</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>idObjetivo</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">ID del jugador objetivo de la poción.</td>
+            <td class="description last">Mensaje con el resultado de la acción si se usa correctamente.</td>
         </tr>
 
     
@@ -1374,7 +2376,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line482">line 482</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line488">line 488</a>
     </li></ul></dd>
     
 
@@ -1391,7 +2393,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
 <h5>Fires:</h5>
 <ul>
-    <li>event:error - Si la partida no se encuentra.</li>
+    <li>event:error - Si se produce un error al usar la poción.</li>
 
     <li>event:usaPocionBruja - Si la poción se usa correctamente.</li>
 </ul>
@@ -1618,6 +2620,29 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje con el resultado de la acción.</td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1662,7 +2687,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line449">line 449</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line452">line 452</a>
     </li></ul></dd>
     
 
@@ -1867,13 +2892,13 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
         <tr>
             
-                <td class="name"><code>data</code></td>
+                <td class="name"><code>datos</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Object</span>
 
 
             
@@ -1883,7 +2908,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 
             
 
-            <td class="description last">Mensaje con el resultado de la revelación.
+            <td class="description last">Objeto con el resultado de la revelación.
                 <h6>Properties</h6>
                 
 
@@ -1926,6 +2951,29 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
             
 
             <td class="description last">Rol del jugador objetivo.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mensaje</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Mensaje informativo con el resultado de la revelación.</td>
         </tr>
 
     
@@ -1973,7 +3021,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line411">line 411</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line416">line 416</a>
     </li></ul></dd>
     
 
@@ -1991,6 +3039,8 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 <h5>Fires:</h5>
 <ul>
     <li>event:error - Si la partida no se encuentra.</li>
+
+    <li>event:visionJugador - Si la revelación se realiza correctamente.</li>
 </ul>
 
 
@@ -2495,7 +3545,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line304">line 304</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line305">line 305</a>
     </li></ul></dd>
     
 
@@ -2544,13 +3594,13 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 18:18:55 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Apr 10 2025 10:31:40 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
