@@ -287,8 +287,9 @@ const manejarConexionPartidas = (socket, io) => {
    */
   socket.on("votar", async ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, idPartida);
-    idSala = partida.idSala;
     if (!partida) return;
+
+    idSala = partida.idSala;
 
     if (partida.turno === "dia") {
       partida.vota(idJugador, idObjetivo);
@@ -369,44 +370,48 @@ const manejarConexionPartidas = (socket, io) => {
    * @emits error - Si la partida no se encuentra.
    * @emits mensajeChat - Si el mensaje se envía correctamente.
    * @emits mensajePrivado - Si el mensaje es privado entre hombres lobos.
-   * @param {Object} data - Chat actualizado de la partida.
-   * @param {string} data.chat - Chat de la partida
+   * @param {Object} datos - Datos del objeto mensaje que se envía al frontend.
+   * @param {string} datos.mensaje - Contenido del mensaje.
+   * @param {string} datos.nombre - Nombre del jugador que envía el mensaje.
+   * @param {number} datos.timestamp - Timestamp del mensaje.
    */
-  socket.on(
-    "enviarMensaje",
-    async ({ idPartida, idJugador, nombreJugador, mensaje }) => {
-      const partida = obtenerPartida(socket, idPartida);
-      if (!partida) return;
+  socket.on("enviarMensaje", async ({ idPartida, idJugador, mensaje }) => {
+    const partida = obtenerPartida(socket, idPartida);
+    if (!partida) return;
 
+    if (!partida.jugadorVivo(idJugador)) return;
+
+    if (partida.turno === "noche") {
+      // Enviar mensaje privado entre hombres lobos
+      const preparacionMensajes = partida.prepararMensajesChatNoche(
+        idJugador,
+        mensaje
+      );
+      preparacionMensajes.forEach(
+        ({ socketId, nombre, mensaje, timestamp }) => {
+          socket
+            .to(socketId)
+            .emit("mensajePrivado", { nombre, mensaje, timestamp });
+        }
+      );
+    } else {
       idSala = partida.idSala;
+      const nombreJugador = partida.obtenerNombreJugador(idJugador);
+      console.log(`Mensaje enviado al resto ${mensaje}`);
+      console.log(`Mensaje enviado al resto ${nombreJugador}`);
 
-      if (partida.turno === "noche") {
-        // Enviar mensaje privado entre hombres lobos
-        const preparacionMensajes = partida.prepararMensajesChatNoche(
-          idJugador,
-          mensaje
-        );
-        preparacionMensajes.forEach(
-          ({ socketId, nombre, mensaje, timestamp }) => {
-            socket
-              .to(socketId)
-              .emit("mensajePrivado", { nombre, mensaje, timestamp });
-          }
-        );
-      } else {
-        console.log(`Mensaje enviado al resto ${mensaje}`);
-        console.log(`Mensaje enviado al resto ${nombreJugador}`);
-        // Enviar mensaje público
-        partida.agregarMensajeChatDia(idJugador, mensaje);
-        io.to(idSala).emit("mensajeChat", {
-          mensaje: mensaje,
-          nombre: nombreJugador,
-        });
-        // Guardar cambios en Redis después de enviar un mensaje público en el chat
-        await guardarPartidasEnRedis();
-      }
+      // Enviar mensaje público
+      partida.agregarMensajeChatDia(idJugador, mensaje);
+      io.to(idSala).emit("mensajeChat", {
+        mensaje: mensaje,
+        nombre: nombreJugador,
+        timestamp: Date.now(),
+      });
+
+      // Guardar cambios en Redis después de enviar un mensaje público en el chat
+      await guardarPartidasEnRedis();
     }
-  );
+  });
 
   /**
    * Revela el rol de un jugador en la partida.
@@ -418,33 +423,31 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {number} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
    *
    * @emits error - Si la partida no se encuentra.
-   * @param {string} data - Mensaje con el resultado de la revelación.
-   * @param {string} data.rol - Rol del jugador objetivo.
+   * @emits visionJugador - Si la revelación se realiza correctamente.
+   * @param {Object} datos - Objeto con el resultado de la revelación.
+   * @param {string} datos.rol - Rol del jugador objetivo.
+   * @param {string} datos.mensaje - Mensaje informativo con el resultado de la revelación.
    */
-  socket.on(
-    "videnteRevela",
-    async ({ idPartida, idJugador, idObjetivo }, callback) => {
-      try {
-        const partida = obtenerPartida(socket, idPartida);
-        if (!partida) {
-          return;
-        }
-
-        idSala = partida.idSala;
-
-        const resultado = partida.videnteRevela(idJugador, idObjetivo);
-        socket.emit("visionJugador", {
-          rol: resultado.rol,
-        });
-
-        // Guardar cambios en Redis después de revelar el rol
-        await guardarPartidasEnRedis();
-      } catch (error) {
-        console.error("Error en videnteRevela:", error);
-        socket.emit("error", "Error al revelar el rol");
+  socket.on("videnteRevela", async ({ idPartida, idJugador, idObjetivo }) => {
+    try {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) {
+        return;
       }
+
+      const resultado = partida.videnteRevela(idJugador, idObjetivo);
+      socket.emit("visionJugador", {
+        mensaje: resultado.mensaje,
+        rol: resultado.rol,
+      });
+
+      // Guardar cambios en Redis después de revelar el rol
+      await guardarPartidasEnRedis();
+    } catch (error) {
+      console.error("Error en videnteRevela:", error);
+      socket.emit("error", "Error al revelar el rol");
     }
-  );
+  });
 
   /**
    * Permite a la bruja ver la victima elegida por los lobos.
@@ -460,22 +463,25 @@ const manejarConexionPartidas = (socket, io) => {
    * @emits visionElegidaLobos - Si la victima elegida por los lobos se ve correctamente.
    * @param {Object} resultado - Resultado de la acción.
    * @param {string} resultado.victima - ID de la victima elegida por los lobos.
+   * @param {string} resultado.mensaje - Mensaje con el resultado de la acción.
    */
-  socket.on("verVictimaElegidaLobos", ({ idPartida, idJugador }, callback) => {
+  socket.on("verVictimaElegidaLobos", ({ idPartida, idJugador }) => {
     try {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      idSala = partida.idSala;
-
       const resultado = partida.verVictimaElegidaLobos(idJugador);
 
       socket.emit("visionElegidaLobos", {
-        victima: victima,
+        victima: resultado.victima,
+        mensaje: resultado.mensaje,
       });
     } catch (error) {
       console.error("Error en verVictimaElegidaLobos:", error);
-      socket.emit("error", "Error al observar víctima");
+      socket.emit(
+        "error",
+        "Error al tratar de ver la víctima elegida por los lobos"
+      );
     }
   });
 
@@ -491,76 +497,149 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {string} datos.tipo - Tipo de poción ('curar' o 'eliminar').
    * @param {number} datos.idObjetivo - ID del jugador objetivo de la poción.
    *
-   * @emits error - Si la partida no se encuentra.
+   * @emits error - Si se produce un error al usar la poción.
    * @emits usaPocionBruja - Si la poción se usa correctamente.
-   * @param {Object} partida - Estado actualizado de la partida.
-   * @param {string} partida.mensaje - Mensaje con el resultado de la acción.
-   * @param {string} partida.tipo - Tipo de poción ('curar' o 'eliminar').
-   * @param {number} partida.idObjetivo - ID del jugador objetivo de la poción.
+   * @param {Object} resultado - Resultado de la acción.
+   * @param {Object.error} resultado.error - Mensaje de error si no puede usar la poción la supuesta bruja.
+   * @param {Object.mensaje} resultado.mensaje - Mensaje con el resultado de la acción si se usa correctamente.
    */
-  socket.on(
-    "usaPocionBruja",
-    ({ idPartida, idJugador, tipo, idObjetivo }, callback) => {
-      try {
-        const partida = obtenerPartida(socket, idPartida);
-        if (!partida) return;
+  socket.on("usaPocionBruja", ({ idPartida, idJugador, tipo, idObjetivo }) => {
+    try {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) return;
 
-        idSala = partida.idSala;
+      const resultado = partida.usaPocionBruja(idJugador, tipo, idObjetivo);
+      if (resultado.error) {
+        socket.emit("error", resultado.error);
+        return;
+      } else if (resultado.mensaje) {
+        socket.emit("usaPocionBruja", {
+          mensaje: resultado.mensaje,
+        });
 
-        const resultado = partida.usaPocionBruja(idJugador, tipo, idObjetivo);
-        callback(resultado);
+        // Guardar cambios en Redis después de usar correctamente la poción de bruja
+        guardarPartidasEnRedis();
+      }
+    } catch (error) {
+      console.error("Error en usaPocionBruja:", error);
+      socket.emit("error", "Error al usar poción");
+    }
+  });
+
+  /**
+   * Permite al cazador disparar a un jugador.
+   *
+   * @event cazadorDispara
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {number} datos.idJugador - ID del jugador cazador.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo del cazador.
+   *
+   * @emits error - Si se produce un error al disparar.
+   * @emits cazadorDispara - Si el cazador dispara correctamente.
+   * @param {Object} resultado - Resultado de la acción.
+   * @param {Object.error} resultado.error - Mensaje de error si no puede usar la habilidad el cazador.
+   * @param {Object.mensaje} resultado.mensaje - Mensaje con el resultado de la acción si se usa correctamente.
+   */
+  socket.on("cazadorDispara", ({ idPartida, idJugador, idObjetivo }) => {
+    try {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) return;
+
+      const resultado = partida.cazadorDispara(idJugador, idObjetivo);
+      if (resultado.error) {
+        socket.emit("error", resultado.error);
+        return;
+      } else if (resultado.mensaje) {
+        socket.emit("cazadorDispara", {
+          mensaje: resultado.mensaje,
+        });
 
         // Guardar cambios en Redis después de usar la poción de bruja
         guardarPartidasEnRedis();
-      } catch (error) {
-        console.error("Error en usaPocionBruja:", error);
-        socket.emit("error", "Error al usar poción");
       }
+    } catch (error) {
+      console.error("Error en cazadorDispara:", error);
+      socket.emit("error", "Error al disparar");
     }
-  );
+  });
 
-  socket.on(
-    "cazadorDispara",
-    ({ idPartida, idJugador, idObjetivo }, callback) => {
-      try {
-        const partida = obtenerPartida(socket, idPartida);
-        if (!partida) return;
+  /**
+   * Permite al alguacil elegir a su sucesor antes de morir.
+   *
+   * @event elegirSucesor
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {number} datos.idJugador - ID del jugador que elige al sucesor.
+   * @param {number} datos.idObjetivo - ID del jugador que será el nuevo alguacil.
+   *
+   * @emits error - Si se produce un error al elegir al sucesor.
+   * @param {String} mensaje - Mensaje de error si no puede elegir al sucesor.
+   *
+   * @emits elegirSucesor - Si el jugador elige al sucesor correctamente.
+   * @param {Object} resultado - Resultado de la acción.
+   * @param {Object.mensaje} resultado.mensaje - Mensaje informativo con el resultado de la acción exitosa.
+   * @param {Object.alguacil} resultado.alguacil - ID del jugador que se convierte en el nuevo alguacil.
+   */
+  socket.on("elegirSucesor", ({ idPartida, idJugador, idObjetivo }) => {
+    try {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) return;
 
+      const resultado = partida.elegirSucesor(idJugador, idObjetivo);
+      if (resultado.alguacil === null) {
+        socket.emit("error", resultado.mensaje);
+        return;
+      } else if (resultado.alguacil) {
         idSala = partida.idSala;
 
-        const resultado = partida.cazadorDispara(idJugador, idObjetivo);
-        callback({ mensaje: resultado });
+        io.to(idSala).emit("alguacilElegido", {
+          mensaje: resultado.mensaje,
+          alguacil: resultado.alguacil,
+        });
 
-        // Guardar cambios en Redis después de usar la poción de bruja
+        // Guardar cambios en Redis después de elegir sucesor
         guardarPartidasEnRedis();
-      } catch (error) {
-        console.error("Error en cazadorDispara:", error);
-        socket.emit("error", "Error al usar poción");
       }
+    } catch (error) {
+      console.error("Error en elegirSucesor:", error);
+      socket.emit("error", "Error al elegir sucesor");
     }
-  );
+  });
 
-  socket.on("obtenerEstadoPartida", ({ idPartida }) => {
+  /**
+   * Obtiene el estado actual de los jugadores de una partida.
+   *
+   * @event obtenerEstadoJugadores
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   *
+   * @emits error - Si la partida no se encuentra.
+   * @emits estadoJugadores - Si el estado se obtiene correctamente.
+   * @param {Object} datos - Datos del estado de la partida.
+   * @param {string} datos.mensaje - Mensaje informativo con el resultado de la acción.
+   * @param {Object[]} datos.jugadores - Array de jugadores de la partida.
+   */
+  socket.on("obtenerEstadoJugadores", ({ idPartida }) => {
     try {
       // Obtenemos la partida en memoria
       const partida = partidas[idPartida];
       if (!partida) {
-        // !!! ADAPTAR A FORMATO COMÚN DE ERROR
-        socket.emit("estadoPartida", {
-          error: "No se encontró la partida con ese ID",
-          jugadores: [],
-        });
+        socket.emit("error", "No se encontró la partida con ese ID");
         return;
       }
 
       // Si existe, enviamos el array de jugadores
-      socket.emit("estadoPartida", {
-        mensaje: "Estado actual de la partida",
+      socket.emit("estadoJugadores", {
+        mensaje: "Estado actual de los jugadores de la partida",
         jugadores: partida.jugadores,
       });
     } catch (error) {
-      console.error("Error en obtenerEstadoPartida:", error);
-      socket.emit("error", "Error al obtener estado de partida");
+      console.error("Error en obtenerEstadoJugadores:", error);
+      socket.emit("error", "Error al obtener el estado de los jugadores");
     }
   });
 };

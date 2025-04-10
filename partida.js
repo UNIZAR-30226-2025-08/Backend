@@ -6,6 +6,7 @@ class Partida {
    * Crea una nueva partida.
    * @param {number} idPartida - Identificador único de la partida.
    * @param {Array<Object>} jugadores - Lista de jugadores con sus respectivos roles.
+   * @param {number} idSala - Identificador único de la sala.
    */
   constructor(idPartida, jugadores, idSala) {
     this.idPartida = idPartida;
@@ -25,7 +26,7 @@ class Partida {
       pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de muerte
       haVisto: jugador.rol === "Vidente" ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
     }));
-    this.chat = []; // Mensajes de chat (día: global, noche: solo lobos)
+    this.chat = []; // Mensajes de chat (durante el día los mensajes son públicos)
     this.votosAlguacil = {}; // Votos para elegir al alguacil
     this.votos = {}; // Votos de los jugadores durante el día
     this.repetirVotacionAlguacil = false; // Para empates en elección de alguacil
@@ -84,21 +85,40 @@ class Partida {
   }
 
   /**
-   * (Método que usa partidaWS) Agrega un mensaje al chat de la partida si el turno es de día.
+   * (Método que usa partidaWS) Agrega un mensaje al chat de la partida
+   * si el turno es de día y el jugador está vivo.
    * @param {number} idJugador - ID del jugador que envía el mensaje.
    * @param {string} mensaje - Contenido del mensaje.
    */
   agregarMensajeChatDia(idJugador, mensaje) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
-    if (!jugador || !jugador.estaVivo) return;
+    if (!jugador || !jugador.estaVivo || this.turno !== "dia") return;
 
-    if (this.turno === "dia") {
-      this.chat.push({
-        nombre: jugador.nombre,
-        mensaje,
-        timestamp: Date.now(),
-      });
-    }
+    this.chat.push({
+      nombre: jugador.nombre,
+      mensaje,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * (Método que usa partidaWS) Comprueba si un jugador está vivo.
+   * @param {number} idJugador - ID del jugador que se quiere comprobar.
+   * @returns {boolean} - true si el jugador está vivo, false en caso contrario.
+   */
+  jugadorVivo(idJugador) {
+    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    return jugador && jugador.estaVivo;
+  }
+
+  /**
+   * (Método que usa partidaWS) Obtiene el nombre de un jugador.
+   * @param {number} idJugador - ID del jugador que se quiere obtener el nombre.
+   * @returns {string} - Nombre del jugador.
+   */
+  obtenerNombreJugador(idJugador) {
+    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    return jugador ? jugador.nombre : null;
   }
 
   /**
@@ -356,6 +376,13 @@ class Partida {
    * @param {string} tipo - Tipo de poción a usar ('curar' o 'matar').
    * @param {string} idObjetivo - ID del jugador afectado por la poción.
    * @returns {Object} - Mensaje de éxito o error.
+   * @returns {Object.error} Mensaje de error si el jugador no es bruja, no es de noche o está muerto.
+   * @returns {Object.error} Mensaje de error si el jugador ya ha usado la poción de curación.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo no está a punto de morir.
+   * @returns {Object.error} Mensaje de error si el jugador ya ha usado la poción de muerte.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo ya está muerto.
+   * @returns {Object.error} Mensaje de error si el tipo de poción es inválido.
+   * @returns {Object.mensaje} Mensaje de éxito si la poción se usa correctamente.
    */
   usaPocionBruja(idJugador, tipo, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
@@ -415,16 +442,25 @@ class Partida {
    *
    * @param {string} idJugador - ID del cazador.
    * @param {string} idObjetivo - ID del jugador al que dispara.
+   *
+   * @returns {Object}
+   * @returns {Object.error} Mensaje de error si el jugador no es cazador o no puede usar la habilidad.
+   * @returns {Object.error} Mensaje de error si el jugador objetivo no es válido.
+   * @returns {Object.mensaje} Mensaje de éxito si el cazador dispara correctamente.
    */
   cazadorDispara(idJugador, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
     if (!jugador || jugador.rol !== "Cazador")
-      return "No puedes usar esta habilidad.";
-    if (!objetivo || !objetivo.estaVivo) return "Jugador erróneo.";
+      return { error: "No puedes usar esta habilidad." };
+    if (!objetivo || !objetivo.estaVivo) return { error: "Jugador erróneo." };
 
     this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
+
+    return {
+      mensaje: `El cazador ha disparado a ${objetivo.nombre}.`,
+    };
   }
 
   /**
@@ -432,17 +468,35 @@ class Partida {
    *
    * @param {string} idJugador - ID del alguacil actual.
    * @param {string} idObjetivo - ID del jugador que será el nuevo alguacil.
+   *
+   * @returns {Object}
+   * @returns {Object.mensaje} Mensaje de error si el jugador no es alguacil.
+   * @returns {Object.mensaje} Mensaje de error si el jugador objetivo no es válido.
+   * @returns {Object.mensaje} Mensaje de éxito si el jugador objetivo se convierte en el nuevo alguacil.
+   * @returns {Object.alguacil} ID del jugador que se convierte en el nuevo alguacil si es exitoso. Null en caso contrario.
    */
   elegirSucesor(idJugador, idObjetivo) {
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
     if (!jugador || !jugador.esAlguacil)
-      return "No puedes usar esta habilidad.";
-    if (!objetivo || !objetivo.estaVivo) return "Jugador erróneo.";
+      return {
+        mensaje: "No puedes usar esta habilidad.",
+        alguacil: null,
+      };
+    if (!objetivo || !objetivo.estaVivo)
+      return {
+        mensaje: "Jugador erróneo.",
+        alguacil: null,
+      };
 
     jugador.esAlguacil = false; // El alguacil deja de serlo
     objetivo.esAlguacil = true; // El objetivo se convierte en el nuevo alguacil
+
+    return {
+      mensaje: `${objetivo.nombre} se convierte en el nuevo alguacil.`,
+      alguacil: idObjetivo,
+    };
   }
 
   /**
