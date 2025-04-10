@@ -618,9 +618,11 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {string} datos.idPartida - ID de la partida en curso.
    *
    * @emits error - Si la partida no se encuentra.
+   * @param {String} mensaje - Mensaje de error si no se encuentra la partida.
+   *
    * @emits estadoJugadores - Si el estado se obtiene correctamente.
-   * @param {Object} datos - Datos del estado de la partida.
-   * @param {string} datos.mensaje - Mensaje informativo con el resultado de la acción.
+   * @param {Object} datos - Datos del estado de los jugadores de la partida.
+   * @param {string} datos.mensaje - Mensaje informativo.
    * @param {Object[]} datos.jugadores - Array de jugadores de la partida.
    */
   socket.on("obtenerEstadoJugadores", ({ idPartida }) => {

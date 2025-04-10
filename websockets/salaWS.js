@@ -303,6 +303,76 @@ const manejarConexionSalas = (socket, io) => {
   });
 
   /**
+   * Unirse rápidamente a una sala pública.
+   * @event unirseRapido
+   *
+   * @param {Object} datos - Datos del usuario que se quiere unir.
+   * @param {Object} datos.usuario - Datos del usuario.
+   * @param {number} datos.usuario.id - ID del usuario.
+   * @param {string} datos.usuario.nombre - Nombre del usuario.
+   *
+   * @emits error - Si no hay salas públicas disponibles.
+   * @param {string} mensaje - Mensaje de error.
+   *
+   * @emits salaActualizada - Si se une exitosamente a una sala.
+   * @param {Object} sala - Datos de la sala a la que se unió.
+   */
+  socket.on("unirseRapido", async ({ usuario }) => {
+    // Filtrar salas públicas que no estén llenas
+    const salasPublicas = Object.values(salas).filter(
+      (sala) =>
+        sala.tipo === "publica" && sala.jugadores.length < sala.maxJugadores
+    );
+
+    if (salasPublicas.length === 0) {
+      socket.emit("error", "No hay salas públicas disponibles");
+      return;
+    }
+
+    // Ordenar salas por proximidad a completarse (más jugadores primero)
+    salasPublicas.sort((a, b) => {
+      const ratioA = a.jugadores.length / a.maxJugadores;
+      const ratioB = b.jugadores.length / b.maxJugadores;
+      return ratioB - ratioA;
+    });
+
+    // Tomar la sala más cercana a completarse
+    const salaElegida = salasPublicas[0];
+
+    // Verificar si el jugador ya está en la sala
+    const yaEsta = salaElegida.jugadores.some((j) => j.id === usuario.id);
+    if (yaEsta) {
+      socket.emit("error", "Ya estás en esta sala");
+      return;
+    }
+
+    // Agregar el jugador a la sala
+    salaElegida.jugadores.push({
+      ...usuario,
+      avatar: usuario.avatar,
+      socketId: socket.id,
+    });
+    socket.join(salaElegida.id);
+
+    await guardarSalasEnRedis(); // Guardar cambios en Redis
+
+    // Notificar al usuario que se unió
+    socket.emit("salaActualizada", salaElegida);
+
+    // Notificar a todos los jugadores de la sala que un nuevo jugador se ha unido
+    io.to(salaElegida.id).emit("jugadorUnido", {
+      nombre: usuario.nombre,
+      id: usuario.id,
+      avatar: usuario.avatar,
+    });
+
+    // Retrasar la actualización de la sala para disimular la reconexión
+    setTimeout(() => {
+      io.to(salaElegida.id).emit("actualizarSala", salaElegida);
+    }, 1000);
+  });
+
+  /**
    * Expulsar a un jugador de la sala.
    * @event expulsarJugador
    *
