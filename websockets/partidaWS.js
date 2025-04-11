@@ -288,15 +288,12 @@ const manejarConexionPartidas = (socket, io) => {
   socket.on("votar", async ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
-
     idSala = partida.idSala;
-
     if (partida.turno === "dia") {
       partida.vota(idJugador, idObjetivo);
     } else {
       partida.votaNoche(idJugador, idObjetivo);
     }
-    io.to(idSala).emit("votoRegistrado", { estado: partida });
 
     // Guardar cambios en Redis después de registrar un voto
     await guardarPartidasEnRedis();
@@ -739,6 +736,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                   alguacil: resultadoAlguacil2.alguacil,
                 });
               }
+              partida.gestionarTurno();
               await iniciarCicloPartida();
             }
           }, 1000);
@@ -748,6 +746,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             mensaje: resultadoAlguacil.mensaje,
             alguacil: resultadoAlguacil.alguacil,
           });
+          partida.gestionarTurno();
           await iniciarCicloPartida();
         }
       }
