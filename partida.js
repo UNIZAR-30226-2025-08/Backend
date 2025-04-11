@@ -516,7 +516,7 @@ class Partida {
    *    y null en el atributo 'jugadorAEliminar'.
    */
   resolverVotosDia() {
-    if (this.turno !== "dia" || !this.votacionActiva) return;
+    if (this.turno !== "dia") return;
     const conteoVotos = {};
 
     for (const votante in this.votos) {
@@ -584,7 +584,15 @@ class Partida {
    *    y null en el atributo 'victima'.
    */
   resolverVotosNoche() {
-    if (this.turno !== "noche" || !this.votacionLobosActiva) return;
+    if (this.turno !== "noche") {
+      if (this.turno !== "noche") {
+        console.log("No es de noche");
+      }
+      return {
+        mensaje: "Error, no se está realizando una votación",
+        victima: null,
+      };
+    }
     const conteoVotos = {};
 
     for (const idLobo in this.votosNoche) {
@@ -618,8 +626,7 @@ class Partida {
       this.votacionLobosActiva = false; // Desactivar la votación
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
-        mensaje:
-          "Los lobos no se pusieron de acuerdo, no hay víctima esta noche.",
+        mensaje: `Los lobos no se pusieron de acuerdo, no hay víctima esta noche.`,
         victima: null,
       };
     }
