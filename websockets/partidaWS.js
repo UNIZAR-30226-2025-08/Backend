@@ -699,6 +699,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     // Fase 2: Iniciar votaciones para elegir alguacil
     io.to(idSala).emit("iniciarVotacionAlguacil", {
       mensaje: "Inician las votaciones para elegir al alguacil.",
+      tiempo: 30,
     });
     partida.iniciarVotacionAlguacil();
 
@@ -761,6 +762,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     // Sub-fase 1: Habilidad de la vidente
     io.to(idSala).emit("habilidadVidente", {
       mensaje: "La vidente tiene 15 segundos para usar su habilidad.",
+      tiempo: 15,
     });
     partida.iniciarHabilidadVidente();
 
@@ -780,6 +782,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       io.to(idSala).emit("turnoHombresLobos", {
         mensaje:
           "Los hombres lobos tienen 30 segundos para elegir una víctima.",
+        tiempo: 30,
       });
       partida.iniciarVotacionLobos();
 
@@ -817,6 +820,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     const manejarFaseBruja = () => {
       io.to(idSala).emit("habilidadBruja", {
         mensaje: "La bruja tiene 30 segundos para usar su poción.",
+        tiempo: 30,
       });
       partida.iniciarHabilidadBruja();
 
@@ -845,6 +849,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       io.to(idSala).emit("diaComienza", {
         mensaje:
           "Es de día, los jugadores tienen 1 minuto para decidir quién será eliminado.",
+        tiempo: 60,
       });
       partida.iniciarVotacion();
 
@@ -917,6 +922,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   // Fase 1: Esperar 30 segundos antes de iniciar las votaciones de alguacil
   io.to(idSala).emit("esperaInicial", {
     mensaje: "La partida comenzará en 30 segundos",
+    tiempo: 30,
   });
   await new Promise((resolve) => setTimeout(resolve, 30000)); // 30 segundos de espera inicial
 
