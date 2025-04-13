@@ -686,6 +686,14 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
       partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria
       //delete partida; // Eliminar de la memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      // !! Meto esto aquí porque resulta más fácil, pero igual habría que cambiar
+      // El nombre de la función porque no sólo verificarFin !!!!!!!
+      PartidaDAO.finalizarPartida(
+        partida.idPartida,
+        "terminada",
+        resultado.ganador
+      );
       return true;
     }
     return false;
