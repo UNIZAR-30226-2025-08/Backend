@@ -245,7 +245,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   vota(idJugador, idObjetivo) {
-    if (this.turno !== "dia") return;
+    if (this.turno !== "dia" || !this.votacionActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
@@ -269,7 +269,7 @@ class Partida {
    * @param {string} idObjetivo - ID del jugador al que vota.
    */
   votaNoche(idJugador, idObjetivo) {
-    if (this.turno !== "noche") return;
+    if (this.turno !== "noche" || !this.votacionLobosActiva) return;
     const jugador = this.jugadores.find((j) => j.id === idJugador);
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
 
@@ -299,8 +299,10 @@ class Partida {
    * @returns {string} Mensaje con el rol revelado.
    * @returns {string} Rol del jugador seleccionado.
    *
-   * - Si el jugador seleccionado esta muerto : 'Solo puedes ver el rol de un jugador vivo.'
-   * - Si el jugador no puede realizar dicha acción: 'No puedes usar esta habilidad.'
+   * - Si el jugador seleccionado está muerto : Objeto con el mensaje 'Solo puedes ver el rol de un jugador vivo.'
+   *   y null en el atributo 'rol'.
+   * - Si el jugador no puede realizar dicha acción: Objeto con el mensaje 'No puedes usar esta habilidad.'
+   *   y null en el atributo 'rol'.
    * - Si la acción es correcta: Objeto con el mensaje 'El jugador ID es ROL' Siendo ROL el rol del jugador seleccionado
    *    y el rol del jugador en el atributo 'rol'.
    */
@@ -312,12 +314,20 @@ class Partida {
       !jugador.estaVivo ||
       jugador.rol !== "Vidente" ||
       jugador.haVisto
-    )
-      return "No puedes usar esta habilidad.";
+    ) {
+      return {
+        mensaje: "No puedes usar esta habilidad.",
+        rol: null,
+      };
+    }
 
     const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
-    if (!objetivo || !objetivo.estaVivo)
-      return "Solo puedes ver el rol de un jugador vivo.";
+    if (!objetivo || !objetivo.estaVivo) {
+      return {
+        mensaje: "Solo puedes ver el rol de un jugador vivo.",
+        rol: null,
+      };
+    }
 
     jugador.haVisto = true; // La vidente solo puede ver un jugador por noche
 
@@ -585,9 +595,7 @@ class Partida {
    */
   resolverVotosNoche() {
     if (this.turno !== "noche") {
-      if (this.turno !== "noche") {
-        console.log("No es de noche");
-      }
+      console.log("No es de noche");
       return {
         mensaje: "Error, no se está realizando una votación",
         victima: null,
@@ -736,7 +744,7 @@ class Partida {
     if (aldeanosVivos === 0 && lobosVivos !== 0) {
       this.estado = "terminada";
       return {
-        ganador: "hombres lobos",
+        ganador: "lobos",
         mensaje: "Los hombres lobos han ganado la partida.",
       };
     }
