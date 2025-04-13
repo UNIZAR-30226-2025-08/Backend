@@ -697,6 +697,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         resultado.ganador
       );
       console.log(`Fin de partida`);
+      console.log(`Fin de partida. Ganador: ${resultado.ganador}`);
       return true;
     }
     return false;

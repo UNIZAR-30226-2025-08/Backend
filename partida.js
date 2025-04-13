@@ -135,7 +135,7 @@ class Partida {
 
     const preparacionMensajes = [];
     this.jugadores.forEach((j) => {
-      if (j.rol === "Hombre lobo" && j.estaVivo && j.id !== idJugador) {
+      if (j.rol === "Hombre lobo" && j.estaVivo) {
         preparacionMensajes.push({
           socketId: j.socketId,
           nombre: jugador.nombre,
@@ -833,7 +833,7 @@ class Partida {
         }
       });
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteHabilidad);
+    }, this.tiempoLimiteHabilidad + 5000); // !!! Sino no da tiempo
   }
 
   // Método para iniciar la habilidad de la bruja
