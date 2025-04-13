@@ -386,9 +386,11 @@ const manejarConexionPartidas = (socket, io) => {
       );
       preparacionMensajes.forEach(
         ({ socketId, nombre, mensaje, timestamp }) => {
-          socket
-            .to(socketId)
-            .emit("mensajePrivado", { nombre, mensaje, timestamp });
+          socket.to(socketId).emit("mensajePrivado", {
+            mensaje: mensaje,
+            nombre: nombre,
+            timestamp: timestamp,
+          });
         }
       );
     } else {
@@ -694,6 +696,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         "terminada",
         resultado.ganador
       );
+      console.log(`Fin de partida`);
       return true;
     }
     return false;
