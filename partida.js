@@ -186,7 +186,8 @@ class Partida {
 
     if (candidatos.length === 1) {
       this.jugadores.forEach((j) => (j.esAlguacil = false)); // Asegurarse de que ningún jugador sea alguacil
-      const alguacil = this.jugadores.find((j) => j.id === candidatos[0]);
+      const candidateId = Number(candidatos[0]); // Convertir a número
+      const alguacil = this.jugadores.find((j) => j.id === candidateId);
       if (alguacil) alguacil.esAlguacil = true;
       this.repetirVotacionAlguacil = false; // Reiniciar flag de repetición
       this.votacionAlguacilActiva = false; // Desactivar la votación de elegir alguacil
