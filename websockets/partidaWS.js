@@ -305,8 +305,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del voto.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que vota.
-   * @param {number} datos.idObjetivo - ID del jugador objetivo del voto.
+   * @param {string} datos.idJugador - ID del jugador que vota.
+   * @param {string} datos.idObjetivo - ID del jugador objetivo del voto.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoAlguacilRegistrado - Si el voto se registra correctamente.
