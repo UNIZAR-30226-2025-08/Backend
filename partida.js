@@ -474,6 +474,17 @@ class Partida {
   }
 
   /**
+   * Verifica si hay un jugador con el rol 'Cazador' en la cola de eliminaciones.
+   * @returns {boolean} - true si hay al menos un cazador en la cola, false en caso contrario.
+   */
+  cazadorHaMuerto() {
+    return this.colaEliminaciones.some((idJugador) => {
+      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      return jugador && jugador.rol === "Cazador";
+    });
+  }
+
+  /**
    * Permite al alguacil elegir a su sucesor antes de morir.
    *
    * @param {string} idJugador - ID del alguacil actual.
@@ -838,6 +849,13 @@ class Partida {
 
   // Método para iniciar la habilidad de la bruja
   iniciarHabilidadBruja() {
+    this.temporizadorHabilidad = setTimeout(() => {
+      this.temporizadorHabilidad = null; // Reiniciar el temporizador
+    }, this.tiempoLimiteHabilidad);
+  }
+
+  // Método para iniciar la habilidad del cazador
+  iniciarHabilidadCazador() {
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);

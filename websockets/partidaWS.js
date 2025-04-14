@@ -844,12 +844,51 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LAS BRUJAS HAN USADOS LAS DOS POCIONES O EL TIEMPO LIMITE HA EXPIRADO
         if (todasBrujasUsaron || !partida.temporizadorHabilidad) {
           clearInterval(checkBruja);
+
+          // Si el cazador murió, activamos su fase antes de pasar al día
+          if (partida.cazadorHaMuerto()) {
+            //await manejarFaseCazador();
+          }
+
           const resultadoTurno2 = partida.gestionarTurno();
 
           const finPartida2 = verificarFinPartida(resultadoTurno2);
           await guardarPartidasEnRedis();
+
           if (partida.estado === "en_curso" && !finPartida2) {
             await manejarFaseDia(); // Pasar a la fase de día
+          }
+        }
+      }, 1000);
+    };
+
+    // Sub-fase opcional 4: Habilidad del cazador
+    const manejarFaseCazador = () => {
+      console.log("Fase del Cazador iniciada");
+
+      const cazadorMuerto = partida.jugadores.find(
+        (j) => partida.colaEliminaciones.includes(j.id) && j.rol === "Cazador"
+      );
+
+      if (!cazadorMuerto) {
+        return; // No hay cazador, no se hace nada
+      }
+
+      io.to(idSala).emit("habilidadCazador"); // Emit sin datos
+
+      partida.iniciarHabilidadCazador();
+
+      // !!! Implementar paso de fase cuando ya ha actuado !!!
+
+      const checkCazador = setInterval(async () => {
+        if (!partida.temporizadorHabilidad) {
+          clearInterval(checkCazador);
+          console.log("Fin de la fase del Cazador");
+
+          await guardarPartidasEnRedis();
+
+          if (partida.estado === "en_curso") {
+            await manejarFaseDia();
           }
         }
       }, 1000);
