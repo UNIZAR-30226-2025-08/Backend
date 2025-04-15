@@ -650,8 +650,10 @@ const manejarDesconexionPartidas = (socket, io) => {
   for (const idPartida in partidas) {
     const partida = partidas[idPartida];
 
-    idSala = partida.idSala;
+    // Si la partida es nula o no existe, saltamos esta iteración.
+    if (!partida) continue;
 
+    const idSala = partida.idSala;
     const jugador = partida.jugadores.find((j) => j.socketId === socket.id);
     if (jugador) {
       // Eliminar al jugador de la partida
