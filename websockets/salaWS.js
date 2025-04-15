@@ -353,6 +353,7 @@ const manejarConexionSalas = (socket, io) => {
    * @param {Object[]} salas - Lista de salas disponibles.
    */
   socket.on("obtenerSalas", () => {
+    console.log("Salas actuales:", JSON.stringify(salas, null, 2)); // Log para mostrar la información de las salas
     socket.emit("listaSalas", Object.values(salas));
   });
 

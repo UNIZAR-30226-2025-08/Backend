@@ -149,6 +149,44 @@ router.post("/obtener_por_id", async (req, res) => {
 });
 
 /**
+ * Obtiene el avatar de un usuario por id.
+ *
+ * @function POST /api/usuario/obtener_avatar_por_id
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
+ * @param {string} req.body.idUsuario - ID del usuario a buscar.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El id del usuario es requerido.
+ * @throws {404} Usuario no encontrado.
+ * @throws {500} Error interno al obtener el avatar.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.avatar - URL del avatar del usuario (si se encuentra).
+ * @param {Object} res.error - Objeto de error en caso de fallo.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/obtener_avatar_por_id", async (req, res) => {
+  const { idUsuario } = req.body; // Obtenemos el id del body
+
+  if (!idUsuario) {
+    return res.status(400).json({ error: "El id es requerido." });
+  }
+
+  try {
+    const usuario = await UsuarioDAO.obtenerUsuarioID(idUsuario);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    // Retornamos solo el avatar del usuario
+    res.status(200).json({ avatar: usuario.avatar });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Inicia sesión validando las credenciales del usuario.
  *
  * @function POST /api/usuario/login

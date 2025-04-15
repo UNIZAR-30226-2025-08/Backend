@@ -149,6 +149,8 @@ const manejarConexionUsuarios = (socket, io) => {
       en_linea: !!usuariosConectados[idAmigo],
     }));
 
+    console.log(`Estado de amigos para el usuario ${idUsuario}:`, estadoAmigos);
+
     socket.emit("estadoAmigos", estadoAmigos);
   });
 };
