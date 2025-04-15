@@ -25,6 +25,7 @@ class Partida {
       pocionCuraUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de vida
       pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de muerte
       haVisto: jugador.rol === "Vidente" ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
+      haDisparado: jugador.rol === "Cazador" ? false : undefined, // Si el cazador disparó a un jugador
     }));
     this.chat = []; // Mensajes de chat (durante el día los mensajes son públicos)
     this.votosAlguacil = {}; // Votos para elegir al alguacil
@@ -470,6 +471,7 @@ class Partida {
     if (!objetivo || !objetivo.estaVivo) return { error: "Jugador erróneo." };
 
     this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
+    jugador.haDisparado = true; // Marcar que el cazador ha usado su habilidad
 
     return {
       mensaje: `El cazador ha disparado a ${objetivo.nombre}.`,
@@ -477,11 +479,22 @@ class Partida {
   }
 
   /**
-   * Verifica si hay un jugador con el rol 'Cazador' en la cola de eliminaciones.
-   * @returns {boolean} - true si hay al menos un cazador en la cola, false en caso contrario.
+   * Verifica si hay al menos un jugador con el rol 'Cazador' en la cola de eliminaciones.
+   * @returns {boolean} - True si hay al menos un cazador en la cola. False en caso contrario.
    */
   cazadorHaMuerto() {
     return this.colaEliminaciones.some((idJugador) => {
+      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      return jugador && jugador.rol === "Cazador";
+    });
+  }
+
+  /**
+   * Obtiene los IDs de los cazadores que están en la cola de eliminaciones.
+   * @returns {Array<string>} - Lista de IDs de cazadores que han muerto.
+   */
+  obtenerCazadoresEnColaEliminacion() {
+    return this.colaEliminaciones.filter((idJugador) => {
       const jugador = this.jugadores.find((j) => j.id === idJugador);
       return jugador && jugador.rol === "Cazador";
     });
@@ -862,6 +875,38 @@ class Partida {
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);
+  }
+
+  /**
+   * Verifica si todas las videntes han visto a un jugador.
+   * @returns {boolean} - True si todas las videntes han visto a un jugador. False en caso contrario.
+   */
+  todosVidentesHanVisto() {
+    return this.jugadores
+      .filter((j) => j.rol === "Vidente" && j.estaVivo)
+      .every((j) => j.haVisto);
+  }
+
+  /**
+   * Verifica si todas las brujas han usado su habilidad.
+   * @returns {boolean} - True si todas las brujas han usado su habilidad. False en caso contrario.
+   */
+  todasBrujasUsaronHabilidad() {
+    return this.jugadores
+      .filter((j) => j.rol === "Bruja" && j.estaVivo)
+      .every((j) => j.pocionCuraUsada && j.pocionMuerteUsada);
+  }
+
+  /**
+   * Verifica si todos los cazadores en la cola de eliminaciones han usado su habilidad.
+   * @returns {boolean} - True si todos los cazadores han usado su habilidad. False en caso contrario.
+   */
+  todosCazadoresUsaronHabilidad() {
+    const cazadoresEnCola = this.obtenerCazadoresEnColaEliminacion();
+    return cazadoresEnCola.every((idCazador) => {
+      const cazador = this.jugadores.find((j) => j.id === idCazador);
+      return cazador && cazador.haDisparado;
+    });
   }
 }
 

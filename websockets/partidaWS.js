@@ -778,11 +778,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     partida.iniciarHabilidadVidente();
 
     const checkVidente = setInterval(() => {
-      const todosVidentesUsaron = partida.jugadores
-        .filter((j) => j.rol === "Vidente" && j.estaVivo)
-        .every((j) => j.haVisto);
-
-      if (todosVidentesUsaron || !partida.temporizadorHabilidad) {
+      if (partida.todosVidentesHanVisto() || !partida.temporizadorHabilidad) {
         clearInterval(checkVidente);
         manejarFaseHombresLobos();
       }
@@ -836,16 +832,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       partida.iniciarHabilidadBruja();
 
       const checkBruja = setInterval(async () => {
-        const todasBrujasUsaron = partida.jugadores
-          .filter((j) => j.rol === "Bruja" && j.estaVivo)
-          .every((j) => j.pocionCuraUsada && j.pocionMuerteUsada);
-
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DE MOMENTO SOLO PASAMOS DE FASE SI
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LAS BRUJAS HAN USADOS LAS DOS POCIONES O EL TIEMPO LIMITE HA EXPIRADO
-        if (todasBrujasUsaron || !partida.temporizadorHabilidad) {
+        if (
+          partida.todasBrujasUsaronHabilidad() ||
+          !partida.temporizadorHabilidad
+        ) {
           clearInterval(checkBruja);
 
-          // Si el cazador murió, activamos su fase antes de pasar al día
+          // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
           if (partida.cazadorHaMuerto()) {
             //await manejarFaseCazador();
           }
@@ -864,32 +859,31 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase opcional 4: Habilidad del cazador
     const manejarFaseCazador = () => {
-      console.log("Fase del Cazador iniciada");
+      console.log("Sub-fase del Cazador iniciada");
 
-      const cazadorMuerto = partida.jugadores.find(
-        (j) => partida.colaEliminaciones.includes(j.id) && j.rol === "Cazador"
-      );
+      const cazadoresMuertos = partida.obtenerCazadoresEnColaEliminacion();
+      console.log("Cazadores muertos: ", cazadoresMuertos);
 
-      if (!cazadorMuerto) {
-        return; // No hay cazador, no se hace nada
+      if (cazadoresMuertos.length === 0) {
+        return; // No hay cazadores muertos, no se hace nada
       }
 
-      io.to(idSala).emit("habilidadCazador"); // Emit sin datos
+      // Notificar a todos los jugadores que comienza la fase del cazador
+      io.to(idSala).emit("habilidadCazador", {
+        mensaje: "Los cazadores tienen 30 segundos para usar su habilidad.",
+        tiempo: 30,
+        cazadoresMuertos: cazadoresMuertos,
+      });
 
       partida.iniciarHabilidadCazador();
 
-      // !!! Implementar paso de fase cuando ya ha actuado !!!
-
       const checkCazador = setInterval(async () => {
-        if (!partida.temporizadorHabilidad) {
+        if (
+          !partida.temporizadorHabilidad ||
+          partida.todosCazadoresUsaronHabilidad()
+        ) {
           clearInterval(checkCazador);
-          console.log("Fin de la fase del Cazador");
-
-          await guardarPartidasEnRedis();
-
-          if (partida.estado === "en_curso") {
-            await manejarFaseDia();
-          }
+          console.log("Fin de la sub-fase del Cazador");
         }
       }, 1000);
     };
