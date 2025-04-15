@@ -774,8 +774,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 1: Habilidad de la vidente
     io.to(idSala).emit("habilidadVidente", {
-      mensaje: "La vidente tiene 15 segundos para usar su habilidad.",
-      tiempo: 15,
+      mensaje: "La vidente tiene 25 segundos para usar su habilidad.",
+      tiempo: 25,
     });
     partida.iniciarHabilidadVidente();
 
