@@ -844,7 +844,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
           // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
           if (partida.cazadorHaMuerto()) {
-            //await manejarFaseCazador();
+            await manejarFaseCazador();
           }
 
           const resultadoTurno2 = partida.gestionarTurno();
@@ -932,6 +932,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                   });
                 }
 
+                // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+                if (partida.cazadorHaMuerto()) {
+                  await manejarFaseCazador();
+                }
+
                 const resultadoTurno = partida.gestionarTurno();
                 // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
                 // se pone a false si se ha cambiado de turno a noche
@@ -949,6 +954,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               mensaje: resultadoVotosDia.mensaje,
               jugadorAEliminar: resultadoVotosDia.jugadorAEliminar,
             });
+
+            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+            if (partida.cazadorHaMuerto()) {
+              await manejarFaseCazador();
+            }
 
             const resultadoTurno2 = partida.gestionarTurno();
             // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
