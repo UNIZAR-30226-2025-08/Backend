@@ -53,6 +53,54 @@ async function eliminarSalaDeRedis(idSala) {
   }
 }
 
+/**
+ * Sale de todas las salas en las que está un jugador excepto la sala especificada.
+ * @param {string} idJugador - ID del jugador.
+ * @param {string} idSalaExcluida - ID de la sala en la que desea permanecer (no salir de esta).
+ * @param {Object} io - Instancia de Socket.IO para emitir eventos.
+ *
+ * @emits actualizarSala
+ * @param {Object} sala - Estado actualizado de la sala.
+ *
+ * @emits jugadorSalido
+ * @param {Object} jugador - Datos del jugador que salió.
+ * @param {string} jugador.nombre - Nombre del jugador.
+ * @param {string} jugador.id - ID del jugador.
+ *
+ * @returns {Promise<void>}
+ */
+async function salirDeOtrasSalas(idJugador, idSalaExcluida, io) {
+  for (const idSala in salas) {
+    if (idSala !== idSalaExcluida) {
+      const sala = salas[idSala];
+      const jugador = sala.jugadores.find((j) => j.id === idJugador);
+
+      if (jugador) {
+        // Eliminar al jugador de la sala
+        sala.jugadores = sala.jugadores.filter((j) => j.id !== idJugador);
+
+        // Si la sala queda vacía, eliminarla
+        if (sala.jugadores.length === 0) {
+          delete salas[idSala];
+          await eliminarSalaDeRedis(idSala);
+        } else if (sala.lider === jugador.id) {
+          // Asignar un nuevo líder si el actual sale
+          sala.lider = sala.jugadores[0].id;
+        }
+
+        await guardarSalasEnRedis();
+
+        // Notificar a los jugadores restantes
+        io.to(idSala).emit("actualizarSala", sala);
+        io.to(idSala).emit("jugadorSalido", {
+          nombre: jugador.nombre,
+          id: jugador.id,
+        });
+      }
+    }
+  }
+}
+
 const manejarConexionSalas = (socket, io) => {
   /**
    * Crea una nueva sala de juego.
@@ -91,6 +139,9 @@ const manejarConexionSalas = (socket, io) => {
       maxRoles,
       usuario,
     }) => {
+      // Salir de todas las salas anteriores
+      await salirDeOtrasSalas(usuario.id, null, io);
+
       const idSala = `sala_${crypto.randomUUID()}`; // Generar un ID único para la sala
       const codigoInvitacion = generarCodigoInvitacion(); // Generar un código de invitación aleatorio
 
@@ -165,6 +216,9 @@ const manejarConexionSalas = (socket, io) => {
         );
         return;
       }
+
+      // Salir de todas las salas anteriores
+      await salirDeOtrasSalas(usuario.id, idSala, io);
 
       // Permitir el acceso directo a salas públicas
       const accesoLibre = sala.tipo === "publica";
@@ -454,6 +508,8 @@ const manejarConexionSalas = (socket, io) => {
     } else if (sala.lider === idUsuario) {
       // Asignar un nuevo líder si el actual sale
       sala.lider = sala.jugadores[0].id;
+      await guardarSalasEnRedis();
+    } else {
       await guardarSalasEnRedis();
     }
 

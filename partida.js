@@ -3,6 +3,7 @@
  */
 class Partida {
   /**
+   * (Constructor que usa partidaWS)
    * Crea una nueva partida.
    * @param {number} idPartida - Identificador único de la partida.
    * @param {Array<Object>} jugadores - Lista de jugadores con sus respectivos roles.
@@ -50,7 +51,14 @@ class Partida {
    * Aplica las eliminaciones pendientes y verifica si la partida ha terminado.
    * Si la partida sigue en curso, cambia al siguiente turno.
    *
-   * @returns {string} Mensaje indicando si el turno ha cambiado o si la partida ha finalizado.
+   * @returns {string} Mensaje indicando que el turno ha cambiado.
+   *
+   * @returns {Object} Si la partida ha terminado.
+   * @returns {Object.mensaje} Mensaje con el resultado final de la partida.
+   * @returns {Object.ganador} Ganador de la partida.
+   * - Si han ganado los aldeanos : mensaje 'Los aldeanos han ganado la partida.' y ganador 'aldeanos'
+   * - Si han ganado los lobos : mensaje 'Los hombres lobos han ganado la partida.' y ganador 'lobos'
+   * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   gestionarTurno() {
     const resultado = this.aplicarEliminaciones(); // Ejecutar eliminaciones pendientes
@@ -222,6 +230,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Registra el voto de un jugador para la elección del alguacil.
    *
    * @param {string} idJugador - ID del jugador que vota.
@@ -242,6 +251,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Registra el voto de un jugador durante el día.
    * El voto del alguacil cuenta doble.
    *
@@ -266,6 +276,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Registra el voto de un lobo durante la fase nocturna.
    * Solo los jugadores con el rol de lobo pueden votar en esta fase.
    *
@@ -292,6 +303,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Permite a la vidente revelar el rol de un jugador durante la noche.
    * Solo puede usarse una vez por noche y solo en jugadores vivos.
    *
@@ -350,6 +362,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Devuelve la victima elegida por los lobos si el jugador que llama a esta función es bruja.
    *
    * @param {string} idJugador - ID del jugador bruja.
@@ -383,6 +396,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Permite a la bruja usar una de sus pociones.
    * Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones.
    *
@@ -451,6 +465,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Permite al cazador disparar a un jugador si muere.
    * Solo puede usar esta habilidad al momento de su eliminación.
    *
@@ -501,6 +516,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Permite al alguacil elegir a su sucesor antes de morir.
    *
    * @param {string} idJugador - ID del alguacil actual.
@@ -724,10 +740,15 @@ class Partida {
 
   /**
    * Ejecuta las eliminaciones pendientes al final del turno.
-   * @returns {string|null} Mensaje indicando el estado de la partida o null si sigue en curso.
-   * - Si han ganado los aldeanos : 'Los aldeanos han ganado la partida.'
-   * - Si han ganado los lobos : 'Los lobos han ganado la partida.'
-   * - Si ha habido empate : 'Empate, no hay ganadores.'
+   *
+   * @returns {null} Si la partida sigue en curso.
+   *
+   * @returns {Object}
+   * @returns {Object.mensaje} Mensaje con el resultado final de la partida.
+   * @returns {Object.ganador} Ganador de la partida.
+   * - Si han ganado los aldeanos : mensaje 'Los aldeanos han ganado la partida.' y ganador 'aldeanos'
+   * - Si han ganado los lobos : mensaje 'Los hombres lobos han ganado la partida.' y ganador 'lobos'
+   * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   aplicarEliminaciones() {
     this.colaEliminaciones.forEach((idJugador) => {
@@ -744,10 +765,15 @@ class Partida {
 
   /**
    * Verifica si la partida ha terminado y determina el ganador.
-   * @returns {string|null} Mensaje con el resultado de la partida o null si sigue en curso.
-   * - Si han ganado los aldeanos : 'Los aldeanos han ganado la partida.'
-   * - Si han ganado los lobos : 'Los lobos han ganado la partida.'
-   * - Si ha habido empate : 'Empate, no hay ganadores.'
+   *
+   * @returns {null} Si la partida sigue en curso.
+   *
+   * @returns {Object}
+   * @returns {Object.mensaje} Mensaje con el resultado final de la partida.
+   * @returns {Object.ganador} Ganador de la partida.
+   * - Si han ganado los aldeanos : mensaje 'Los aldeanos han ganado la partida.' y ganador 'aldeanos'
+   * - Si han ganado los lobos : mensaje 'Los hombres lobos han ganado la partida.' y ganador 'lobos'
+   * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
@@ -821,7 +847,9 @@ class Partida {
     }
   }
 
-  // Método para iniciar la votación del alguacil
+  /**
+   * (Método que usa partidaWS) Inicia la votación del alguacil.
+   */
   iniciarVotacionAlguacil() {
     this.votacionAlguacilActiva = true;
     this.temporizadorVotacion = setTimeout(() => {
@@ -830,7 +858,9 @@ class Partida {
     }, this.tiempoLimiteVotacion); // Tiempo límite para la votación del alguacil
   }
 
-  // Método para iniciar la votación de los hombres lobos en la noche
+  /**
+   * (Método que usa partidaWS) Inicia la votación de los hombres lobos en la noche.
+   */
   iniciarVotacionLobos() {
     this.votacionLobosActiva = true;
     this.temporizadorVotacion = setTimeout(() => {
@@ -839,7 +869,9 @@ class Partida {
     }, this.tiempoLimiteVotacion);
   }
 
-  // Método para iniciar la votación en el día
+  /**
+   * (Método que usa partidaWS) Inicia la votación en el turno de día.
+   */
   iniciarVotacion() {
     this.votacionActiva = true;
     this.temporizadorVotacion = setTimeout(() => {
@@ -848,7 +880,9 @@ class Partida {
     }, this.tiempoLimiteVotacion);
   }
 
-  // Método para iniciar la habilidad de la vidente
+  /**
+   * (Método que usa partidaWS) Inicia la habilidad de la vidente.
+   */
   iniciarHabilidadVidente() {
     // La variable de los jugadores videntes 'haVisto' se pone a false al gestionar el turno y cambiar de turno a noche
     // La variable de los jugadores videntes 'haVisto' se pone a true al usar la habilidad o al expirar el tiempo límite
@@ -863,14 +897,18 @@ class Partida {
     }, this.tiempoLimiteHabilidad + 5000); // !!! Sino no da tiempo
   }
 
-  // Método para iniciar la habilidad de la bruja
+  /**
+   * (Método que usa partidaWS) Inicia la habilidad de la bruja.
+   */
   iniciarHabilidadBruja() {
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);
   }
 
-  // Método para iniciar la habilidad del cazador
+  /**
+   * (Método que usa partidaWS) Inicia la habilidad del cazador.
+   */
   iniciarHabilidadCazador() {
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
@@ -888,6 +926,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Verifica si todas las brujas han usado su habilidad.
    * @returns {boolean} - True si todas las brujas han usado su habilidad. False en caso contrario.
    */
@@ -898,6 +937,7 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS)
    * Verifica si todos los cazadores en la cola de eliminaciones han usado su habilidad.
    * @returns {boolean} - True si todos los cazadores han usado su habilidad. False en caso contrario.
    */
