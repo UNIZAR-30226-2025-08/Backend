@@ -349,7 +349,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line705">line 705</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line718">line 718</a>
     </li></ul></dd>
     
 
@@ -510,7 +510,7 @@ si el turno es de día y el jugador está vivo.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line93">line 93</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line94">line 94</a>
     </li></ul></dd>
     
 
@@ -598,7 +598,7 @@ si el turno es de día y el jugador está vivo.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line719">line 719</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line732">line 732</a>
     </li></ul></dd>
     
 
@@ -787,7 +787,7 @@ Solo puede usar esta habilidad al momento de su eliminación.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line464">line 464</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line465">line 465</a>
     </li></ul></dd>
     
 
@@ -909,7 +909,7 @@ Solo puede usar esta habilidad al momento de su eliminación.
 
 
 <div class="description">
-    Verifica si hay un jugador con el rol 'Cazador' en la cola de eliminaciones.
+    Verifica si hay al menos un jugador con el rol 'Cazador' en la cola de eliminaciones.
 </div>
 
 
@@ -953,7 +953,7 @@ Solo puede usar esta habilidad al momento de su eliminación.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line483">line 483</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line485">line 485</a>
     </li></ul></dd>
     
 
@@ -982,7 +982,7 @@ Solo puede usar esta habilidad al momento de su eliminación.
 
         
 <div class="param-desc">
-    - true si hay al menos un cazador en la cola, false en caso contrario.
+    - True si hay al menos un cazador en la cola. False en caso contrario.
 </div>
 
 
@@ -1063,7 +1063,7 @@ Solo puede usar esta habilidad al momento de su eliminación.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line739">line 739</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line752">line 752</a>
     </li></ul></dd>
     
 
@@ -1180,7 +1180,7 @@ En caso de empate, se repiten las votaciones una vez.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line167">line 167</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line168">line 168</a>
     </li></ul></dd>
     
 
@@ -1406,7 +1406,7 @@ mensaje con el resultado de la elección si se ha elegido a un jugador como algu
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line502">line 502</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line515">line 515</a>
     </li></ul></dd>
     
 
@@ -1594,7 +1594,7 @@ Si la partida sigue en curso, cambia al siguiente turno.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line54">line 54</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line55">line 55</a>
     </li></ul></dd>
     
 
@@ -1753,7 +1753,7 @@ Si la partida sigue en curso, cambia al siguiente turno.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line109">line 109</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -1794,6 +1794,116 @@ Si la partida sigue en curso, cambia al siguiente turno.
     <dd>
         
 <span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="obtenerCazadoresEnColaEliminacion"><span class="type-signature"></span>obtenerCazadoresEnColaEliminacion<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Obtiene los IDs de los cazadores que están en la cola de eliminaciones.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line496">line 496</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - Lista de IDs de cazadores que han muerto.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;string></span>
 
 
     </dd>
@@ -1863,7 +1973,7 @@ Si la partida sigue en curso, cambia al siguiente turno.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line347">line 347</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line348">line 348</a>
     </li></ul></dd>
     
 
@@ -2022,7 +2132,7 @@ Si la partida sigue en curso, cambia al siguiente turno.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line119">line 119</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line120">line 120</a>
     </li></ul></dd>
     
 
@@ -2182,7 +2292,7 @@ por unanimidad a un jugador para ser eliminado durante la noche.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line685">line 685</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line698">line 698</a>
     </li></ul></dd>
     
 
@@ -2424,7 +2534,7 @@ por unanimidad a un jugador para ser eliminado durante la noche.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line130">line 130</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line131">line 131</a>
     </li></ul></dd>
     
 
@@ -2583,7 +2693,7 @@ por unanimidad a un jugador para ser eliminado durante la noche.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line662">line 662</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line675">line 675</a>
     </li></ul></dd>
     
 
@@ -2694,7 +2804,7 @@ En caso de empate, se repiten las votaciones una vez.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line542">line 542</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line555">line 555</a>
     </li></ul></dd>
     
 
@@ -2849,7 +2959,7 @@ Solo se elimina a un jugador si todos los lobos votan por la misma persona.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line610">line 610</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line623">line 623</a>
     </li></ul></dd>
     
 
@@ -3002,7 +3112,7 @@ día. Reinicia el uso de habilidad de la vidente.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line71">line 71</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -3027,6 +3137,336 @@ día. Reinicia el uso de habilidad de la vidente.
 
 
 
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="todasBrujasUsaronHabilidad"><span class="type-signature"></span>todasBrujasUsaronHabilidad<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Verifica si todas las brujas han usado su habilidad.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line894">line 894</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - True si todas las brujas han usado su habilidad. False en caso contrario.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="todosCazadoresUsaronHabilidad"><span class="type-signature"></span>todosCazadoresUsaronHabilidad<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Verifica si todos los cazadores en la cola de eliminaciones han usado su habilidad.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line904">line 904</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - True si todos los cazadores han usado su habilidad. False en caso contrario.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="todosVidentesHanVisto"><span class="type-signature"></span>todosVidentesHanVisto<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Verifica si todas las videntes han visto a un jugador.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line884">line 884</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - True si todas las videntes han visto a un jugador. False en caso contrario.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -3186,7 +3626,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line400">line 400</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line401">line 401</a>
     </li></ul></dd>
     
 
@@ -3485,7 +3925,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line361">line 361</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line362">line 362</a>
     </li></ul></dd>
     
 
@@ -3701,7 +4141,7 @@ Si todos han votado, devuelve true. En caso contrario, devuelve false.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line781">line 781</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line794">line 794</a>
     </li></ul></dd>
     
 
@@ -3884,7 +4324,7 @@ Solo puede usarse una vez por noche y solo en jugadores vivos.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line312">line 312</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line313">line 313</a>
     </li></ul></dd>
     
 
@@ -4130,7 +4570,7 @@ El voto del alguacil cuenta doble.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line250">line 250</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line251">line 251</a>
     </li></ul></dd>
     
 
@@ -4290,7 +4730,7 @@ El voto del alguacil cuenta doble.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line229">line 229</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line230">line 230</a>
     </li></ul></dd>
     
 
@@ -4451,7 +4891,7 @@ Solo los jugadores con el rol de lobo pueden votar en esta fase.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line274">line 274</a>
+        <a href="partida.js.html">partida.js</a>, <a href="partida.js.html#line275">line 275</a>
     </li></ul></dd>
     
 
@@ -4503,7 +4943,7 @@ Solo los jugadores con el rol de lobo pueden votar en esta fase.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Apr 14 2025 19:52:38 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Apr 15 2025 09:18:26 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
