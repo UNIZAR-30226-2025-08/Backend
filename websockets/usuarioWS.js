@@ -181,6 +181,58 @@ const manejarAmigos = (socket, io) => {
   });
 
   /**
+   * Maneja la notificación de que una solicitud de amistad ha sido aceptada.
+   * @event solicitudAceptada
+   *
+   * @param {Object} datos - Datos de la solicitud aceptada.
+   * @param {number} datos.idUsuario - ID del usuario que envió la solicitud de amistad que fue aceptada.
+   *
+   * @emits solicitudAceptada - Notifica al usuario que su solicitud fue aceptada.
+   * @param {Object} payload - Contiene el ID del usuario que envió la solicitud de amistad que fue aceptada.
+   * @param {number} payload.idUsuario - ID del usuario que envió la solicitud de amistad que fue aceptada.
+   */
+  socket.on("solicitudAceptada", ({ idUsuario }) => {
+    if (usuariosConectados[idUsuario]) {
+      io.to(usuariosConectados[idUsuario]).emit("solicitudAceptada", {
+        idUsuario,
+      });
+      console.log(
+        `Solicitud de amistad aceptada. Enviando notificación al usuario que envió la solicitud: ${idUsuario}`
+      );
+    } else {
+      console.log(
+        `Usuario ${idUsuario} no está conectado para recibir la notificación.`
+      );
+    }
+  });
+
+  /**
+   * Maneja la notificación de que un amigo ha sido eliminado.
+   * @event amigoEliminado
+   *
+   * @param {Object} datos - Datos de la eliminación de amigo.
+   * @param {number} datos.idUsuario - ID del usuario que fue eliminado como amigo.
+   *
+   * @emits amigoEliminado - Notifica al usuario que fue eliminado como amigo.
+   * @param {Object} payload - Contiene el ID del usuario que fue eliminado como amigo.
+   * @param {number} payload.idUsuario - ID del usuario que fue eliminado como amigo.
+   */
+  socket.on("amigoEliminado", ({ idUsuario }) => {
+    if (usuariosConectados[idUsuario]) {
+      io.to(usuariosConectados[idUsuario]).emit("amigoEliminado", {
+        idUsuario,
+      });
+      console.log(
+        `Notificación de eliminación de amigo enviada al usuario: ${idUsuario}`
+      );
+    } else {
+      console.log(
+        `Usuario ${idUsuario} no está conectado para recibir la notificación de eliminación.`
+      );
+    }
+  });
+
+  /**
    * Invita a un amigo a una sala.
    * @event invitarASala
    *

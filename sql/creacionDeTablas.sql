@@ -25,7 +25,7 @@ CREATE TYPE roles AS ENUM ('lobo', 'aldeano', 'vidente', 'bruja', 'cazador');
 CREATE TABLE "Usuario" (
   "idUsuario" SERIAL PRIMARY KEY, /* El idUsuario se irá autoincrementando sin necesidad de hacerlo manualmente */
   nombre VARCHAR(100) NOT NULL UNIQUE,
-  avatar VARCHAR(255),
+  avatar VARCHAR(255) DEFAULT 'avatar1',
   "hashContrasena" VARCHAR(255) NOT NULL,
   correo VARCHAR(100) NOT NULL UNIQUE, /* El correo debe ser único */
   /* Fecha de creación de usuario, se pondrá automáticamente al insertar un usuario en la tabla */
