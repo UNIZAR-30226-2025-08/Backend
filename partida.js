@@ -43,6 +43,7 @@ class Partida {
     this.votacionLobosActiva = false; // Indica si hay una votación activa para los lobos
     this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
+    this.sucesionHecha = false;
     // la victima elegida por los lobos es la que se elimina al final del turno.
   }
 
@@ -505,6 +506,17 @@ class Partida {
   }
 
   /**
+   * Verifica si el alguacil está  en la cola de eliminaciones.
+   * @returns {boolean} - True si el alguacil está en la cola. False en caso contrario.
+   */
+  alguacilHaMuerto() {
+    return this.colaEliminaciones.some((idJugador) => {
+      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      return jugador && jugador.esAlguacil;
+    });
+  }
+
+  /**
    * Obtiene los IDs de los cazadores que están en la cola de eliminaciones.
    * @returns {Array<string>} - Lista de IDs de cazadores que han muerto.
    */
@@ -513,6 +525,16 @@ class Partida {
       const jugador = this.jugadores.find((j) => j.id === idJugador);
       return jugador && jugador.rol === "Cazador";
     });
+  }
+
+  /**
+   * Obtiene el ID del alguacils que está en la cola de eliminaciones.
+   * @returns {Array<string>} - Jugador alguacil que ha muerto
+   */
+  obtenerAlguacilMuerto() {
+    return this.jugadores.find(
+      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil
+    );
   }
 
   /**
@@ -545,6 +567,8 @@ class Partida {
 
     jugador.esAlguacil = false; // El alguacil deja de serlo
     objetivo.esAlguacil = true; // El objetivo se convierte en el nuevo alguacil
+
+    this.sucesionHecha = true;
 
     return {
       mensaje: `${objetivo.nombre} se convierte en el nuevo alguacil.`,
@@ -916,6 +940,16 @@ class Partida {
   }
 
   /**
+   * (Método que usa partidaWS) Inicia la habilidad del alguacil.
+   */
+  iniciarHabilidadAlguacil() {
+    this.sucesionHecha = false;
+    this.temporizadorHabilidad = setTimeout(() => {
+      this.temporizadorHabilidad = null;
+    }, this.tiempoLimiteHabilidad);
+  }
+
+  /**
    * Verifica si todas las videntes han visto a un jugador.
    * @returns {boolean} - True si todas las videntes han visto a un jugador. False en caso contrario.
    */
@@ -948,6 +982,16 @@ class Partida {
       const cazador = this.jugadores.find((j) => j.id === idCazador);
       return cazador && cazador.haDisparado;
     });
+  }
+
+  /**
+   * (Método que usa partidaWS)
+   * Verifica si el alguacil realizó su sucesión.
+   * @returns {boolean} - True si el alguacil realizó su sucesión. False en caso contrario.
+   */
+  alguacilUsoHabilidad() {
+    // Por ejemplo, podrías setear un flag cuando el alguacil elige
+    return this.sucesionHecha;
   }
 }
 
