@@ -166,6 +166,31 @@ class UsuarioDAO {
       throw new Error("No se pudo actualizar el perfil del usuario");
     }
   }
+  static async obtenerAvatarUsuario(idUsuario) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT avatar FROM "Usuario" WHERE "idUsuario" = $1`,
+        [idUsuario]
+      );
+      return rows[0];
+    } catch (error) {
+      console.error("Error al buscar avatar por id:", error);
+      throw new Error(error.message);
+    }
+  }
+
+  static async eliminarUsuario(idUsuario) {
+    try {
+      const { rows } = await pool.query(
+        'DELETE FROM "Usuario" WHERE "idUsuario" = $1 RETURNING *',
+        [idUsuario]
+      );
+      return rows[0]; // Retorna el usuario eliminado
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      throw new Error("Error al eliminar el usuario");
+    }
+  }
 }
 
 module.exports = UsuarioDAO;
