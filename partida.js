@@ -286,8 +286,8 @@ class Partida {
    */
   votaNoche(idJugador, idObjetivo) {
     if (this.turno !== "noche" || !this.votacionLobosActiva) return;
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
-    const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
 
     // Verificar si el jugador que vota es lobo y si el objetivo es válido
     if (!jugador || !jugador.estaVivo || jugador.rol !== "Hombre lobo") return;
@@ -693,7 +693,7 @@ class Partida {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador
       return {
         mensaje: `Los lobos van a atacar a ${
-          this.jugadores.find((j) => j.id === victimaElegida).nombre
+          this.jugadores.find((j) => j.id == victimaElegida).nombre
         }. Será eliminado al final de la noche.`,
         victima: victimaElegida,
       };

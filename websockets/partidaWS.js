@@ -287,11 +287,15 @@ const manejarConexionPartidas = (socket, io) => {
    */
   socket.on("votar", async ({ idPartida, idJugador, idObjetivo }) => {
     const partida = obtenerPartida(socket, idPartida);
+
     if (!partida) return;
     idSala = partida.idSala;
     if (partida.turno === "dia") {
       partida.vota(idJugador, idObjetivo);
     } else {
+      console.log(
+        "`[Backend] Recibido votacion Lobos de idJugador: ${idJugador} para idObjetivo: ${idObjetivo}`);"
+      );
       partida.votaNoche(idJugador, idObjetivo);
     }
 
