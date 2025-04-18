@@ -828,6 +828,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         }
       }, 1000);
     };
+    console.log(
+      "partida.todasBrujasUsaronHabilidad() antes de nada: ",
+      partida.todasBrujasUsaronHabilidad()
+    );
 
     // Sub-fase 3: Habilidad de la bruja
     const manejarFaseBruja = () => {
@@ -845,6 +849,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           !partida.temporizadorHabilidad
         ) {
           clearInterval(checkBruja);
+          console.log(
+            "partida.todasBrujasUsaronHabilidad() al pasar turno: ",
+            partida.todasBrujasUsaronHabilidad()
+          );
 
           // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
           if (partida.alguacilHaMuerto()) {
@@ -899,7 +907,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           partida.todosCazadoresUsaronHabilidad()
         ) {
           console.log(
-            "partida.todosCazadoresUsaronHabilidad(): ",
+            "partida.todosCazadoresUsaronHabilidad()  al pasar turno: ",
             partida.todosCazadoresUsaronHabilidad()
           );
           clearInterval(checkCazador);
@@ -934,7 +942,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       const checkAlguacil = setInterval(() => {
         if (!partida.temporizadorHabilidad || partida.alguacilUsoHabilidad()) {
           console.log(
-            "partida.alguacilUsoHabilidad(): ",
+            "partida.alguacilUsoHabilidad()  al pasar turno: ",
             partida.alguacilUsoHabilidad()
           );
           clearInterval(checkAlguacil);
