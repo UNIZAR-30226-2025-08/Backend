@@ -801,6 +801,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
   // Ciclo principal de la partida. Alterna los turnos de noche y día hasta que haya un ganador
   const iniciarCicloPartida = async () => {
+    console.log("Partida iniciada");
     // Fase 3: Noche
     io.to(idSala).emit("nocheComienza", { mensaje: "La noche ha comenzado." });
 
@@ -820,6 +821,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 2: Hombres lobos
     const manejarFaseHombresLobos = () => {
+      console.log("Fase Lobos iniciada");
       io.to(idSala).emit("turnoHombresLobos", {
         mensaje:
           "Los hombres lobos tienen 30 segundos para elegir una víctima.",
@@ -856,13 +858,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         }
       }, 1000);
     };
-    console.log(
-      "partida.todasBrujasUsaronHabilidad() antes de nada: ",
-      partida.todasBrujasUsaronHabilidad()
-    );
 
     // Sub-fase 3: Habilidad de la bruja
     const manejarFaseBruja = () => {
+      console.log("Fase Bruja iniciada");
       io.to(idSala).emit("habilidadBruja", {
         mensaje: "La bruja tiene 30 segundos para usar su poción.",
         tiempo: 30,
@@ -881,15 +880,19 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             "partida.todasBrujasUsaronHabilidad() al pasar turno: ",
             partida.todasBrujasUsaronHabilidad()
           );
+          console.log(
+            "partida.temporizadorHabilidad al pasar turno: ",
+            partida.temporizadorHabilidad
+          );
 
           // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
           if (partida.alguacilHaMuerto()) {
             await manejarFaseAlguacil();
-          } else {
-            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-            if (partida.cazadorHaMuerto()) {
-              await manejarFaseCazador();
-            }
+          }
+
+          // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+          if (partida.cazadorHaMuerto()) {
+            await manejarFaseCazador();
           }
 
           const resultadoTurno2 = partida.gestionarTurno();
@@ -905,81 +908,96 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     };
 
     // Sub-fase opcional 4: Habilidad del cazador
-    const manejarFaseCazador = () => {
-      console.log("Sub-fase del Cazador iniciada");
+    const manejarFaseCazador = async () => {
+      return new Promise((resolve) => {
+        console.log("Sub-fase del Cazador iniciada");
 
-      const cazadoresMuertos = partida.obtenerCazadoresEnColaEliminacion();
-      console.log("Cazadores muertos: ", cazadoresMuertos);
+        const cazadoresMuertos = partida.obtenerCazadoresEnColaEliminacion();
+        console.log("Cazadores muertos: ", cazadoresMuertos);
 
-      if (cazadoresMuertos.length === 0) {
-        return; // No hay cazadores muertos, no se hace nada
-      }
-
-      console.log(
-        "partida.todosCazadoresUsaronHabilidad() antes de nada: ",
-        partida.todosCazadoresUsaronHabilidad()
-      );
-
-      // Notificar a todos los jugadores que comienza la fase del cazador
-      io.to(idSala).emit("habilidadCazador", {
-        mensaje: "Los cazadores tienen 30 segundos para usar su habilidad.",
-        tiempo: 30,
-        cazadoresMuertos: cazadoresMuertos,
-      });
-
-      partida.iniciarHabilidadCazador();
-
-      const checkCazador = setInterval(async () => {
-        if (
-          !partida.temporizadorHabilidad ||
-          partida.todosCazadoresUsaronHabilidad()
-        ) {
-          console.log(
-            "partida.todosCazadoresUsaronHabilidad()  al pasar turno: ",
-            partida.todosCazadoresUsaronHabilidad()
-          );
-          clearInterval(checkCazador);
-          console.log("Fin de la sub-fase del Cazador");
+        if (cazadoresMuertos.length === 0) {
+          resolve(); // No hay cazadores muertos, no se hace nada
         }
-      }, 1000);
+
+        console.log(
+          "partida.todosCazadoresUsaronHabilidad() antes de nada: ",
+          partida.todosCazadoresUsaronHabilidad()
+        );
+
+        // Notificar a todos los jugadores que comienza la fase del cazador
+        io.to(idSala).emit("habilidadCazador", {
+          mensaje: "Los cazadores tienen 30 segundos para usar su habilidad.",
+          tiempo: 30,
+          cazadoresMuertos: cazadoresMuertos,
+        });
+
+        partida.iniciarHabilidadCazador();
+
+        console.log(
+          "partida.temporizadorHabilidad recien iniciado: ",
+          partida.todosCazadoresUsaronHabilidad()
+        );
+
+        const checkCazador = setInterval(async () => {
+          if (
+            !partida.temporizadorHabilidad ||
+            partida.todosCazadoresUsaronHabilidad()
+          ) {
+            console.log(
+              "partida.todosCazadoresUsaronHabilidad() al pasar turno: ",
+              partida.todosCazadoresUsaronHabilidad()
+            );
+            console.log(
+              "partida.temporizadorHabilidad al pasar turno: ",
+              partida.todosCazadoresUsaronHabilidad()
+            );
+            clearInterval(checkCazador);
+            console.log("Fin de la sub-fase del Cazador");
+            resolve();
+          }
+        }, 1000);
+      });
     };
 
     // Sub-fase opcional 5: Habilidad del alguacil
-    const manejarFaseAlguacil = () => {
-      console.log("Sub-fase del Alguacil iniciada");
+    const manejarFaseAlguacil = async () => {
+      return new Promise((resolve) => {
+        console.log("Sub-fase del Alguacil iniciada");
 
-      const alguacilMuerto = partida.obtenerAlguacilMuerto();
+        const alguacilMuerto = partida.obtenerAlguacilMuerto();
 
-      if (!alguacilMuerto) {
-        return; // No hay alguacil muerto, no se hace nada
-      }
-
-      console.log(
-        "partida.alguacilUsoHabilidad() antes de nada: ",
-        partida.alguacilUsoHabilidad()
-      );
-
-      io.to(idSala).emit("habilidadAlguacil", {
-        mensaje: `${alguacilMuerto.nombre} era el Alguacil. Puede elegir a quién le pasa la voz.`,
-        tiempo: 20,
-        idAlguacil: alguacilMuerto.id,
-      });
-
-      partida.iniciarHabilidadAlguacil();
-
-      const checkAlguacil = setInterval(async () => {
-        if (!partida.temporizadorHabilidad || partida.alguacilUsoHabilidad()) {
-          console.log(
-            "partida.alguacilUsoHabilidad()  al pasar turno: ",
-            partida.alguacilUsoHabilidad()
-          );
-          clearInterval(checkAlguacil);
-          console.log("Fin de la sub-fase del Alguacil");
-          if (partida.cazadorHaMuerto()) {
-            await manejarFaseCazador();
-          }
+        if (!alguacilMuerto) {
+          resolve(); // No hay alguacil muerto, no se hace nada
         }
-      }, 1000);
+
+        console.log(
+          "partida.alguacilUsoHabilidad() antes de nada: ",
+          partida.alguacilUsoHabilidad()
+        );
+
+        io.to(idSala).emit("habilidadAlguacil", {
+          mensaje: `${alguacilMuerto.nombre} era el Alguacil. Puede elegir a quién le pasa la voz.`,
+          tiempo: 20,
+          idAlguacil: alguacilMuerto.id,
+        });
+
+        partida.iniciarHabilidadAlguacil();
+
+        const checkAlguacil = setInterval(() => {
+          if (
+            !partida.temporizadorHabilidad ||
+            partida.alguacilUsoHabilidad()
+          ) {
+            console.log(
+              "partida.alguacilUsoHabilidad()  al pasar turno: ",
+              partida.alguacilUsoHabilidad()
+            );
+            clearInterval(checkAlguacil);
+            console.log("Fin de la sub-fase del Alguacil");
+            resolve();
+          }
+        }, 1000);
+      });
     };
 
     // Fase 4: Día
@@ -993,6 +1011,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
       const checkVotosDia = setInterval(async () => {
         if (partida.verificarVotos("dia") || !partida.votacionActiva) {
+          console.log(
+            "partida.votacionActiva  al pasar turno: ",
+            partida.votacionActiva
+          );
           clearInterval(checkVotosDia);
           // Resolver votos del día
           const resultadoVotosDia = partida.resolverVotosDia();
@@ -1027,11 +1049,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
                 if (partida.alguacilHaMuerto()) {
                   await manejarFaseAlguacil();
-                } else {
-                  // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-                  if (partida.cazadorHaMuerto()) {
-                    await manejarFaseCazador();
-                  }
+                }
+
+                // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+                if (partida.cazadorHaMuerto()) {
+                  await manejarFaseCazador();
                 }
 
                 const resultadoTurno = partida.gestionarTurno();
@@ -1055,11 +1077,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
             if (partida.alguacilHaMuerto()) {
               await manejarFaseAlguacil();
-            } else {
-              // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-              if (partida.cazadorHaMuerto()) {
-                await manejarFaseCazador();
-              }
+            }
+
+            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+            if (partida.cazadorHaMuerto()) {
+              await manejarFaseCazador();
             }
 
             const resultadoTurno2 = partida.gestionarTurno();
@@ -1105,7 +1127,7 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 18 2025 09:45:43 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 18 2025 12:30:54 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
