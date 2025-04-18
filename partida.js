@@ -44,6 +44,11 @@ class Partida {
     this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
     this.sucesionHecha = false;
+    this.currentDay = 1; //LLEVAR CONTADOR DEL DIA
+    this.phase = null; // nombre de la fase actual
+    this.phaseStart = null; // timestamp (ms) de cuándo empezó
+    this.phaseDuration = null; // duración en ms de la fase
+    this.ultimasVictimas = [];
     // la victima elegida por los lobos es la que se elimina al final del turno.
   }
 
@@ -763,7 +768,7 @@ class Partida {
    * @param {string} idJugador - ID del jugador que será eliminado.
    */
   agregarAColaDeEliminacion(idJugador) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (jugador && jugador.estaVivo) {
       this.colaEliminaciones.push(idJugador);
     }
@@ -782,15 +787,15 @@ class Partida {
    * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   aplicarEliminaciones() {
-    this.colaEliminaciones.forEach((idJugador) => {
-      const jugador = this.jugadores.find((j) => j.id === idJugador);
-      if (jugador) {
-        jugador.estaVivo = false;
-      }
+    // antes de eliminar…
+    this.ultimasVictimas = [...this.colaEliminaciones];
+    // ahora sí aplicamos la muerte
+    this.colaEliminaciones.forEach((id) => {
+      const j = this.jugadores.find((p) => p.id == id);
+      if (j) j.estaVivo = false;
     });
-    this.colaEliminaciones = []; // Reiniciar la cola
+    this.colaEliminaciones = [];
 
-    // Comprobar si hay un ganador y devolver el resultado
     return this.comprobarVictoria();
   }
 
@@ -999,6 +1004,15 @@ class Partida {
   alguacilUsoHabilidad() {
     // Por ejemplo, podrías setear un flag cuando el alguacil elige
     return this.sucesionHecha;
+  }
+
+  hayRolVivo(rol) {
+    this.jugadores.forEach((jugador) => {
+      if (jugador.rol == rol && jugador.estaVivo) {
+        return true;
+      }
+    });
+    return false;
   }
 }
 
