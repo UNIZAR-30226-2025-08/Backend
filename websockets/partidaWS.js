@@ -879,6 +879,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         return; // No hay cazadores muertos, no se hace nada
       }
 
+      console.log(
+        "partida.todosCazadoresUsaronHabilidad() antes de nada: ",
+        partida.todosCazadoresUsaronHabilidad()
+      );
+
       // Notificar a todos los jugadores que comienza la fase del cazador
       io.to(idSala).emit("habilidadCazador", {
         mensaje: "Los cazadores tienen 30 segundos para usar su habilidad.",
@@ -893,6 +898,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           !partida.temporizadorHabilidad ||
           partida.todosCazadoresUsaronHabilidad()
         ) {
+          console.log(
+            "partida.todosCazadoresUsaronHabilidad(): ",
+            partida.todosCazadoresUsaronHabilidad()
+          );
           clearInterval(checkCazador);
           console.log("Fin de la sub-fase del Cazador");
         }
@@ -909,6 +918,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         return; // No hay alguacil muerto, no se hace nada
       }
 
+      console.log(
+        "partida.alguacilUsoHabilidad() antes de nada: ",
+        partida.alguacilUsoHabilidad()
+      );
+
       io.to(idSala).emit("habilidadAlguacil", {
         mensaje: `${alguacilMuerto.nombre} era el Alguacil. Puede elegir a quién le pasa la voz.`,
         tiempo: 20,
@@ -919,6 +933,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
       const checkAlguacil = setInterval(() => {
         if (!partida.temporizadorHabilidad || partida.alguacilUsoHabilidad()) {
+          console.log(
+            "partida.alguacilUsoHabilidad(): ",
+            partida.alguacilUsoHabilidad()
+          );
           clearInterval(checkAlguacil);
           console.log("Fin de la sub-fase del Alguacil");
         }
