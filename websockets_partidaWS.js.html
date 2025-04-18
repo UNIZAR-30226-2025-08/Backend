@@ -33,6 +33,7 @@ const PartidaDAO = require("../dao/partidaDao"); // Importar el DAO de Partida
 const JuegaDAO = require("../dao/juegaDao"); // Importar el DAO de juega
 
 let partidas = {}; // Almacenamiento en memoria de las partidas
+const desconexionTimers = new Map();
 
 /**
  * Convierte de forma segura un objeto a una cadena JSON, omitiendo funciones y referencias circulares.
@@ -125,6 +126,76 @@ function obtenerPartida(socket, idPartida) {
 
 // manejarConexionPartidas
 const manejarConexionPartidas = (socket, io) => {
+  // permite a un cliente reconectado pedir el estado completo de la partida
+  socket.on("rejoinGame", ({ idPartida, idUsuario }) => {
+    const partida = partidas[idPartida];
+    if (!partida) return socket.emit("error", "Partida no encontrada");
+
+    // buscamos al jugador por su id de usuario
+    const me = partida.jugadores.find((j) => j.id === idUsuario);
+    if (me &amp;&amp; me.desconectado) {
+      // cancelamos la eliminación pendiente
+      if (desconexionTimers.has(me.id)) {
+        clearTimeout(desconexionTimers.get(me.id));
+        desconexionTimers.delete(me.id);
+      }
+      // desmarcamos y actualizamos socketId
+      me.desconectado = false;
+      me.socketId = socket.id;
+    }
+
+    // reconstruimos la lista de jugadores que el frontend necesita
+    const jugadores = partida.jugadores.map((j) => ({
+      id: j.id,
+      nombre: j.nombre,
+      avatar: j.avatar,
+      estaVivo: j.estaVivo,
+      rol: j.rol,
+    }));
+
+    // contadores
+    const totalVillagers = partida.jugadores.filter(
+      (j) => j.rol !== "Hombre lobo"
+    ).length;
+    const aliveVillagers = partida.jugadores.filter(
+      (j) => j.rol !== "Hombre lobo" &amp;&amp; j.estaVivo
+    ).length;
+    const totalWolves = partida.jugadores.filter(
+      (j) => j.rol === "Hombre lobo"
+    ).length;
+    const aliveWolves = partida.jugadores.filter(
+      (j) => j.rol === "Hombre lobo" &amp;&amp; j.estaVivo
+    ).length;
+
+    // derivamos una fase aproximada
+    let currentPhase;
+    if (partida.votacionAlguacilActiva) currentPhase = "alguacil_announce";
+    else if (partida.turno === "dia" &amp;&amp; partida.votacionActiva)
+      currentPhase = "game_voting";
+    else if (partida.turno === "dia") currentPhase = "game";
+    else if (partida.votacionLobosActiva) currentPhase = "turnoHombresLobos";
+    else currentPhase = "night";
+
+    // tiempo restante aproximado (usa tu propia lógica si quieres medirlo con timestamps)
+    const elapsed = Date.now() - partida.phaseStart;
+    const timeLeft = Math.max(
+      0,
+      Math.ceil((partida.phaseDuration - elapsed) / 1000)
+    );
+
+    socket.emit("gameState", {
+      partidaID: idPartida,
+      currentPhase,
+      currentPeriod: partida.turno === "dia" ? "DÍA" : "NOCHE",
+      timeLeft,
+      currentDay: partida.currentDay,
+      players: jugadores,
+      totalVillagers,
+      aliveVillagers,
+      totalWolves,
+      aliveWolves,
+    });
+  });
   socket.onAny((event, ...args) => {
     console.log(`[Backend] Received event: ${event}`, args);
   });
@@ -681,27 +752,51 @@ const manejarConexionPartidas = (socket, io) => {
 const manejarDesconexionPartidas = (socket, io) => {
   for (const idPartida in partidas) {
     const partida = partidas[idPartida];
-
-    // Si la partida es nula o no existe, saltamos esta iteración.
     if (!partida) continue;
 
-    const idSala = partida.idSala;
+    // buscamos al jugador que se desconecta
     const jugador = partida.jugadores.find((j) => j.socketId === socket.id);
-    if (jugador) {
-      // Eliminar al jugador de la partida
-      partida.jugadores = partida.jugadores.filter(
-        (j) => j.socketId !== socket.id
-      );
-      io.to(idSala).emit("actualizarPartida", partida);
-      console.log(`Jugador ${jugador.id} desconectado de la partida ${idSala}`);
+    if (!jugador) continue;
 
-      // Notificar a todos los jugadores de la partida que un jugador ha salido
-      io.to(idSala).emit("jugadorSalido", {
-        nombre: jugador.nombre,
-        id: jugador.id,
-      });
-      break;
-    }
+    // marcamos como "pendiente de desconexión"
+    jugador.desconectado = true;
+
+    // programamos la eliminación definitiva a los 5 segundos
+    const timer = setTimeout(() => {
+      // si para entonces sigue desconectado, lo quitamos
+      if (jugador.desconectado) {
+        partida.jugadores = partida.jugadores.filter(
+          (j) => j.id !== jugador.id
+        );
+        // enviamos sólo estado serializable
+        const estadoPartida = {
+          idPartida: partida.idPartida,
+          turno: partida.turno,
+          estado: partida.estado,
+          currentDay: partida.currentDay,
+          jugadores: partida.jugadores.map((j) => ({
+            id: j.id,
+            nombre: j.nombre,
+            avatar: j.avatar,
+            estaVivo: j.estaVivo,
+            rol: j.rol,
+          })),
+        };
+        io.to(partida.idSala).emit("actualizarPartida", estadoPartida);
+        io.to(partida.idSala).emit("jugadorSalido", {
+          nombre: jugador.nombre,
+          id: jugador.id,
+        });
+        console.log(
+          `Jugador ${jugador.id} eliminado tras 5s de desconexión de la partida ${partida.idSala}`
+        );
+      }
+      desconexionTimers.delete(jugador.id);
+    }, 5000);
+
+    // guardamos el timer para poder cancelarlo si se reconecta
+    desconexionTimers.set(jugador.id, timer);
+    break;
   }
 };
 
@@ -810,11 +905,13 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       mensaje: "La vidente tiene 25 segundos para usar su habilidad.",
       tiempo: 25,
     });
+
     partida.iniciarHabilidadVidente();
 
     const checkVidente = setInterval(() => {
       if (partida.todosVidentesHanVisto() || !partida.temporizadorHabilidad) {
         clearInterval(checkVidente);
+        clearInterval(partida.temporizadorHabilidad);
         manejarFaseHombresLobos();
       }
     }, 1000);
@@ -840,7 +937,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             resultadoVotosNoche.mensaje
           );
           preparacionResultado.forEach(({ socketId, mensaje }) => {
-            io.to(socketId).emit("resultadoVotosNoche", { mensaje });
+            io.to(socketId).emit("resultadoVotosNoche", {
+              mensaje,
+              partida: partida.colaEliminaciones,
+            });
           });
 
           // Comunicar a las brujas la víctima elegida por los hombres lobos (si existe)
@@ -876,6 +976,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           !partida.temporizadorHabilidad
         ) {
           clearInterval(checkBruja);
+          clearInterval(partida.temporizadorHabilidad);
           console.log(
             "partida.todasBrujasUsaronHabilidad() al pasar turno: ",
             partida.todasBrujasUsaronHabilidad()
@@ -952,6 +1053,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               partida.todosCazadoresUsaronHabilidad()
             );
             clearInterval(checkCazador);
+            clearInterval(partida.temporizadorHabilidad);
             console.log("Fin de la sub-fase del Cazador");
             resolve();
           }
@@ -993,6 +1095,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               partida.alguacilUsoHabilidad()
             );
             clearInterval(checkAlguacil);
+            clearInterval(partida.temporizadorHabilidad);
             console.log("Fin de la sub-fase del Alguacil");
             resolve();
           }
@@ -1001,12 +1104,17 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     };
 
     // Fase 4: Día
-    const manejarFaseDia = () => {
+    const manejarFaseDia = async () => {
+      //MANEJAR FIN DE PARTIDA
+      //const finPartida3 = verificarFinPartida(resultadoTurno3);
+      //await guardarPartidasEnRedis();
+
       io.to(idSala).emit("diaComienza", {
-        mensaje:
-          "Es de día, los jugadores tienen 1 minuto para decidir quién será eliminado.",
+        mensaje: "Es de día…",
         tiempo: 60,
+        victimas: partida.ultimasVictimas,
       });
+      partida.ultimasVictimas = []; // opcional: limpio para el próximo ciclo
       partida.iniciarVotacion();
 
       const checkVotosDia = setInterval(async () => {
@@ -1127,7 +1235,7 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 18 2025 12:30:54 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 18 2025 18:39:25 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
