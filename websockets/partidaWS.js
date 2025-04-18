@@ -857,11 +857,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
           if (partida.alguacilHaMuerto()) {
             await manejarFaseAlguacil();
-          }
-
-          // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-          if (partida.cazadorHaMuerto()) {
-            await manejarFaseCazador();
+          } else {
+            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+            if (partida.cazadorHaMuerto()) {
+              await manejarFaseCazador();
+            }
           }
 
           const resultadoTurno2 = partida.gestionarTurno();
@@ -939,7 +939,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
       partida.iniciarHabilidadAlguacil();
 
-      const checkAlguacil = setInterval(() => {
+      const checkAlguacil = setInterval(async () => {
         if (!partida.temporizadorHabilidad || partida.alguacilUsoHabilidad()) {
           console.log(
             "partida.alguacilUsoHabilidad()  al pasar turno: ",
@@ -947,6 +947,9 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           );
           clearInterval(checkAlguacil);
           console.log("Fin de la sub-fase del Alguacil");
+          if (partida.cazadorHaMuerto()) {
+            await manejarFaseCazador();
+          }
         }
       }, 1000);
     };
@@ -996,11 +999,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
                 if (partida.alguacilHaMuerto()) {
                   await manejarFaseAlguacil();
-                }
-
-                // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-                if (partida.cazadorHaMuerto()) {
-                  await manejarFaseCazador();
+                } else {
+                  // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+                  if (partida.cazadorHaMuerto()) {
+                    await manejarFaseCazador();
+                  }
                 }
 
                 const resultadoTurno = partida.gestionarTurno();
@@ -1024,11 +1027,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
             if (partida.alguacilHaMuerto()) {
               await manejarFaseAlguacil();
-            }
-
-            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-            if (partida.cazadorHaMuerto()) {
-              await manejarFaseCazador();
+            } else {
+              // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
+              if (partida.cazadorHaMuerto()) {
+                await manejarFaseCazador();
+              }
             }
 
             const resultadoTurno2 = partida.gestionarTurno();
