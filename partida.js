@@ -438,7 +438,10 @@ class Partida {
           error: `No puedes curar a ${idObjetivo} porque no está a punto de morir.`,
         };
       }
+      clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
+      //this.temporizadorHabilidad = null;
       jugador.pocionCuraUsada = true;
+      jugador.estaVivo = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
         (id) => id !== idObjetivo
       ); // Cancela la muerte de los lobos
@@ -606,15 +609,19 @@ class Partida {
     let candidatos = [];
 
     for (const idJugador in conteoVotos) {
+      console.log("Sin problemas con idJugador");
       if (conteoVotos[idJugador] > maxVotos) {
         maxVotos = conteoVotos[idJugador];
         candidatos = [idJugador];
+        console.log("Añade candidato");
       } else if (conteoVotos[idJugador] === maxVotos) {
         candidatos.push(idJugador);
+        console.log("Valor final");
       }
     }
 
     if (candidatos.length === 1) {
+      console.log("Eliminado por votación");
       this.agregarAColaDeEliminacion(candidatos[0]);
       this.repetirVotosDia = false; // Se reinicia al resolver una votación sin empate
       this.votacionActiva = false; // Desactivar la votación de día
