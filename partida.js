@@ -43,13 +43,13 @@ class Partida {
     this.votacionLobosActiva = false; // Indica si hay una votación activa para los lobos
     this.votacionActiva = false; // Indica si hay una votación activa para todos los jugadores
     this.victimaElegidaLobos = null; // Victima elegida por los lobos. Excepto que la bruja use su poción de curación
-    this.sucesionHecha = false; // Indica si se ha hecho una sucesión de alguacil
-    this.currentDay = 1; //LLEVAR CONTADOR DEL DIA
-    this.phase = null; // nombre de la fase actual
-    this.phaseStart = null; // timestamp (ms) de cuándo empezó
-    this.phaseDuration = null; // duración en ms de la fase
-    this.ultimasVictimas = [];
     // la victima elegida por los lobos es la que se elimina al final del turno.
+    this.sucesionHecha = false; // Indica si se ha hecho una sucesión de alguacil
+    this.numJornada = 1; // Número de jornada, inicialmente 1
+    this.faseActual = alguacil; // Nombre de la fase actual
+    this.faseInicio = null; // Timestamp (ms) de cuándo empezó la fase actual
+    this.faseDuracion = null; // Duración en ms de la fase actual
+    this.ultimasVictimas = []; // Lista de las últimas víctimas eliminadas
   }
 
   /**
@@ -96,6 +96,8 @@ class Partida {
           jugador.haVisto = false;
         }
       });
+    } else if (this.turno === "dia") {
+      this.numJornada++;
     }
   }
 
@@ -446,11 +448,9 @@ class Partida {
         };
       }
       clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
-      //this.temporizadorHabilidad = null;
       jugador.pocionCuraUsada = true;
-      jugador.estaVivo = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo
+        (id) => id !== idObjetivo,
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
@@ -546,7 +546,7 @@ class Partida {
    */
   obtenerAlguacilMuerto() {
     return this.jugadores.find(
-      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil
+      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil,
     );
   }
 
@@ -695,7 +695,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo
+      (j) => j.rol === "Hombre lobo" && j.estaVivo,
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -792,15 +792,19 @@ class Partida {
    * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   aplicarEliminaciones() {
-    // antes de eliminar…
+    // Guardamos las últimas víctimas antes de eliminarlas
     this.ultimasVictimas = [...this.colaEliminaciones];
-    // ahora sí aplicamos la muerte
-    this.colaEliminaciones.forEach((id) => {
-      const j = this.jugadores.find((p) => p.id == id);
-      if (j) j.estaVivo = false;
-    });
-    this.colaEliminaciones = [];
 
+    // Eliminamos a los jugadores de la cola de eliminaciones
+    this.colaEliminaciones.forEach((idJugador) => {
+      const jugador = this.jugadores.find((j) => j.id == idJugador);
+      if (jugador) {
+        jugador.estaVivo = false;
+      }
+    });
+    this.colaEliminaciones = []; // Reiniciar la cola de eliminaciones
+
+    // Comprobar si hay un ganador y devolver el resultado
     return this.comprobarVictoria();
   }
 
@@ -818,10 +822,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo"
+      (j) => j.estaVivo && j.rol === "Hombre lobo",
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo"
+      (j) => j.estaVivo && j.rol !== "Hombre lobo",
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -867,7 +871,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo"
+        (j) => j.estaVivo && j.rol === "Hombre lobo",
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {
@@ -893,6 +897,9 @@ class Partida {
    */
   iniciarVotacionAlguacil() {
     this.votacionAlguacilActiva = true;
+    this.faseActual = "alguacil";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteVotacion;
     this.temporizadorVotacion = setTimeout(() => {
       this.votacionAlguacilActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
@@ -904,6 +911,10 @@ class Partida {
    */
   iniciarVotacionLobos() {
     this.votacionLobosActiva = true;
+    this.faseActual = "votacionLobos";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteVotacion;
+    this.ultimasVictimas = [];
     this.temporizadorVotacion = setTimeout(() => {
       this.votacionLobosActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
@@ -915,6 +926,9 @@ class Partida {
    */
   iniciarVotacion() {
     this.votacionActiva = true;
+    this.faseActual = "votacionDia";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteVotacion;
     this.temporizadorVotacion = setTimeout(() => {
       this.votacionActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
@@ -925,6 +939,9 @@ class Partida {
    * (Método que usa partidaWS) Inicia la habilidad de la vidente.
    */
   iniciarHabilidadVidente() {
+    this.faseActual = "videnteRevela";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteHabilidad + 5000;
     // La variable de los jugadores videntes 'haVisto' se pone a false al gestionar el turno y cambiar de turno a noche
     // La variable de los jugadores videntes 'haVisto' se pone a true al usar la habilidad o al expirar el tiempo límite
     this.temporizadorHabilidad = setTimeout(() => {
@@ -942,6 +959,9 @@ class Partida {
    * (Método que usa partidaWS) Inicia la habilidad de la bruja.
    */
   iniciarHabilidadBruja() {
+    this.faseActual = "pocionBruja";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteHabilidad;
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);
@@ -951,6 +971,9 @@ class Partida {
    * (Método que usa partidaWS) Inicia la habilidad del cazador.
    */
   iniciarHabilidadCazador() {
+    this.faseActual = "disparoCazador";
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteHabilidad;
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);
@@ -960,7 +983,10 @@ class Partida {
    * (Método que usa partidaWS) Inicia la habilidad del alguacil.
    */
   iniciarHabilidadAlguacil() {
+    this.faseActual = "sucesionAlguacil";
     this.sucesionHecha = false;
+    this.faseInicio = Date.now();
+    this.faseDuracion = this.tiempoLimiteHabilidad;
     this.temporizadorHabilidad = setTimeout(() => {
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
     }, this.tiempoLimiteHabilidad);
@@ -1010,13 +1036,14 @@ class Partida {
     return this.sucesionHecha;
   }
 
-  hayRolVivo(rol) {
-    this.jugadores.forEach((jugador) => {
-      if (jugador.rol == rol && jugador.estaVivo) {
-        return true;
-      }
-    });
-    return false;
+  /**
+   * (Método que usa partidaWS)
+   * Limpia el temporizador de habilidad.
+   */
+  limpiarTemporizadorHabilidad() {
+    if (this.temporizadorHabilidad) {
+      clearTimeout(this.temporizadorHabilidad);
+    }
   }
 }
 

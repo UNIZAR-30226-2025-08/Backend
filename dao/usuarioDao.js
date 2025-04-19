@@ -180,6 +180,24 @@ class UsuarioDAO {
       throw new Error(error.message);
     }
   }
+
+  /**
+   * Busca usuarios por nombre similar.
+   * @param {string} nombre - Parte del nombre del usuario a buscar.
+   * @returns {Promise<Object[]>} Lista de usuarios con nombres similares.
+   */
+  static async buscarUsuariosPorNombre(nombre) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT nombre, avatar FROM "Usuario" WHERE nombre ILIKE $1`,
+        [`%${nombre}%`]
+      );
+      return rows; // Devuelve la lista de usuarios con nombres similares
+    } catch (error) {
+      console.error("Error al buscar usuarios por nombre:", error);
+      throw new Error("Error al buscar usuarios por nombre");
+    }
+  }
 }
 
 module.exports = UsuarioDAO;

@@ -332,3 +332,39 @@ router.post("/obtener_por_nombre", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * Busca usuarios por nombre similar.
+ *
+ * @function POST /api/usuario/buscar_por_nombre
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
+ * @param {string} req.body.nombre - Parte del nombre del usuario a buscar.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El nombre es requerido.
+ * @throws {500} Error interno al buscar usuarios.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {Object[]} res.usuarios - Lista de usuarios encontrados.
+ * @param {string} res.usuarios.nombre - Nombre del usuario.
+ * @param {string} res.usuarios.avatar - Avatar del usuario.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/buscar_por_nombre", async (req, res) => {
+  const { nombre } = req.body; // Obtenemos el nombre del body
+
+  if (!nombre) {
+    return res.status(400).json({ error: "El nombre es requerido." });
+  }
+
+  try {
+    const usuarios = await UsuarioDAO.buscarUsuariosPorNombre(nombre);
+    res.status(200).json({ usuarios });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
