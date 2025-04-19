@@ -92,15 +92,9 @@ class UsuarioDAO {
   }
 
   /**
-   * Valida credenciales de usuario.
+   * Valida las credenciales de un usuario.
    * @param {string} correo - Correo del usuario.
-   * @param {string} contrasena - Contraseña en texto plano.
-   * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
-   */
-  /**
-   * Valida credenciales de usuario.
-   * @param {string} correo - Correo del usuario.
-   * @param {string} contrasena - Contraseña en texto plano.
+   * @param {string} contrasena - Hash de la contraseña.
    * @returns {Promise<Object|null>} Datos del usuario si las credenciales son correctas.
    */
   static async validarCredenciales(correo, contrasena) {
@@ -142,9 +136,11 @@ class UsuarioDAO {
    * @returns {Promise<Object>} Datos del usuario actualizado.
    */
   static async actualizarPerfil(idUsuario, { nombre, avatar, rolFavorito }) {
-    /*COALESCE se utiliza para que si solo se actualiza el nombre y no el avatar
-      o viceversa, el parámetro que no se actualiza mantiene el valor que tenia antes
-      Funcionamiento: Si en $1 el valor es null, el valor que se quedará será el de nombre */
+    /* COALESCE se utiliza para que si solo se actualiza el nombre y no el avatar,
+      o viceversa, el parámetro que no se actualiza mantenga el valor que tenía antes
+      Funcionamiento: Si en $1 el valor es null, el valor que se quedará será el del nombre actual,
+      si en $2 el valor es null, el valor que se quedará será el del avatar actual,
+      si en $3 el valor es null, el valor que se quedará será el del rolFavorito actual */
     try {
       const query = `
         UPDATE "Usuario"
@@ -166,29 +162,22 @@ class UsuarioDAO {
       throw new Error("No se pudo actualizar el perfil del usuario");
     }
   }
+
+  /**
+   * Obtiene el avatar de un usuario por su id.
+   * @param {string} idUsuario - ID del usuario.
+   * @returns {Promise<Object>} Avatar del usuario.
+   */
   static async obtenerAvatarUsuario(idUsuario) {
     try {
       const { rows } = await pool.query(
         `SELECT avatar FROM "Usuario" WHERE "idUsuario" = $1`,
         [idUsuario]
       );
-      return rows[0];
+      return rows[0]; // Devuelve el avatar del usuario
     } catch (error) {
-      console.error("Error al buscar avatar por id:", error);
+      console.error("Error al buscar el avatar de un usuario por id:", error);
       throw new Error(error.message);
-    }
-  }
-
-  static async eliminarUsuario(idUsuario) {
-    try {
-      const { rows } = await pool.query(
-        'DELETE FROM "Usuario" WHERE "idUsuario" = $1 RETURNING *',
-        [idUsuario]
-      );
-      return rows[0]; // Retorna el usuario eliminado
-    } catch (error) {
-      console.error("Error al eliminar usuario:", error);
-      throw new Error("Error al eliminar el usuario");
     }
   }
 }

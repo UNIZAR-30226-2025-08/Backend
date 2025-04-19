@@ -958,15 +958,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             partida.temporizadorHabilidad
           );
 
-          // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
-          if (partida.alguacilHaMuerto()) {
-            await manejarFaseAlguacil();
-          }
-
-          // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-          if (partida.cazadorHaMuerto()) {
-            await manejarFaseCazador();
-          }
+          // Llamar a la función verificarSubfasesOpcionales antes de pasar al turno de día
+          await verificarSubfasesOpcionales();
 
           const resultadoTurno2 = partida.gestionarTurno();
 
@@ -1033,10 +1026,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       });
     };
 
-    // Sub-fase opcional 5: Habilidad del alguacil
+    // Sub-fase opcional 5: Sucesion del alguacil
     const manejarFaseAlguacil = async () => {
       return new Promise((resolve) => {
-        console.log("Sub-fase del Alguacil iniciada");
+        console.log("Sub-fase de la sucesión del Alguacil iniciada");
 
         const alguacilMuerto = partida.obtenerAlguacilMuerto();
 
@@ -1049,6 +1042,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           partida.alguacilUsoHabilidad()
         );
 
+        // Notificar a todos los jugadores que comienza la fase de la sucesión del alguacil
         io.to(idSala).emit("habilidadAlguacil", {
           mensaje: `${alguacilMuerto.nombre} era el Alguacil. Puede elegir a quién le pasa la voz.`,
           tiempo: 20,
@@ -1073,6 +1067,19 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           }
         }, 1000);
       });
+    };
+
+    // Verificar y activar si es necesario las subfases opcionales de la sucesión del alguacil y la habilidad del cazador
+    const verificarSubfasesOpcionales = async () => {
+      // Si el alguacil murió, activamos su sub-fase
+      if (partida.alguacilHaMuerto()) {
+        await manejarFaseAlguacil();
+      }
+
+      // Si el cazador murió, activamos su sub-fase
+      if (partida.cazadorHaMuerto()) {
+        await manejarFaseCazador();
+      }
     };
 
     // Fase 4: Día
@@ -1126,15 +1133,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                   });
                 }
 
-                // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
-                if (partida.alguacilHaMuerto()) {
-                  await manejarFaseAlguacil();
-                }
-
-                // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-                if (partida.cazadorHaMuerto()) {
-                  await manejarFaseCazador();
-                }
+                // Llamar a la función verificarSubfasesOpcionales antes de pasar al turno de noche
+                await verificarSubfasesOpcionales();
 
                 const resultadoTurno = partida.gestionarTurno();
                 // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
@@ -1154,15 +1154,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               jugadorAEliminar: resultadoVotosDia.jugadorAEliminar,
             });
 
-            // Si el alguacil murió, activamos su sub-fase antes de pasar al turno de día
-            if (partida.alguacilHaMuerto()) {
-              await manejarFaseAlguacil();
-            }
-
-            // Si el cazador murió, activamos su sub-fase antes de pasar al turno de día
-            if (partida.cazadorHaMuerto()) {
-              await manejarFaseCazador();
-            }
+            // Llamar a la función verificarSubfasesOpcionales antes de pasar al turno de noche
+            await verificarSubfasesOpcionales();
 
             const resultadoTurno2 = partida.gestionarTurno();
             // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'

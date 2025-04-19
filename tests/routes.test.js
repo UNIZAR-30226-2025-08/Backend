@@ -137,6 +137,16 @@ describe("Tests de rutas de Usuario", () => {
     expect(response.body.usuario.correo).toBe(testUser.correo);
   });
 
+  test("POST /api/usuario/obtener_avatar_por_id - Obtener el avatar de un usuario por su id", async () => {
+    const response = await request(app)
+      .post("/api/usuario/obtener_avatar_por_id")
+      .send({ idUsuario: testUserId });
+
+    expect(response.status).toBe(200);
+    expect(response.body.avatar).toBeDefined();
+    expect(response.body.avatar).toBe(testUser.avatar);
+  });
+
   test("PUT /api/usuario/actualizar - Actualizar perfil", async () => {
     const response = await request(app)
       .put("/api/usuario/actualizar")

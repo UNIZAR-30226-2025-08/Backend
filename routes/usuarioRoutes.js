@@ -100,7 +100,7 @@ router.post("/obtener", async (req, res) => {
     }
     res.status(200).json({ usuario });
   } catch (error) {
-    res.status(500).json({ error: error.message }); //Cambiar?
+    res.status(500).json({ error: error.message }); //Cambiar? !!!!!!!
   }
 });
 
@@ -144,7 +144,7 @@ router.post("/obtener_por_id", async (req, res) => {
     }
     res.status(200).json({ usuario });
   } catch (error) {
-    res.status(500).json({ error: error.message }); //Cambiar?
+    res.status(500).json({ error: error.message }); //Cambiar? !!!!!!!
   }
 });
 
@@ -164,6 +164,7 @@ router.post("/obtener_por_id", async (req, res) => {
  *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.avatar - URL del avatar del usuario (si se encuentra).
+ * 
  * @param {Object} res.error - Objeto de error en caso de fallo.
  * @param {string} res.error.mensaje - Descripción del error.
  */
@@ -179,7 +180,7 @@ router.post("/obtener_avatar_por_id", async (req, res) => {
     if (!avatar) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
-    res.status(200).json({ avatar: avatar });
+    res.status(200).json({ avatar: avatar.avatar });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -327,40 +328,6 @@ router.post("/obtener_por_nombre", async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
     res.status(200).json({ usuario });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Elimina un usuario por id.
- *
- * @function DELETE /api/usuario/eliminar
- * @param {Object} req - Objeto de solicitud HTTP.
- * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
- * @param {string} req.body.idUsuario - ID del usuario a eliminar.
- *
- * @param {Object} res - Objeto de respuesta HTTP.
- *
- * @throws {400} El id es requerido.
- * @throws {404} Usuario no encontrado.
- * @throws {500} Error interno al eliminar el usuario.
- *
- * @param {number} res.status - Código de estado HTTP.
- * @param {string} res.mensaje - Mensaje de confirmación de la eliminación.
- * @param {Object} res.error - Objeto de error en caso de fallo.
- * @param {string} res.error.mensaje - Descripción del error.
- */
-router.delete("/eliminar", async (req, res) => {
-  const { idUsuario } = req.body; // Obtenemos el id del body
-
-  if (!idUsuario) {
-    return res.status(400).json({ error: "El id es requerido." });
-  }
-
-  try {
-    await UsuarioDAO.eliminarUsuario(idUsuario);
-    res.status(200).json({ mensaje: "Usuario eliminado exitosamente" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
