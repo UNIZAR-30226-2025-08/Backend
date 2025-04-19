@@ -46,7 +46,7 @@ class Partida {
     // la victima elegida por los lobos es la que se elimina al final del turno.
     this.sucesionHecha = false; // Indica si se ha hecho una sucesión de alguacil
     this.numJornada = 1; // Número de jornada, inicialmente 1
-    this.faseActual = alguacil; // Nombre de la fase actual
+    this.faseActual = "alguacil"; // Nombre de la fase actual
     this.faseInicio = null; // Timestamp (ms) de cuándo empezó la fase actual
     this.faseDuracion = null; // Duración en ms de la fase actual
     this.ultimasVictimas = []; // Lista de las últimas víctimas eliminadas
