@@ -158,6 +158,9 @@ class UsuarioDAO {
       ]);
       return rows[0];
     } catch (error) {
+      if (error.code === "23505" && error.constraint === "Usuario_nombre_key") {
+        throw new Error("El nombre de usuario ya está registrado en la plataforma.");
+      }
       console.error("Error al actualizar el perfil:", error);
       throw new Error("No se pudo actualizar el perfil del usuario");
     }
@@ -177,6 +180,24 @@ class UsuarioDAO {
       return rows[0]; // Devuelve el avatar del usuario
     } catch (error) {
       console.error("Error al buscar el avatar de un usuario por id:", error);
+      throw new Error(error.message);
+    }
+  }
+
+  /**
+   * Obtiene el nombre de un usuario por su id.
+   * @param {string} idUsuario - ID del usuario.
+   * @returns {Promise<Object>} Nombre del usuario.
+   */
+  static async obtenerNombreUsuario(idUsuario) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT nombre FROM "Usuario" WHERE "idUsuario" = $1`,
+        [idUsuario]
+      );
+      return rows[0]; // Devuelve el nombre del usuario
+    } catch (error) {
+      console.error("Error al buscar el nombre de un usuario por id:", error);
       throw new Error(error.message);
     }
   }

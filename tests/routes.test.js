@@ -147,6 +147,16 @@ describe("Tests de rutas de Usuario", () => {
     expect(response.body.avatar).toBe(testUser.avatar);
   });
 
+  test("POST /api/usuario/obtener_nombre_por_id - Obtener el nombre de un usuario por su id", async () => {
+    const response = await request(app)
+      .post("/api/usuario/obtener_nombre_por_id")
+      .send({ idUsuario: testUserId });
+
+    expect(response.status).toBe(200);
+    expect(response.body.nombre).toBeDefined();
+    expect(response.body.nombre).toBe(testUser.nombre);
+  });
+
   test("POST /api/usuario/buscar_por_nombre - Buscar usuarios por nombre", async () => {
     const response = await request(app)
       .post("/api/usuario/buscar_por_nombre")
@@ -293,10 +303,6 @@ describe("Tests de rutas de Amistad", () => {
     ).toBeGreaterThanOrEqual(0);
     expect(
       response.body.amigos[0].estadisticas.porcentajeVictorias,
-    ).toBeGreaterThanOrEqual(0);
-    expect(response.body.amigos[0].estadisticas.rolesMasJugados).toBeDefined();
-    expect(
-      response.body.amigos[0].estadisticas.rolesMasJugados.length,
     ).toBeGreaterThanOrEqual(0);
   });
 
@@ -594,7 +600,6 @@ describe("Tests de rutas de Estadisticas", () => {
     expect(response.body.stats.partidasGanadas).toBeDefined();
     expect(response.body.stats.partidasTotales).toBeDefined();
     expect(response.body.stats.porcentajeVictorias).toBeDefined();
-    expect(response.body.stats.rolesMasJugados).toBeDefined();
     expect(response.body.mensaje).toBeDefined();
     expect(response.body.mensaje).toBe("Estadísticas obtenidas");
   });

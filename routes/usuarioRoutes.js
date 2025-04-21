@@ -187,6 +187,47 @@ router.post("/obtener_avatar_por_id", async (req, res) => {
 });
 
 /**
+ * Obtiene el nombre de un usuario por id.
+ *
+ * @function POST /api/usuario/obtener_nombre_por_id
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} req.body - Cuerpo de la solicitud con los datos requeridos.
+ * @param {string} req.body.idUsuario - ID del usuario a buscar.
+ *
+ * @param {Object} res - Objeto de respuesta HTTP.
+ *
+ * @throws {400} El id del usuario es requerido.
+ * @throws {404} Usuario no encontrado.
+ * @throws {500} Error interno al obtener el nombre.
+ *
+ * @param {number} res.status - Código de estado HTTP.
+ * @param {string} res.nombre - Nombre del usuario encontrado.
+ * 
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ *
+ * @param {Object} res.error - Objeto de error.
+ * @param {string} res.error.mensaje - Descripción del error.
+ */
+router.post("/obtener_nombre_por_id", async (req, res) => {
+  const { idUsuario } = req.body; // Obtenemos el id del body
+
+  if (!idUsuario) {
+    return res.status(400).json({ error: "El id es requerido." });
+  }
+
+  try {
+    const nombre = await UsuarioDAO.obtenerNombreUsuario(idUsuario);
+    if (!nombre) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.status(200).json({ nombre: nombre.nombre });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Inicia sesión validando las credenciales del usuario.
  *
  * @function POST /api/usuario/login
@@ -256,6 +297,7 @@ router.post("/login", async (req, res) => {
  * @throws {400} El ID del usuario es requerido.
  * @throws {404} Usuario no encontrado.
  * @throws {500} Error interno al actualizar el perfil.
+ * @throws {409} El nombre de usuario ya está registrado.
  *
  * @param {number} res.status - Código de estado HTTP.
  * @param {string} res.mensaje - Mensaje de confirmación de la actualización.
@@ -283,6 +325,10 @@ router.put("/actualizar", async (req, res) => {
       usuario: usuarioActualizado,
     });
   } catch (error) {
+    if (error.message === "El nombre de usuario ya está registrado en la plataforma.") {
+      return res.status(409).json({ error: error.message });
+    }
+    console.error("Error en la ruta de actualización:", error);
     res.status(500).json({ error: error.message });
   }
 });

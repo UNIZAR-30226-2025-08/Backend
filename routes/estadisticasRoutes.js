@@ -25,7 +25,6 @@ const EstadisticasDAO = require("../dao/estadisticasDao");
  * @returns {number} res.stats.partidasGanadas - Número de partidas ganadas.
  * @returns {number} res.stats.partidasTotales - Total de partidas jugadas.
  * @returns {number} res.stats.porcentajeVictorias - Porcentaje de victorias.
- * @returns {Object[]} res.stats.rolesMasJugados - Array con los roles más jugados y su cantidad.
  */
 router.get("/obtener/:idUsuario", async (req, res) => {
   try {

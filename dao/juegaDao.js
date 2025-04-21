@@ -54,6 +54,7 @@ class JuegaDAO {
         FROM "Juega" j
         JOIN "Partida" p ON j."idPartida" = p."idPartida"
         WHERE j."idUsuario" = $1
+        AND p.estado = 'terminada'
         ORDER BY p.fecha DESC`;
 
       const { rows } = await pool.query(query, [idUsuario]);

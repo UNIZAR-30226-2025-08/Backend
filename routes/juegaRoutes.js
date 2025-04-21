@@ -48,7 +48,7 @@ router.post("/asignar", async (req, res) => {
 });
 
 /**
- * Obtiene todas las partidas en las que ha participado un usuario.
+ * Obtiene todas las partidas finalizadas en las que ha participado un usuario.
  * @function GET /api/juega/usuario/:idUsuario
  *
  * @param {Object} req - Objeto de solicitud HTTP.
