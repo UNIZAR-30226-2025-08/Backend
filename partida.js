@@ -450,7 +450,7 @@ class Partida {
       clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo
+        (id) => id !== idObjetivo,
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
       return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
@@ -546,7 +546,7 @@ class Partida {
    */
   obtenerAlguacilMuerto() {
     return this.jugadores.find(
-      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil
+      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil,
     );
   }
 
@@ -695,7 +695,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo
+      (j) => j.rol === "Hombre lobo" && j.estaVivo,
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -822,10 +822,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo"
+      (j) => j.estaVivo && j.rol === "Hombre lobo",
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo"
+      (j) => j.estaVivo && j.rol !== "Hombre lobo",
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -871,7 +871,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo"
+        (j) => j.estaVivo && j.rol === "Hombre lobo",
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {
@@ -1044,6 +1044,18 @@ class Partida {
     if (this.temporizadorHabilidad) {
       clearTimeout(this.temporizadorHabilidad);
     }
+  }
+
+  /**
+   * (Método que usa partidaWS)
+   * Verifica si hay un jugador vivo con un rol específico.
+   * @param {string} rol - Rol del jugador a verificar.
+   * @returns {boolean} - True si hay un jugador vivo con el rol especificado. False en caso contrario.
+   */
+  hayRolVivo(rol) {
+    return this.jugadores.some(
+      (jugador) => jugador.rol == rol && jugador.estaVivo,
+    );
   }
 }
 
