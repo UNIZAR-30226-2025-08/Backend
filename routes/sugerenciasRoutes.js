@@ -69,6 +69,7 @@ router.post("/enviar", async (req, res) => {
  * @param {number} res.sugerencias[].idUsuario - ID del usuario que envió la sugerencia.
  * @param {string} res.sugerencias[].contenido - Contenido de la sugerencia.
  * @param {string} res.sugerencias[].fechaSugerencia - Fecha de envío de la sugerencia en formato ISO.
+ * @param {string} res.sugerencias[].respuesta - Respuesta asignada a la sugerencia.
  *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
