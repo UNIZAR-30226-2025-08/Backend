@@ -25,13 +25,13 @@ class SugerenciasDAO {
 
   /**
    * Obtiene todas las sugerencias almacenadas.
-   * La he añadido porque puede ser útil si tenemos un rol de administrador que quiera ver todas las sugerencias
+   * Útil si tenemos un rol de administrador que quiera ver todas las sugerencias
    * @returns {Promise<Array>} Lista de sugerencias.
    */
   static async obtenerSugerencias() {
     try {
       const query = `
-        SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada
+        SELECT "idSugerencia", "idUsuario", contenido, "fechaSugerencia", revisada, respuesta
         FROM "Sugerencias"
         ORDER BY "fechaSugerencia" DESC
       `;

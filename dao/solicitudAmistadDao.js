@@ -19,6 +19,12 @@ class SolicitudAmistadDAO {
         );
       }
 
+      // Verificar si ya son amigos
+      const amigos = await AmistadDAO.obtenerAmigos(idEmisor);
+      if (amigos.includes(idReceptor)) {
+        throw new Error("Estos usuarios ya son amigos.");
+      }
+
       await client.query("BEGIN");
 
       // Verificar si ya existe una solicitud en este sentido

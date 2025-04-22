@@ -45,7 +45,11 @@ router.post("/enviar", async (req, res) => {
     );
     res.status(200).json({ mensaje: "Solicitud enviada", solicitud });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error.message === "Estos usuarios ya son amigos.") {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
