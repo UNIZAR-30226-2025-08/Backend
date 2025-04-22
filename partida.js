@@ -358,7 +358,7 @@ class Partida {
     jugador.haVisto = true; // La vidente solo puede ver un jugador por noche
 
     return {
-      mensaje: `El jugador ${idObjetivo} es ${objetivo.rol}.`,
+      mensaje: `El jugador ${this.jugadores.find((j) => j.id == idObjetivo).nombre} es ${objetivo.rol}.`,
       rol: objetivo.rol,
     };
   }
@@ -444,7 +444,7 @@ class Partida {
       }
       if (!this.colaEliminaciones.includes(idObjetivo)) {
         return {
-          error: `No puedes curar a ${idObjetivo} porque no está a punto de morir.`,
+          error: `No puedes curar a ${this.jugadores.find((j) => j.id == idObjetivo).nombre} porque no está a punto de morir.`,
         };
       }
       clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
@@ -453,7 +453,9 @@ class Partida {
         (id) => id !== idObjetivo,
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
-      return { mensaje: `La bruja ha salvado a ${idObjetivo}.` };
+      return {
+        mensaje: `La bruja ha salvado a ${this.jugadores.find((j) => j.id == idObjetivo).nombre}.`,
+      };
     }
 
     if (tipo === "matar") {
@@ -462,13 +464,13 @@ class Partida {
       }
       if (!objetivo || !objetivo.estaVivo) {
         return {
-          error: `No puedes matar a ${idObjetivo} porque ya está muerto.`,
+          error: `No puedes matar a ${this.jugadores.find((j) => j.id == idObjetivo).nombre} porque ya está muerto.`,
         };
       }
       jugador.pocionMatarUsada = true;
       this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
       return {
-        mensaje: `La bruja ha usado su poción de muerte con ${idObjetivo}.`,
+        mensaje: `La bruja ha usado su poción de muerte con ${this.jugadores.find((j) => j.id == idObjetivo).nombre}.`,
       };
     }
 

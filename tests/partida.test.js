@@ -364,7 +364,7 @@ describe("Clase Partida", () => {
     expect(result.rol).toBe(null);
 
     result = partida.videnteRevela("4", "1"); // La vidente intenta ver el rol del jugador 1
-    expect(result.mensaje).toBe("El jugador 1 es Hombre lobo.");
+    expect(result.mensaje).toBe("El jugador jugador1 es Hombre lobo.");
     expect(result.rol).toBe("Hombre lobo"); // El rol del jugador 1 es Hombre lobo
 
     result = partida.videnteRevela("4", "2"); // La vidente intenta ver el rol del jugador 2
