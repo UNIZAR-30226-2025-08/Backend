@@ -1059,6 +1059,19 @@ class Partida {
       (jugador) => jugador.rol == rol && jugador.estaVivo,
     );
   }
+
+  /**
+   * (Método que usa partidaWS)
+   * Actualiza el socketId de un jugador en la partida.
+   * @param {string} idJugador - ID del jugador a actualizar.
+   * @param {string} socketId - SocketId del jugador a actualizar.
+   */
+  actualizarSocketId(idJugador, socketId) {
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    if (jugador) {
+      jugador.socketId = socketId;
+    }
+  }
 }
 
 module.exports = Partida; // exportar la clase

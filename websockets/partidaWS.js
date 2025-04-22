@@ -474,9 +474,11 @@ const manejarConexionPartidas = (socket, io) => {
         idJugador,
         mensaje,
       );
+      console.log("preparacionMensajes", preparacionMensajes);
       preparacionMensajes.forEach(
         ({ socketId, nombre, mensaje, timestamp }) => {
-          socket.to(socketId).emit("mensajePrivado", {
+          console.log(io.sockets.sockets.has(socketId));
+          io.to(socketId).emit("mensajePrivado", {
             mensaje: mensaje,
             nombre: nombre,
             timestamp: timestamp,
@@ -732,6 +734,27 @@ const manejarConexionPartidas = (socket, io) => {
       console.error("Error en obtenerEstadoJugadores:", error);
       socket.emit("error", "Error al obtener el estado de los jugadores");
     }
+  });
+
+  /**
+   * Actualiza el socketId de un jugador en la partida.
+   *
+   * @event actualizarSocketId
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {string} datos.idJugador - ID del jugador a actualizar.
+   * @param {string} datos.socketId - SocketId del jugador a actualizar.
+   *
+   * @emits error - Si la partida no se encuentra.
+   * @param {String} mensaje - Mensaje de error si no se encuentra la partida.
+   *
+   */
+  socket.on("actualizarSocketId", ({ idPartida, idJugador, socketId }) => {
+    const partida = obtenerPartida(socket, idPartida);
+    if (!partida) return;
+    partida.actualizarSocketId(idJugador, socketId);
+    guardarPartidasEnRedis();
   });
 };
 
