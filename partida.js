@@ -108,7 +108,7 @@ class Partida {
    * @param {string} mensaje - Contenido del mensaje.
    */
   agregarMensajeChatDia(idJugador, mensaje) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (!jugador || !jugador.estaVivo || this.turno !== "dia") return;
 
     this.chat.push({
@@ -124,7 +124,7 @@ class Partida {
    * @returns {boolean} - true si el jugador está vivo, false en caso contrario.
    */
   jugadorVivo(idJugador) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     return jugador && jugador.estaVivo;
   }
 
@@ -134,7 +134,7 @@ class Partida {
    * @returns {string} - Nombre del jugador.
    */
   obtenerNombreJugador(idJugador) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     return jugador ? jugador.nombre : null;
   }
 
@@ -145,7 +145,7 @@ class Partida {
    * @returns {Array<Object>} - Preparación de los mensajes privados para los hombres lobos.
    */
   prepararMensajesChatNoche(idJugador, mensaje) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (!jugador || !jugador.estaVivo || jugador.rol !== "Hombre lobo") {
       return []; // El jugador que intenta enviar el mensaje no es un hombre lobo o está muerto
     }
@@ -246,7 +246,7 @@ class Partida {
    */
   votaAlguacil(idJugador, idObjetivo) {
     if (this.turno !== "dia" || !this.votacionAlguacilActiva) return;
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
     this.votosAlguacil[idJugador] = idObjetivo;
@@ -268,7 +268,7 @@ class Partida {
    */
   vota(idJugador, idObjetivo) {
     if (this.turno !== "dia" || !this.votacionActiva) return;
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (!jugador || !jugador.estaVivo) return;
 
     this.votos[idJugador] = idObjetivo;
@@ -334,7 +334,7 @@ class Partida {
    */
   videnteRevela(idJugador, idObjetivo) {
     if (this.turno !== "noche") return "No es de noche.";
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (
       !jugador ||
       !jugador.estaVivo ||
@@ -347,7 +347,7 @@ class Partida {
       };
     }
 
-    const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
+    const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
     if (!objetivo || !objetivo.estaVivo) {
       return {
         mensaje: "Solo puedes ver el rol de un jugador vivo.",
@@ -358,7 +358,9 @@ class Partida {
     jugador.haVisto = true; // La vidente solo puede ver un jugador por noche
 
     return {
-      mensaje: `El jugador ${this.jugadores.find((j) => j.id == idObjetivo).nombre} es ${objetivo.rol}.`,
+      mensaje: `El jugador ${
+        this.jugadores.find((j) => j.id == idObjetivo).nombre
+      } es ${objetivo.rol}.`,
       rol: objetivo.rol,
     };
   }
@@ -383,7 +385,7 @@ class Partida {
    * @returns {string} Mensaje con el nombre de la victima elegida por los lobos.
    */
   verVictimaElegidaLobos(idJugador) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
 
     if (
       !jugador ||
@@ -423,8 +425,8 @@ class Partida {
    * @returns {Object.mensaje} Mensaje de éxito si la poción se usa correctamente.
    */
   usaPocionBruja(idJugador, tipo, idObjetivo) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
-    const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
 
     if (
       !jugador ||
@@ -444,17 +446,21 @@ class Partida {
       }
       if (!this.colaEliminaciones.includes(idObjetivo)) {
         return {
-          error: `No puedes curar a ${this.jugadores.find((j) => j.id == idObjetivo).nombre} porque no está a punto de morir.`,
+          error: `No puedes curar a ${
+            this.jugadores.find((j) => j.id == idObjetivo).nombre
+          } porque no está a punto de morir.`,
         };
       }
       clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
-        (id) => id !== idObjetivo,
+        (id) => id !== idObjetivo
       ); // Cancela la muerte de los lobos
       this.victimaElegidaLobos = null; // Reiniciar la victima elegida por los lobos
       return {
-        mensaje: `La bruja ha salvado a ${this.jugadores.find((j) => j.id == idObjetivo).nombre}.`,
+        mensaje: `La bruja ha salvado a ${
+          this.jugadores.find((j) => j.id == idObjetivo).nombre
+        }.`,
       };
     }
 
@@ -464,13 +470,17 @@ class Partida {
       }
       if (!objetivo || !objetivo.estaVivo) {
         return {
-          error: `No puedes matar a ${this.jugadores.find((j) => j.id == idObjetivo).nombre} porque ya está muerto.`,
+          error: `No puedes matar a ${
+            this.jugadores.find((j) => j.id == idObjetivo).nombre
+          } porque ya está muerto.`,
         };
       }
       jugador.pocionMatarUsada = true;
       this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
       return {
-        mensaje: `La bruja ha usado su poción de muerte con ${this.jugadores.find((j) => j.id == idObjetivo).nombre}.`,
+        mensaje: `La bruja ha usado su poción de muerte con ${
+          this.jugadores.find((j) => j.id == idObjetivo).nombre
+        }.`,
       };
     }
 
@@ -491,8 +501,8 @@ class Partida {
    * @returns {Object.mensaje} Mensaje de éxito si el cazador dispara correctamente.
    */
   cazadorDispara(idJugador, idObjetivo) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
-    const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
 
     if (!jugador || jugador.rol !== "Cazador")
       return { error: "No puedes usar esta habilidad." };
@@ -512,7 +522,7 @@ class Partida {
    */
   cazadorHaMuerto() {
     return this.colaEliminaciones.some((idJugador) => {
-      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      const jugador = this.jugadores.find((j) => j.id == idJugador);
       return jugador && jugador.rol === "Cazador";
     });
   }
@@ -523,7 +533,7 @@ class Partida {
    */
   alguacilHaMuerto() {
     return this.colaEliminaciones.some((idJugador) => {
-      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      const jugador = this.jugadores.find((j) => j.id == idJugador);
       return jugador && jugador.esAlguacil;
     });
   }
@@ -534,7 +544,7 @@ class Partida {
    */
   obtenerCazadoresEnColaEliminacion() {
     return this.colaEliminaciones.filter((idJugador) => {
-      const jugador = this.jugadores.find((j) => j.id === idJugador);
+      const jugador = this.jugadores.find((j) => j.id == idJugador);
       return jugador && jugador.rol === "Cazador";
     });
   }
@@ -548,7 +558,7 @@ class Partida {
    */
   obtenerAlguacilMuerto() {
     return this.jugadores.find(
-      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil,
+      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil
     );
   }
 
@@ -697,7 +707,7 @@ class Partida {
     // Buscar la víctima con unanimidad
     let victimaElegida = null;
     let totalLobos = this.jugadores.filter(
-      (j) => j.rol === "Hombre lobo" && j.estaVivo,
+      (j) => j.rol === "Hombre lobo" && j.estaVivo
     ).length; // Número de lobos vivos
     for (const [idJugador, cuenta] of Object.entries(conteoVotos)) {
       if (cuenta === totalLobos) {
@@ -824,10 +834,10 @@ class Partida {
    */
   comprobarVictoria() {
     const lobosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol === "Hombre lobo",
+      (j) => j.estaVivo && j.rol === "Hombre lobo"
     ).length;
     const aldeanosVivos = this.jugadores.filter(
-      (j) => j.estaVivo && j.rol !== "Hombre lobo",
+      (j) => j.estaVivo && j.rol !== "Hombre lobo"
     ).length;
 
     // Ganan los aldeanos cuando no quedan lobos vivos
@@ -873,7 +883,7 @@ class Partida {
       totalVotos = Object.keys(this.votos).length;
     } else if (contexto === "noche") {
       totalLobosVivos = this.jugadores.filter(
-        (j) => j.estaVivo && j.rol === "Hombre lobo",
+        (j) => j.estaVivo && j.rol === "Hombre lobo"
       ).length;
       totalVotos = Object.keys(this.votosNoche).length;
     } else if (contexto === "alguacil") {
@@ -1024,7 +1034,7 @@ class Partida {
     const cazadoresEnCola = this.obtenerCazadoresEnColaEliminacion();
     console.log(cazadoresEnCola);
     return cazadoresEnCola.every((idCazador) => {
-      const cazador = this.jugadores.find((j) => j.id === idCazador);
+      const cazador = this.jugadores.find((j) => j.id == idCazador);
       return cazador && cazador.haDisparado;
     });
   }
@@ -1056,7 +1066,7 @@ class Partida {
    */
   hayRolVivo(rol) {
     return this.jugadores.some(
-      (jugador) => jugador.rol == rol && jugador.estaVivo,
+      (jugador) => jugador.rol == rol && jugador.estaVivo
     );
   }
 
