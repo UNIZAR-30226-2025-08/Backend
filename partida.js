@@ -576,8 +576,8 @@ class Partida {
    * @returns {Object.alguacil} ID del jugador que se convierte en el nuevo alguacil si es exitoso. Null en caso contrario.
    */
   elegirSucesor(idJugador, idObjetivo) {
-    const jugador = this.jugadores.find((j) => j.id === idJugador);
-    const objetivo = this.jugadores.find((j) => j.id === idObjetivo);
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
 
     if (!jugador || !jugador.esAlguacil)
       return {
