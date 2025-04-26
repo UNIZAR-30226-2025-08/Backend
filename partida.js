@@ -1055,6 +1055,7 @@ class Partida {
   limpiarTemporizadorHabilidad() {
     if (this.temporizadorHabilidad) {
       clearTimeout(this.temporizadorHabilidad);
+      this.temporizadorHabilidad = null;
     }
   }
 
@@ -1081,6 +1082,26 @@ class Partida {
     if (jugador) {
       jugador.socketId = socketId;
     }
+  }
+
+  /*
+   * (Método que usa partidaWS)
+   * Permite a la bruja saltar el resto de su fase sin usar todas sus pociones.
+   * @param {string} idJugador - ID del jugador a saltar el turno.
+   * @returns {Object} - Objeto con el mensaje de éxito o error.
+   * @returns {Object.mensaje} - Mensaje de éxito.
+   * @returns {Object.error} - Mensaje de error.
+   */
+  pasarTurnoBruja(idJugador) {
+    const jugador = this.jugadores.find((j) => j.id == idJugador);
+    if (!jugador || !jugador.estaVivo || jugador.rol !== "Bruja") {
+      return {
+        error:
+          "No puedes pasar el turno. No eres la bruja o has sido eliminada.",
+      };
+    }
+    this.limpiarTemporizadorHabilidad();
+    return { mensaje: "Turno de la bruja saltado correctamente." };
   }
 }
 

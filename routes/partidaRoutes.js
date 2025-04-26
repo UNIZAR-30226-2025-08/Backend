@@ -47,11 +47,11 @@ router.post("/crear", async (req, res) => {
  * @param {Object} req - Objeto de solicitud HTTP.
  * @param {number} req.body.idPartida - ID de la partida.
  * @param {string} req.body.estado - Nuevo estado ('terminada').
- * @param {string} req.body.ganadores - Bando ganador ('lobos' o 'aldeanos').
+ * @param {string} req.body.ganadores - Bando ganador ('lobos','aldeanos' o 'empate').
  *
  * @throws {400} Faltan parámetros en la solicitud.
  * @throws {400} El estado debe ser 'terminada' para finalizar la partida.
- * @throws {400} El bando ganador debe ser 'lobos' o 'aldeanos'.
+ * @throws {400} El bando ganador debe ser 'lobos','aldeanos' o 'empate'.
  * @throws {404} Partida no encontrada.
  * @throws {500} Error interno al finalizar la partida.
  *
@@ -63,7 +63,7 @@ router.post("/crear", async (req, res) => {
  * @param {string} res.partida.tipo - Tipo de la partida ('publica' o 'privada').
  * @param {string} res.partida.fecha - Fecha y hora de creación de la partida.
  * @param {string} res.partida.estado - Estado final de la partida ('terminada').
- * @param {string} res.partida.ganadores - Bando ganador ('lobos' o 'aldeanos').
+ * @param {string} res.partida.ganadores - Bando ganador ('lobos','aldeanos' o 'empate').
  *
  * @param {Object} res.error - Objeto de error.
  * @param {string} res.error.mensaje - Descripción del error.
@@ -86,10 +86,10 @@ router.put("/finalizar-partida", async (req, res) => {
   }
 
   // Validar bando ganador
-  if (!["lobos", "aldeanos"].includes(ganadores)) {
+  if (!["lobos", "aldeanos", "empate"].includes(ganadores)) {
     return res
       .status(400)
-      .json({ error: "El bando ganador debe ser 'lobos' o 'aldeanos'" });
+      .json({ error: "El bando ganador debe ser 'lobos','aldeanos' o 'empate'" });
   }
 
   try {

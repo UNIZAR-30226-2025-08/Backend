@@ -32,7 +32,7 @@ class PartidaDAO {
    * Finaliza una partida.
    * @param {number} idPartida - ID de la partida.
    * @param {string} estado - Nuevo estado ('terminada').
-   * @param {string} ganadores - Bando ganador ('lobos' o 'aldeanos').
+   * @param {string} ganadores - Bando ganador ('lobos', 'aldeanos' o 'empate').
    * @returns {Promise<Object>} Partida finalizada o mensaje de error.
    */
   static async finalizarPartida(idPartida, estado, ganadores) {
@@ -48,9 +48,11 @@ class PartidaDAO {
 
       if (
         typeof ganadores !== "string" ||
-        !["lobos", "aldeanos"].includes(ganadores)
+        !["lobos", "aldeanos", "empate"].includes(ganadores)
       ) {
-        throw new Error("El bando ganador debe ser 'lobos' o 'aldeanos'.");
+        throw new Error(
+          "El bando ganador debe ser 'lobos', 'aldeanos' o 'empate'."
+        );
       }
 
       const query = `

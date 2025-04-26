@@ -618,6 +618,43 @@ const manejarConexionPartidas = (socket, io) => {
   });
 
   /**
+   * Permite a la bruja saltar el resto de su turno sin usar sus dos pociones.
+   * @event pasarTurnoBruja
+   *
+   * @param {Object} datos - Datos de la acción.
+   * @param {string} datos.idPartida - ID de la partida en curso.
+   * @param {string} datos.idJugador - ID del jugador bruja.
+   *
+   * @emits error - Si la partida no se encuentra o el jugador no es bruja o no está vivo.
+   * @emits pasarTurnoBruja - Si la bruja salta su turno correctamente.
+   * @param {Object} resultado - Resultado de la acción.
+   * @param {Object.error} resultado.error - Mensaje de error si no puede usar la habilidad el cazador.
+   * @param {Object.mensaje} resultado.mensaje - Mensaje con el resultado de la acción si se usa correctamente.
+   */
+  socket.on("pasarTurnoBruja", async ({ idPartida, idJugador }) => {
+    try {
+      const partida = obtenerPartida(socket, idPartida);
+      if (!partida) return;
+
+      const resultado = partida.pasarTurnoBruja(idJugador);
+      if (resultado.error) {
+        socket.emit("error", resultado.error);
+        return;
+      } else if (resultado.mensaje) {
+        socket.emit("pasarTurnoBruja", {
+          mensaje: resultado.mensaje,
+        });
+
+        // Guardar cambios en Redis después de saltar el turno
+        guardarPartidasEnRedis();
+      }
+    } catch (error) {
+      console.error("Error en pasarTurnoBruja:", error);
+      socket.emit("error", "Error al pasar el turno de la bruja");
+    }
+  });
+
+  /**
    * Permite al cazador disparar a un jugador.
    *
    * @event cazadorDispara
@@ -991,8 +1028,9 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       partida.iniciarHabilidadBruja();
 
       const checkBruja = setInterval(async () => {
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DE MOMENTO SOLO PASAMOS DE FASE SI
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LAS BRUJAS HAN USADOS LAS DOS POCIONES O EL TIEMPO LIMITE HA EXPIRADO
+        /* Se pasa de fase si las brujas han usado sus dos pociones, el tiempo ha expirado
+         *  o se ha cambiado de turno a día
+         */
         if (
           partida.todasBrujasUsaronHabilidad() ||
           !partida.temporizadorHabilidad

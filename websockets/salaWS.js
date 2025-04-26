@@ -272,6 +272,9 @@ const manejarConexionSalas = (socket, io) => {
 
       // Retrasar la actualización de la sala para disimular la reconexión
       setTimeout(() => {
+        // Actualizar sala para todos los clientes del navegador de salas
+        io.emit("actualizarSala", sala);
+        // Mantener también la actualización para los clientes dentro de la sala
         io.to(idSala).emit("actualizarSala", sala);
       }, 1000); // 1 segundo de retraso
     }
