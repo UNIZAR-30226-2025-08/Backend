@@ -1022,7 +1022,7 @@ class Partida {
   todasBrujasUsaronHabilidad() {
     return this.jugadores
       .filter((j) => j.rol === "Bruja" && j.estaVivo)
-      .every((j) => j.pocionCuraUsada && j.pocionMuerteUsada);
+      .every((j) => j.pocionCuraUsada && j.pocionMatarUsada);
   }
 
   /**
