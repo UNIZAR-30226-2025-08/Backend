@@ -120,6 +120,39 @@ function obtenerPartida(socket, idPartida) {
   return partida;
 }
 
+/**
+ * Busca si un usuario está en alguna partida y devuelve el ID de la partida si lo encuentra.
+ *
+ * @param {string} idUsuario - El ID del usuario a buscar.
+ * @returns {string|null} - El ID de la partida si el usuario está en una, o null si no está en ninguna.
+ */
+function buscarPartidaDeUsuario(idUsuario) {
+  for (const idPartida in partidas) {
+    const partida = partidas[idPartida];
+    if (partida) {
+      if (partida.jugadores) {
+        /*const jugadorEncontrado = partida.jugadores.find(
+          (jugador) => jugador.id === idUsuario
+        );
+        if (jugadorEncontrado) {
+          return idPartida; // Retorna el id de la partida donde encontró al usuario
+        }*/
+        for (const jugador of partida.jugadores) {
+          console.log(
+            `Comparando jugador.id (${
+              jugador.id
+            }, tipo ${typeof jugador.id}) con idUsuario (${idUsuario}, tipo ${typeof idUsuario})`
+          ); // &lt;-- Aquí imprimimos
+          if (jugador.id === idUsuario) {
+            return idPartida; // Retorna el id de la partida donde encontró al usuario
+          }
+        }
+      }
+    }
+  }
+  return null; // No se encontró ninguna partida con ese usuario
+}
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // VERSION INCOMPLETA DE COMENTARIOS Y WS
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -127,17 +160,38 @@ function obtenerPartida(socket, idPartida) {
 // manejarConexionPartidas
 const manejarConexionPartidas = (socket, io) => {
   /**
+   * Evento para buscar la partida de un usuario
+   * @event buscarPartidaUsuario
+   *
+   * @param {Object} datos - Datos del usuario a buscar.
+   * @param {number} datos.idUsuario - ID del usuario a buscar.
+   *
+   * @emits partidaEncontrada
+   * @param {Object} partida - Info de la partida.
+   * @param {string} partida.idPartida - ID de la partida donde está el usuario.
+   */
+  socket.on("buscarPartidaUsuario", ({ idUsuario }) => {
+    const idPartida = buscarPartidaDeUsuario(idUsuario);
+
+    if (idPartida) {
+      socket.emit("partidaEncontrada", { idPartida });
+    } else {
+      socket.emit("partidaNoEncontrada", {});
+    }
+  });
+
+  /**
    * Permite a un cliente reconectado pedir el estado completo de la partida
-   * @event rejoinGame
+   * @event reconectarPartida
    *
    * @param {Object} datos - Datos de la partida que el jugador desea volver a unirse.
    * @param {string} datos.idPartida - ID de la partida a unirse.
    * @param {string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
    *
    * @emits error - Si la partida no se encuentra.
-   * @emits gameState - Estado de la partida.
+   * @emits estadoPartida - Estado de la partida.
    */
-  socket.on("rejoinGame", ({ idPartida, idUsuario }) => {
+  socket.on("reconectarPartida", ({ idPartida, idUsuario }) => {
     const partida = partidas[idPartida];
     if (!partida) return socket.emit("error", "Partida no encontrada");
 
@@ -155,9 +209,9 @@ const manejarConexionPartidas = (socket, io) => {
       jugador.socketId = socket.id;
 
       // Notificamos al jugador de que se ha vuelto a unir a la partida
-      io.to(jugador.socketId).emit("rejoinGame", {
+      /*io.to(jugador.socketId).emit("reconectandoPartida", {
         mensaje: "Has vuelto a la partida",
-      });
+      });*/
     }
 
     // Reconstruimos la lista de jugadores que el frontend necesita
@@ -196,17 +250,17 @@ const manejarConexionPartidas = (socket, io) => {
     );
 
     // Enviamos el estado de la partida al jugador que se ha vuelto a unir a la partida
-    socket.emit("gameState", {
+    socket.emit("estadoPartida", {
       partidaID: idPartida,
-      currentDay: partida.numJornada,
-      currentPhase: faseActual,
-      currentPeriod: partida.turno === "dia" ? "DÍA" : "NOCHE",
-      timeLeft: tiempoRestante,
-      players: listaJugadores,
-      totalVillagers: totalAldeanos,
-      aliveVillagers: aldeanosVivos,
-      totalWolves: totalLobos,
-      aliveWolves: lobosVivos,
+      numJornada: partida.numJornada,
+      faseActual: faseActual,
+      turno: partida.turno === "dia" ? "DÍA" : "NOCHE",
+      tiempoRestante: tiempoRestante,
+      listaJugadores: listaJugadores,
+      totalAldeanos: totalAldeanos,
+      aldeanosVivos: aldeanosVivos,
+      totalLobos: totalLobos,
+      lobosVivos: lobosVivos,
     });
   });
 
@@ -1305,13 +1359,13 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:actualizarSocketId">actualizarSocketId</a></li><li><a href="module-API_WB_Usuarios.html#~event:amigoEliminado">amigoEliminado</a></li><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Partidas.html#~event:pasarTurnoBruja">pasarTurnoBruja</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Partidas.html#~event:rejoinGame">rejoinGame</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAceptada">solicitudAceptada</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseRapido">unirseRapido</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:actualizarSocketId">actualizarSocketId</a></li><li><a href="module-API_WB_Usuarios.html#~event:amigoEliminado">amigoEliminado</a></li><li><a href="module-API_WB_Partidas.html#~event:buscarPartidaUsuario">buscarPartidaUsuario</a></li><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Partidas.html#~event:pasarTurnoBruja">pasarTurnoBruja</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Partidas.html#~event:reconectarPartida">reconectarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAceptada">solicitudAceptada</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseRapido">unirseRapido</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 26 2025 18:42:34 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Apr 27 2025 19:59:07 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

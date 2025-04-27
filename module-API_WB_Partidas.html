@@ -136,6 +136,172 @@
     
 
     
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~buscarPartidaDeUsuario"><span class="type-signature">(inner) </span>buscarPartidaDeUsuario<span class="signature">(idUsuario)</span><span class="type-signature"> &rarr; {string|null}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Busca si un usuario está en alguna partida y devuelve el ID de la partida si lo encuentra.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idUsuario</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">El ID del usuario a buscar.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line101">line 101</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - El ID de la partida si el usuario está en una, o null si no está en ninguna.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+|
+
+<span class="param-type">null</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
 
     
 
@@ -367,7 +533,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line776">line 776</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line830">line 830</a>
     </li></ul></dd>
     
 
@@ -385,6 +551,269 @@
 <h5>Fires:</h5>
 <ul>
     <li>event:error - Si la partida no se encuentra.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~event:buscarPartidaUsuario">buscarPartidaUsuario</h4>
+    
+
+    
+
+
+
+<div class="description">
+    Evento para buscar la partida de un usuario
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>datos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Datos del usuario a buscar.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idUsuario</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID del usuario a buscar.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partida</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Info de la partida.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>idPartida</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ID de la partida donde está el usuario.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line134">line 134</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<h5>Fires:</h5>
+<ul>
+    <li>event:partidaEncontrada</li>
 </ul>
 
 
@@ -699,7 +1128,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line657">line 657</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line711">line 711</a>
     </li></ul></dd>
     
 
@@ -1056,7 +1485,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line696">line 696</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line750">line 750</a>
     </li></ul></dd>
     
 
@@ -1413,7 +1842,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line448">line 448</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line502">line 502</a>
     </li></ul></dd>
     
 
@@ -1988,7 +2417,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line189">line 189</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line243">line 243</a>
     </li></ul></dd>
     
 
@@ -2301,7 +2730,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line740">line 740</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line794">line 794</a>
     </li></ul></dd>
     
 
@@ -2612,7 +3041,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line620">line 620</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line674">line 674</a>
     </li></ul></dd>
     
 
@@ -2655,7 +3084,7 @@
     
 
     
-    <h4 class="name" id="~event:rejoinGame">rejoinGame</h4>
+    <h4 class="name" id="~event:reconectarPartida">reconectarPartida</h4>
     
 
     
@@ -2828,7 +3257,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line101">line 101</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line155">line 155</a>
     </li></ul></dd>
     
 
@@ -2847,7 +3276,7 @@
 <ul>
     <li>event:error - Si la partida no se encuentra.</li>
 
-    <li>event:gameState - Estado de la partida.</li>
+    <li>event:estadoPartida - Estado de la partida.</li>
 </ul>
 
 
@@ -3186,7 +3615,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line579">line 579</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line633">line 633</a>
     </li></ul></dd>
     
 
@@ -3497,7 +3926,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line543">line 543</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line597">line 597</a>
     </li></ul></dd>
     
 
@@ -3831,7 +4260,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line507">line 507</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line561">line 561</a>
     </li></ul></dd>
     
 
@@ -4093,7 +4522,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line361">line 361</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line415">line 415</a>
     </li></ul></dd>
     
 
@@ -4355,7 +4784,7 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line392">line 392</a>
+        <a href="websockets_partidaWS.js.html">websockets/partidaWS.js</a>, <a href="websockets_partidaWS.js.html#line446">line 446</a>
     </li></ul></dd>
     
 
@@ -4404,13 +4833,13 @@ Puede curar a un jugador o eliminar a otro que esté en la cola de eliminaciones
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:actualizarSocketId">actualizarSocketId</a></li><li><a href="module-API_WB_Usuarios.html#~event:amigoEliminado">amigoEliminado</a></li><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Partidas.html#~event:pasarTurnoBruja">pasarTurnoBruja</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Partidas.html#~event:rejoinGame">rejoinGame</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAceptada">solicitudAceptada</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseRapido">unirseRapido</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_Administradores.html">API_Administradores</a></li><li><a href="module-API_Amistades.html">API_Amistades</a></li><li><a href="module-API_Estadisticas.html">API_Estadisticas</a></li><li><a href="module-API_Juega.html">API_Juega</a></li><li><a href="module-API_Partida.html">API_Partida</a></li><li><a href="module-API_Ranking.html">API_Ranking</a></li><li><a href="module-API_SolicitudAmistad.html">API_SolicitudAmistad</a></li><li><a href="module-API_Sugerencias.html">API_Sugerencias</a></li><li><a href="module-API_Usuario.html">API_Usuario</a></li><li><a href="module-API_WB_Partidas.html">API_WB_Partidas</a></li><li><a href="module-API_WB_Salas.html">API_WB_Salas</a></li><li><a href="module-API_WB_Usuarios.html">API_WB_Usuarios</a></li></ul><h3>Classes</h3><ul><li><a href="Partida.html">Partida</a></li></ul><h3>Events</h3><ul><li><a href="module-API_WB_Partidas.html#~event:actualizarSocketId">actualizarSocketId</a></li><li><a href="module-API_WB_Usuarios.html#~event:amigoEliminado">amigoEliminado</a></li><li><a href="module-API_WB_Partidas.html#~event:buscarPartidaUsuario">buscarPartidaUsuario</a></li><li><a href="module-API_WB_Partidas.html#~event:cazadorDispara">cazadorDispara</a></li><li><a href="module-API_WB_Salas.html#~event:crearSala">crearSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:desconectarUsuario">desconectarUsuario</a></li><li><a href="module-API_WB_Usuarios.html#~event:disconnect">disconnect</a></li><li><a href="module-API_WB_Partidas.html#~event:elegirSucesor">elegirSucesor</a></li><li><a href="module-API_WB_Partidas.html#~event:enviarMensaje">enviarMensaje</a></li><li><a href="module-API_WB_Salas.html#~event:expulsarJugador">expulsarJugador</a></li><li><a href="module-API_WB_Partidas.html#~event:iniciarPartida">iniciarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:invitarASala">invitarASala</a></li><li><a href="module-API_WB_Salas.html#~event:marcarEstado">marcarEstado</a></li><li><a href="module-API_WB_Partidas.html#~event:obtenerEstadoJugadores">obtenerEstadoJugadores</a></li><li><a href="module-API_WB_Salas.html#~event:obtenerSalas">obtenerSalas</a></li><li><a href="module-API_WB_Partidas.html#~event:pasarTurnoBruja">pasarTurnoBruja</a></li><li><a href="module-API_WB_Usuarios.html#~event:reconectar">reconectar</a></li><li><a href="module-API_WB_Partidas.html#~event:reconectarPartida">reconectarPartida</a></li><li><a href="module-API_WB_Usuarios.html#~event:registrarUsuario">registrarUsuario</a></li><li><a href="module-API_WB_Salas.html#~event:salirSala">salirSala</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitarEstadoAmigos">solicitarEstadoAmigos</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAceptada">solicitudAceptada</a></li><li><a href="module-API_WB_Usuarios.html#~event:solicitudAmistad">solicitudAmistad</a></li><li><a href="module-API_WB_Salas.html#~event:unirseRapido">unirseRapido</a></li><li><a href="module-API_WB_Salas.html#~event:unirseSala">unirseSala</a></li><li><a href="module-API_WB_Partidas.html#~event:usaPocionBruja">usaPocionBruja</a></li><li><a href="module-API_WB_Partidas.html#~event:verVictimaElegidaLobos">verVictimaElegidaLobos</a></li><li><a href="module-API_WB_Partidas.html#~event:videnteRevela">videnteRevela</a></li><li><a href="module-API_WB_Partidas.html#~event:votar">votar</a></li><li><a href="module-API_WB_Partidas.html#~event:votarAlguacil">votarAlguacil</a></li></ul><h3>Global</h3><ul><li><a href="global.html#PORT">PORT</a></li><li><a href="global.html#safeStringify">safeStringify</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 26 2025 18:42:34 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Apr 27 2025 19:59:07 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
