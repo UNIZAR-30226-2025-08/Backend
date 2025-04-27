@@ -115,7 +115,7 @@ function buscarPartidaDeUsuario(idUsuario) {
               jugador.id
             }, tipo ${typeof jugador.id}) con idUsuario (${idUsuario}, tipo ${typeof idUsuario})`
           ); // <-- Aquí imprimimos
-          if (jugador.id === idUsuario) {
+          if (jugador.id == idUsuario) {
             return idPartida; // Retorna el id de la partida donde encontró al usuario
           }
         }
