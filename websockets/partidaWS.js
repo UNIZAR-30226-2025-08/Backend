@@ -92,6 +92,39 @@ function obtenerPartida(socket, idPartida) {
   return partida;
 }
 
+/**
+ * Busca si un usuario está en alguna partida y devuelve el ID de la partida si lo encuentra.
+ *
+ * @param {string} idUsuario - El ID del usuario a buscar.
+ * @returns {string|null} - El ID de la partida si el usuario está en una, o null si no está en ninguna.
+ */
+function buscarPartidaDeUsuario(idUsuario) {
+  for (const idPartida in partidas) {
+    const partida = partidas[idPartida];
+    if (partida) {
+      if (partida.jugadores) {
+        /*const jugadorEncontrado = partida.jugadores.find(
+          (jugador) => jugador.id === idUsuario
+        );
+        if (jugadorEncontrado) {
+          return idPartida; // Retorna el id de la partida donde encontró al usuario
+        }*/
+        for (const jugador of partida.jugadores) {
+          console.log(
+            `Comparando jugador.id (${
+              jugador.id
+            }, tipo ${typeof jugador.id}) con idUsuario (${idUsuario}, tipo ${typeof idUsuario})`
+          ); // <-- Aquí imprimimos
+          if (jugador.id === idUsuario) {
+            return idPartida; // Retorna el id de la partida donde encontró al usuario
+          }
+        }
+      }
+    }
+  }
+  return null; // No se encontró ninguna partida con ese usuario
+}
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // VERSION INCOMPLETA DE COMENTARIOS Y WS
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -99,17 +132,38 @@ function obtenerPartida(socket, idPartida) {
 // manejarConexionPartidas
 const manejarConexionPartidas = (socket, io) => {
   /**
+   * Evento para buscar la partida de un usuario
+   * @event buscarPartidaUsuario
+   *
+   * @param {Object} datos - Datos del usuario a buscar.
+   * @param {number} datos.idUsuario - ID del usuario a buscar.
+   *
+   * @emits partidaEncontrada
+   * @param {Object} partida - Info de la partida.
+   * @param {string} partida.idPartida - ID de la partida donde está el usuario.
+   */
+  socket.on("buscarPartidaUsuario", ({ idUsuario }) => {
+    const idPartida = buscarPartidaDeUsuario(idUsuario);
+
+    if (idPartida) {
+      socket.emit("partidaEncontrada", { idPartida });
+    } else {
+      socket.emit("partidaNoEncontrada", {});
+    }
+  });
+
+  /**
    * Permite a un cliente reconectado pedir el estado completo de la partida
-   * @event rejoinGame
+   * @event reconectarPartida
    *
    * @param {Object} datos - Datos de la partida que el jugador desea volver a unirse.
    * @param {string} datos.idPartida - ID de la partida a unirse.
    * @param {string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
    *
    * @emits error - Si la partida no se encuentra.
-   * @emits gameState - Estado de la partida.
+   * @emits estadoPartida - Estado de la partida.
    */
-  socket.on("rejoinGame", ({ idPartida, idUsuario }) => {
+  socket.on("reconectarPartida", ({ idPartida, idUsuario }) => {
     const partida = partidas[idPartida];
     if (!partida) return socket.emit("error", "Partida no encontrada");
 
@@ -127,9 +181,9 @@ const manejarConexionPartidas = (socket, io) => {
       jugador.socketId = socket.id;
 
       // Notificamos al jugador de que se ha vuelto a unir a la partida
-      io.to(jugador.socketId).emit("rejoinGame", {
+      /*io.to(jugador.socketId).emit("reconectandoPartida", {
         mensaje: "Has vuelto a la partida",
-      });
+      });*/
     }
 
     // Reconstruimos la lista de jugadores que el frontend necesita
@@ -168,17 +222,17 @@ const manejarConexionPartidas = (socket, io) => {
     );
 
     // Enviamos el estado de la partida al jugador que se ha vuelto a unir a la partida
-    socket.emit("gameState", {
+    socket.emit("estadoPartida", {
       partidaID: idPartida,
-      currentDay: partida.numJornada,
-      currentPhase: faseActual,
-      currentPeriod: partida.turno === "dia" ? "DÍA" : "NOCHE",
-      timeLeft: tiempoRestante,
-      players: listaJugadores,
-      totalVillagers: totalAldeanos,
-      aliveVillagers: aldeanosVivos,
-      totalWolves: totalLobos,
-      aliveWolves: lobosVivos,
+      numJornada: partida.numJornada,
+      faseActual: faseActual,
+      turno: partida.turno === "dia" ? "DÍA" : "NOCHE",
+      tiempoRestante: tiempoRestante,
+      listaJugadores: listaJugadores,
+      totalAldeanos: totalAldeanos,
+      aldeanosVivos: aldeanosVivos,
+      totalLobos: totalLobos,
+      lobosVivos: lobosVivos,
     });
   });
 
