@@ -1172,6 +1172,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         const alguacilMuerto = partida.obtenerAlguacilMuerto();
 
         if (!alguacilMuerto) {
+          console.log("▶️ No hay alguacil muerto, saliendo de la sub-fase");
           resolve(); // No hay alguacil muerto, no se hace nada
         }
 

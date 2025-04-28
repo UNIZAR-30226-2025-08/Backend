@@ -558,7 +558,8 @@ class Partida {
    */
   obtenerAlguacilMuerto() {
     return this.jugadores.find(
-      (j) => this.colaEliminaciones.includes(j.id) && j.esAlguacil
+      (j) =>
+        this.colaEliminaciones.some((elimId) => elimId == j.id) && j.esAlguacil
     );
   }
 
