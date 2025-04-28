@@ -1082,10 +1082,11 @@ class Partida {
    * @param {string} idJugador - ID del jugador a actualizar.
    * @param {string} socketId - SocketId del jugador a actualizar.
    */
-  actualizarSocketId(idJugador, socketId) {
+  actualizarSocketId(idJugador, nuevoSocketId) {
     const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (jugador) {
-      jugador.socketId = socketId;
+      jugador.socketId = nuevoSocketId;
+      jugador.desconectado = false; // Asegurar que se marque como reconectado
     }
   }
 

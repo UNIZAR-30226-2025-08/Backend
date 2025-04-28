@@ -40,15 +40,23 @@ function safeStringify(obj) {
 }
 
 // Función para cargar partidas desde Redis al iniciar
+// En cargarPartidasDesdeRedis(), necesitas reconstruir las instancias:
 async function cargarPartidasDesdeRedis() {
   try {
     const partidasRedis = await redisClient.get("partidas");
     if (partidasRedis) {
-      partidas = JSON.parse(partidasRedis);
-      console.log("Partidas cargadas desde Redis");
+      const parsed = JSON.parse(partidasRedis);
+      // Reconstruir cada partida como instancia de la clase
+      partidas = Object.fromEntries(
+        Object.entries(parsed).map(([id, data]) => [
+          id,
+          Object.assign(new Partida(), data),
+        ])
+      );
+      console.log("Partidas cargadas desde Redis como instancias");
     }
   } catch (error) {
-    console.error("Error al cargar partidas desde Redis:", error);
+    console.error("Error al cargar partidas:", error);
   }
 }
 
@@ -166,7 +174,7 @@ const manejarConexionPartidas = (socket, io) => {
   socket.on("reconectarPartida", ({ idPartida, idUsuario }) => {
     const partida = partidas[idPartida];
     if (!partida) return socket.emit("error", "Partida no encontrada");
-
+    socket.join(partida.idSala);
     // Buscamos al jugador en la partida por su id de usuario
     const jugador = partida.jugadores.find((j) => j.id === idUsuario);
     if (jugador && jugador.desconectado) {
@@ -179,6 +187,7 @@ const manejarConexionPartidas = (socket, io) => {
       // Desmarcamos al jugador como desconectado y actualizamos el socketId del jugador
       jugador.desconectado = false;
       jugador.socketId = socket.id;
+      guardarPartidasEnRedis();
 
       // Notificamos al jugador de que se ha vuelto a unir a la partida
       /*io.to(jugador.socketId).emit("reconectandoPartida", {
@@ -192,6 +201,7 @@ const manejarConexionPartidas = (socket, io) => {
       nombre: j.nombre,
       avatar: j.avatar,
       estaVivo: j.estaVivo,
+      rol: j.id === idUsuario ? j.rol : undefined, // Mostrar rol solo al jugador que se reconecta
     }));
 
     // Contadores de jugadores totales y vivos por bandos (aldeanos y lobos)
@@ -233,6 +243,12 @@ const manejarConexionPartidas = (socket, io) => {
       aldeanosVivos: aldeanosVivos,
       totalLobos: totalLobos,
       lobosVivos: lobosVivos,
+      tiempoRestante: Math.max(
+        0,
+        Math.ceil(
+          (partida.faseDuracion - (Date.now() - partida.faseInicio)) / 1000
+        )
+      ),
     });
   });
 
