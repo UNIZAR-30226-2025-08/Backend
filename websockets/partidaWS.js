@@ -767,6 +767,7 @@ const manejarConexionPartidas = (socket, io) => {
    */
   socket.on("elegirSucesor", ({ idPartida, idJugador, idObjetivo }) => {
     try {
+      console.log(" [Backend] Elegir sucesor: ", idJugador, idObjetivo);
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 

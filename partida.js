@@ -580,16 +580,20 @@ class Partida {
     const jugador = this.jugadores.find((j) => j.id == idJugador);
     const objetivo = this.jugadores.find((j) => j.id == idObjetivo);
 
-    if (!jugador || !jugador.esAlguacil)
+    if (!jugador || !jugador.esAlguacil) {
+      console.log("No es alguacil");
       return {
         mensaje: "No puedes usar esta habilidad.",
         alguacil: null,
       };
-    if (!objetivo || !objetivo.estaVivo)
+    }
+    if (!objetivo || !objetivo.estaVivo) {
+      console.log("Jugador erróneo");
       return {
         mensaje: "Jugador erróneo.",
         alguacil: null,
       };
+    }
 
     jugador.esAlguacil = false; // El alguacil deja de serlo
     objetivo.esAlguacil = true; // El objetivo se convierte en el nuevo alguacil
