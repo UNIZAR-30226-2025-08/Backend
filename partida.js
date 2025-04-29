@@ -27,6 +27,7 @@ class Partida {
       pocionMatarUsada: jugador.rol === "Bruja" ? false : undefined, // Si la bruja usó su poción de muerte
       haVisto: jugador.rol === "Vidente" ? false : undefined, // La vidente puede ver el rol de un jugador por la noche
       haDisparado: jugador.rol === "Cazador" ? false : undefined, // Si el cazador disparó a un jugador
+      desconectado: false, // ¿El jugador está desconectado?
     }));
     this.chat = []; // Mensajes de chat (durante el día los mensajes son públicos)
     this.votosAlguacil = {}; // Votos para elegir al alguacil
@@ -254,7 +255,6 @@ class Partida {
     // Verificar si todos jugadores han votado
     if (this.verificarVotos("alguacil")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      //this.elegirAlguacil(); // Resuelve la votación de alguacil !!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -279,7 +279,6 @@ class Partida {
     // Verificar si todos los jugadores han votado
     if (this.verificarVotos("dia")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      //this.resolverVotosDia(); // Resuelve la votación de día !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -308,7 +307,6 @@ class Partida {
     // Verificar si todos los hombres lobos han votado
     if (this.verificarVotos("noche")) {
       clearTimeout(this.temporizadorVotacion); // Limpiar el temporizador si todos votaron
-      //this.resolverVotosNoche(); // Resuelve la votación de noche !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
 
@@ -1082,10 +1080,10 @@ class Partida {
    * @param {string} idJugador - ID del jugador a actualizar.
    * @param {string} socketId - SocketId del jugador a actualizar.
    */
-  actualizarSocketId(idJugador, nuevoSocketId) {
+  actualizarSocketId(idJugador, socketId) {
     const jugador = this.jugadores.find((j) => j.id == idJugador);
     if (jugador) {
-      jugador.socketId = nuevoSocketId;
+      jugador.socketId = socketId;
       jugador.desconectado = false; // Asegurar que se marque como reconectado
     }
   }

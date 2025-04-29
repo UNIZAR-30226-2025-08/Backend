@@ -100,7 +100,7 @@ router.post("/obtener", async (req, res) => {
     }
     res.status(200).json({ usuario });
   } catch (error) {
-    res.status(500).json({ error: error.message }); //Cambiar? !!!!!!!
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -144,7 +144,7 @@ router.post("/obtener_por_id", async (req, res) => {
     }
     res.status(200).json({ usuario });
   } catch (error) {
-    res.status(500).json({ error: error.message }); //Cambiar? !!!!!!!
+    res.status(500).json({ error: error.message });
   }
 });
 

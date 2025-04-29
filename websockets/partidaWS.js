@@ -40,7 +40,6 @@ function safeStringify(obj) {
 }
 
 // Función para cargar partidas desde Redis al iniciar
-// En cargarPartidasDesdeRedis(), necesitas reconstruir las instancias:
 async function cargarPartidasDesdeRedis() {
   try {
     const partidasRedis = await redisClient.get("partidas");
@@ -56,7 +55,7 @@ async function cargarPartidasDesdeRedis() {
       console.log("Partidas cargadas desde Redis como instancias");
     }
   } catch (error) {
-    console.error("Error al cargar partidas:", error);
+    console.error("Error al cargar partidas desde redis:", error);
   }
 }
 
@@ -103,39 +102,28 @@ function obtenerPartida(socket, idPartida) {
 /**
  * Busca si un usuario está en alguna partida y devuelve el ID de la partida si lo encuentra.
  *
- * @param {string} idUsuario - El ID del usuario a buscar.
- * @returns {string|null} - El ID de la partida si el usuario está en una, o null si no está en ninguna.
+ * @param {string|number} idUsuario - El ID del usuario a buscar.
+ * @returns {string|null} - El ID de la partida si el usuario está en una partida, o null si no está en ninguna.
  */
 function buscarPartidaDeUsuario(idUsuario) {
-  for (const idPartida in partidas) {
-    const partida = partidas[idPartida];
-    if (partida) {
-      if (partida.jugadores) {
-        /*const jugadorEncontrado = partida.jugadores.find(
-          (jugador) => jugador.id === idUsuario
-        );
-        if (jugadorEncontrado) {
-          return idPartida; // Retorna el id de la partida donde encontró al usuario
-        }*/
-        for (const jugador of partida.jugadores) {
-          console.log(
-            `Comparando jugador.id (${
-              jugador.id
-            }, tipo ${typeof jugador.id}) con idUsuario (${idUsuario}, tipo ${typeof idUsuario})`
-          ); // <-- Aquí imprimimos
-          if (jugador.id == idUsuario) {
-            return idPartida; // Retorna el id de la partida donde encontró al usuario
-          }
-        }
+  const idUsuarioStr = String(idUsuario);
+
+  for (const [idPartida, partida] of Object.entries(partidas)) {
+    if (!partida?.jugadores) continue;
+
+    for (const jugador of partida.jugadores) {
+      const jugadorIdStr = String(jugador.id);
+      console.log(
+        `Comparando jugador.id (${jugadorIdStr}, tipo ${typeof jugador.id}) con idUsuario (${idUsuarioStr}, tipo ${typeof idUsuario})`
+      );
+      if (jugadorIdStr === idUsuarioStr) {
+        return idPartida; // Retorna el id de la partida donde encontró al usuario
       }
     }
   }
+
   return null; // No se encontró ninguna partida con ese usuario
 }
-
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// VERSION INCOMPLETA DE COMENTARIOS Y WS
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // manejarConexionPartidas
 const manejarConexionPartidas = (socket, io) => {
@@ -144,11 +132,13 @@ const manejarConexionPartidas = (socket, io) => {
    * @event buscarPartidaUsuario
    *
    * @param {Object} datos - Datos del usuario a buscar.
-   * @param {number} datos.idUsuario - ID del usuario a buscar.
+   * @param {number|string} datos.idUsuario - ID del usuario a buscar.
    *
    * @emits partidaEncontrada
    * @param {Object} partida - Info de la partida.
    * @param {string} partida.idPartida - ID de la partida donde está el usuario.
+   *
+   * @emits partidaNoEncontrada - Si el usuario no se encuentra en ninguna partida.
    */
   socket.on("buscarPartidaUsuario", ({ idUsuario }) => {
     const idPartida = buscarPartidaDeUsuario(idUsuario);
@@ -201,7 +191,7 @@ const manejarConexionPartidas = (socket, io) => {
       nombre: j.nombre,
       avatar: j.avatar,
       estaVivo: j.estaVivo,
-      rol: j.id === idUsuario ? j.rol : undefined, // Mostrar rol solo al jugador que se reconecta
+      rol: j.id == idUsuario ? j.rol : undefined, // Mostrar rol solo al jugador que se reconecta
     }));
 
     // Contadores de jugadores totales y vivos por bandos (aldeanos y lobos)
@@ -931,7 +921,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   // Definición de funciones auxiliares
 
   // Función auxiliar para verificar el fin de la partida
-  const verificarFinPartida = (resultado) => {
+  const finalizarPartidaSiCorresponde = (resultado) => {
     // La partida ha terminado, notificar el resultado
     if (resultado.ganador) {
       io.to(idSala).emit("partidaFinalizada", {
@@ -939,11 +929,9 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         ganador: resultado.ganador,
       });
       eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
-      partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria
-      //delete partida; // Eliminar de la memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      // partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      delete partidas[partida.idPartida]; // Eliminar de la memoria
 
-      // !! Meto esto aquí porque resulta más fácil, pero igual habría que cambiar
-      // El nombre de la función porque no sólo verificarFin !!!!!!!
       PartidaDAO.finalizarPartida(
         partida.idPartida,
         "terminada",
@@ -1122,7 +1110,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
           const resultadoTurno2 = partida.gestionarTurno();
 
-          const finPartida2 = verificarFinPartida(resultadoTurno2);
+          const finPartida2 = finalizarPartidaSiCorresponde(resultadoTurno2);
           await guardarPartidasEnRedis();
 
           if (partida.estado === "en_curso" && !finPartida2) {
@@ -1291,7 +1279,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 const resultadoTurno = partida.gestionarTurno();
                 // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
                 // se pone a false si se ha cambiado de turno a noche
-                const finPartida = verificarFinPartida(resultadoTurno);
+                const finPartida = finalizarPartidaSiCorresponde(resultadoTurno);
                 await guardarPartidasEnRedis();
                 if (partida.estado === "en_curso" && !finPartida) {
                   // Volver a la fase de noche
@@ -1312,7 +1300,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             const resultadoTurno2 = partida.gestionarTurno();
             // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
             // se pone a false si se ha cambiado de turno a noche
-            const finPartida2 = verificarFinPartida(resultadoTurno2);
+            const finPartida2 = finalizarPartidaSiCorresponde(resultadoTurno2);
             await guardarPartidasEnRedis();
             if (partida.estado === "en_curso" && !finPartida2) {
               // Volver a la fase de noche
