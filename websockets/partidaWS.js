@@ -44,7 +44,10 @@ async function cargarPartidasDesdeRedis() {
   try {
     const partidasRedis = await redisClient.get("partidas");
     if (partidasRedis) {
-      const parsed = JSON.parse(partidasRedis);
+      partidas = JSON.parse(partidasRedis);
+      console.log("Partidas cargadas desde Redis");
+
+      /*const parsed = JSON.parse(partidasRedis);
       // Reconstruir cada partida como instancia de la clase
       partidas = Object.fromEntries(
         Object.entries(parsed).map(([id, data]) => [
@@ -52,7 +55,7 @@ async function cargarPartidasDesdeRedis() {
           Object.assign(new Partida(), data),
         ])
       );
-      console.log("Partidas cargadas desde Redis como instancias");
+      console.log("Partidas cargadas desde Redis como instancias");*/
     }
   } catch (error) {
     console.error("Error al cargar partidas desde redis:", error);
@@ -140,7 +143,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits partidaNoEncontrada - Si el usuario no se encuentra en ninguna partida.
    */
-  socket.on("buscarPartidaUsuario", ({ idUsuario }) => {
+  socket.on("", ({ idUsuario }) => {
     const idPartida = buscarPartidaDeUsuario(idUsuario);
 
     if (idPartida) {
@@ -929,8 +932,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         ganador: resultado.ganador,
       });
       eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
-      // partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      delete partidas[partida.idPartida]; // Eliminar de la memoria
+      partidas[partida.idPartida] = null; // Liberar la referencia en el almacenamiento en memoria !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      //delete partidas[partida.idPartida]; // Eliminar de la memoria
 
       PartidaDAO.finalizarPartida(
         partida.idPartida,
@@ -1279,7 +1282,8 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 const resultadoTurno = partida.gestionarTurno();
                 // Al llamar a gestionarTurno, la variable de los jugadores videntes 'haVisto'
                 // se pone a false si se ha cambiado de turno a noche
-                const finPartida = finalizarPartidaSiCorresponde(resultadoTurno);
+                const finPartida =
+                  finalizarPartidaSiCorresponde(resultadoTurno);
                 await guardarPartidasEnRedis();
                 if (partida.estado === "en_curso" && !finPartida) {
                   // Volver a la fase de noche
