@@ -147,7 +147,29 @@ const manejarConexionPartidas = (socket, io) => {
     const idPartida = buscarPartidaDeUsuario(idUsuario);
 
     if (idPartida) {
-      socket.emit("partidaEncontrada", { idPartida });
+      const partida = partidas[idPartida];
+
+      const jugador = partida.jugadores.find((j) => j.id == idUsuario);
+      if (!jugador) {
+        socket.emit("partidaNoEncontrada", {});
+        return;
+      }
+
+      const jugadoresReducidos = partida.jugadores.map((j) => ({
+        id: j.id,
+        nombre: j.nombre,
+        avatar: j.avatar,
+      }));
+
+      socket.emit("partidaEncontrada", {
+        idPartida,
+        idSala: partida.idSala,
+        rol: jugador.rol,
+        idUsuario: jugador.id,
+        nombreUsuario: jugador.nombre,
+        jugadores: jugadoresReducidos,
+        lider: partida.liderId ?? partida.jugadores[0]?.id,
+      });
     } else {
       socket.emit("partidaNoEncontrada", {});
     }
@@ -227,6 +249,7 @@ const manejarConexionPartidas = (socket, io) => {
     // Enviamos el estado de la partida al jugador que se ha vuelto a unir a la partida
     socket.emit("estadoPartida", {
       partidaID: idPartida,
+      salaID: partida.idSala,
       numJornada: partida.numJornada,
       faseActual: faseActual,
       turno: partida.turno === "dia" ? "DÍA" : "NOCHE",
@@ -908,11 +931,11 @@ const manejarDesconexionPartidas = (socket, io) => {
           id: jugador.socketId,
         });
         console.log(
-          `Jugador ${jugador.socketId} eliminado tras 10s de desconexión de la partida ${idSala}`
+          `Jugador ${jugador.socketId} eliminado tras 40s de desconexión de la partida ${idSala}`
         );
       }
       desconexionTimers.delete(jugador.socketId);
-    }, 10000);
+    }, 40000);
 
     // Guardamos el timer para poder cancelarlo si se reconecta
     desconexionTimers.set(jugador.socketId, timer);
