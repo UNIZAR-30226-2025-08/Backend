@@ -143,7 +143,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @emits partidaNoEncontrada - Si el usuario no se encuentra en ninguna partida.
    */
-  socket.on("", ({ idUsuario }) => {
+  socket.on("buscarPartidaUsuario", ({ idUsuario }) => {
     const idPartida = buscarPartidaDeUsuario(idUsuario);
 
     if (idPartida) {
