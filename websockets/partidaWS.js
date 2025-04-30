@@ -43,22 +43,21 @@ function safeStringify(obj) {
 async function cargarPartidasDesdeRedis() {
   try {
     const partidasRedis = await redisClient.get("partidas");
-    if (partidasRedis) {
-      partidas = JSON.parse(partidasRedis);
-      console.log("Partidas cargadas desde Redis");
+    if (!partidasRedis) return;
 
-      /*const parsed = JSON.parse(partidasRedis);
-      // Reconstruir cada partida como instancia de la clase
-      partidas = Object.fromEntries(
-        Object.entries(parsed).map(([id, data]) => [
-          id,
-          Object.assign(new Partida(), data),
-        ])
-      );
-      console.log("Partidas cargadas desde Redis como instancias");*/
-    }
+    const parsed = JSON.parse(partidasRedis);
+    partidas = Object.fromEntries(
+      Object.entries(parsed).map(([id, data]) => {
+        // Creamos una instancia limpia
+        const p = new Partida(data.idPartida, data.jugadores, data.idSala);
+        // Le aplicamos el resto de propiedades
+        Object.assign(p, data);
+        return [id, p];
+      })
+    );
+    console.log("Partidas rehidratadas en memoria");
   } catch (error) {
-    console.error("Error al cargar partidas desde redis:", error);
+    console.error("Error al cargar partidas desde Redis:", error);
   }
 }
 
@@ -888,6 +887,12 @@ const manejarConexionPartidas = (socket, io) => {
   socket.on("actualizarSocketId", ({ idPartida, idJugador, socketId }) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
+
+    // Si no lleva el prototipo, se lo ponemos
+    if (!(partida instanceof Partida)) {
+      Object.setPrototypeOf(partida, Partida.prototype);
+    }
+
     partida.actualizarSocketId(idJugador, socketId);
     guardarPartidasEnRedis();
   });
@@ -1363,5 +1368,4 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
 // Cargar partidas al iniciar el servidor
 cargarPartidasDesdeRedis();
-
 module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
