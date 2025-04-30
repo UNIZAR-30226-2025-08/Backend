@@ -118,7 +118,7 @@ function buscarPartidaDeUsuario(idUsuario) {
       console.log(
         `Comparando jugador.id (${jugadorIdStr}, tipo ${typeof jugadorIdStr}) con idUsuario (${idUsuarioStr}, tipo ${typeof idUsuarioStr})`
       );
-      if (jugadorIdStr === idUsuarioStr) {
+      if (jugadorIdStr == idUsuarioStr) {
         return idPartida; // Retorna el id de la partida donde encontró al usuario
       }
     }
@@ -157,7 +157,9 @@ const manejarConexionPartidas = (socket, io) => {
     if (idPartida) {
       const partida = partidas[idPartida];
 
-      const jugador = partida.jugadores.find((j) => j.id == idUsuario);
+      const jugador = partida.jugadores.find(
+        (j) => String(j.id) == String(idUsuario)
+      );
       if (!jugador) {
         socket.emit("partidaNoEncontrada", {});
         return;
@@ -197,17 +199,15 @@ const manejarConexionPartidas = (socket, io) => {
     if (!partida) return socket.emit("error", "Partida no encontrada");
 
     socket.join(partida.idSala);
+
+    // Buscamos al jugador en la partida por su id de usuario
     const jugador = partida.jugadores.find((j) => j.id == idUsuario);
-
-    if (jugador) {
-      // Cancelamos cualquier timer de desconexión pendiente
-      if (desconexionTimers.has(jugador.socketId)) {
-        clearTimeout(desconexionTimers.get(jugador.socketId));
-        desconexionTimers.delete(jugador.socketId);
+    if (jugador && jugador.desconectado) {
+      // Cancelamos la eliminación pendiente, si existe
+      if (desconexionTimers.has(jugador.id)) {
+        clearTimeout(desconexionTimers.get(jugador.id));
+        desconexionTimers.delete(jugador.id);
       }
-
-      // Marcamos al jugador como reconectando
-      jugador.reconectando = true;
 
       // Desmarcamos al jugador como desconectado y actualizamos el socketId del jugador
       jugador.desconectado = false;
@@ -896,38 +896,6 @@ const manejarConexionPartidas = (socket, io) => {
     partida.actualizarSocketId(idJugador, socketId);
     guardarPartidasEnRedis();
   });
-
-  /**
-   * Registrar usuario en línea y actualizar el socketId.
-   * @event registrarUsuario
-   *
-   * @param {Object} datos - Datos del usuario a registrar.
-   * @param {string} datos.idUsuario - ID del usuario que se conecta.
-   */
-  socket.on("registrarUsuario", ({ idUsuario }) => {
-    // Verificar si el usuario ya está registrado en alguna partida
-    const idPartida = buscarPartidaDeUsuario(idUsuario);
-    if (idPartida) {
-      const partida = partidas[idPartida];
-      const jugador = partida.jugadores.find((j) => j.id == idUsuario);
-
-      if (jugador) {
-        // Si el jugador ya está en la partida, actualizamos su socketId
-        jugador.socketId = socket.id;
-        jugador.desconectado = false;
-        jugador.reconectando = false;
-
-        // Cancelamos cualquier timer de desconexión pendiente
-        if (desconexionTimers.has(jugador.socketId)) {
-          clearTimeout(desconexionTimers.get(jugador.socketId));
-          desconexionTimers.delete(jugador.socketId);
-        }
-
-        // Guardamos los cambios
-        guardarPartidasEnRedis();
-      }
-    }
-  });
 };
 
 // Manejar desconexión de jugadores
@@ -944,21 +912,13 @@ const manejarDesconexionPartidas = (socket, io) => {
     const jugador = partida.jugadores.find((j) => j.socketId === socket.id);
     if (!jugador) continue; // Si no existe, saltamos esta iteración.
 
-    // Verificamos si el jugador ya está intentando reconectarse
-    if (jugador.reconectando) {
-      console.log(
-        `Jugador ${jugador.id} está intentando reconectarse, no se eliminará`
-      );
-      continue;
-    }
-
     // Marcamos al jugador como "pendiente de desconexión"
     jugador.desconectado = true;
 
     // Programamos la eliminación definitiva a los 10 segundos
     const timer = setTimeout(() => {
-      // Si para entonces sigue desconectado y no está reconectando, lo eliminamos de la partida
-      if (jugador.desconectado && !jugador.reconectando) {
+      // Si para entonces sigue desconectado, lo eliminamos de la partida
+      if (jugador.desconectado) {
         // Eliminamos al jugador de la partida
         partida.jugadores = partida.jugadores.filter(
           (j) => j.socketId !== jugador.socketId
