@@ -1,10 +1,21 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { createServer } = require("http"); // Servidor HTTP necesario para WebSockets
+const fs = require("fs");
+const https = require("https"); // Usamos https
 
 const app = express();
-const server = createServer(app);
+
+// Cargar los certificados SSL de Let's Encrypt
+const options = {
+  key: fs.readFileSync("/etc/letsencrypt/live/albertofsg.ddns.net/privkey.pem"),
+  cert: fs.readFileSync(
+    "/etc/letsencrypt/live/albertofsg.ddns.net/fullchain.pem"
+  ),
+};
+
+// Crear un servidor HTTPS
+const server = https.createServer(options, app);
 
 // Middlewares
 app.use(cors()); // Permitir solicitudes desde el frontend
@@ -42,12 +53,11 @@ const io = servidorWS(server);
  * Inicia el servidor Express y WebSocket.
  * @function
  */
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 443;
 
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`WebSockets escuchando en ws://localhost:${PORT}`);
+  console.log(`Servidor corriendo en https://localhost:${PORT}`);
+  console.log(`WebSockets escuchando en wss://localhost:${PORT}`);
 });
-
 
 module.exports = { app, server };
