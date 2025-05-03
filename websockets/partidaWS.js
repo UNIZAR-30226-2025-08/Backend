@@ -951,7 +951,7 @@ const manejarDesconexionPartidas = (socket, io) => {
         );
       }
       desconexionTimers.delete(jugador.socketId);
-    }, 40000);
+    }, 5000);
 
     // Guardamos el timer para poder cancelarlo si se reconecta
     desconexionTimers.set(jugador.socketId, timer);
@@ -1132,6 +1132,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         /* Se pasa de fase si las brujas han usado sus dos pociones, el tiempo ha expirado
          *  o se ha cambiado de turno a día
          */
+        console.log("Evaluo fin de bruja ");
         if (
           partida.todasBrujasUsaronHabilidad() ||
           !partida.temporizadorHabilidad
@@ -1147,15 +1148,19 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             partida.temporizadorHabilidad
           );
 
+          console.log("Verifico si se necesitan subfases ");
           // Llamar a la función verificarSubfasesOpcionales antes de pasar al turno de día
           await verificarSubfasesOpcionales();
 
+          console.log("Gestiono turno ");
           const resultadoTurno2 = partida.gestionarTurno();
 
           const finPartida2 = finalizarPartidaSiCorresponde(resultadoTurno2);
           await guardarPartidasEnRedis();
 
+          console.log("Verifico fin de partida ");
           if (partida.estado === "en_curso" && !finPartida2) {
+            console.log("Paso a siguiente fase desde bruja (Dia) ");
             await manejarFaseDia(); // Pasar a la fase de día
           }
         }
