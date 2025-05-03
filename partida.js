@@ -947,7 +947,7 @@ class Partida {
     this.temporizadorVotacion = setTimeout(() => {
       this.votacionActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteVotacion);
+    }, this.tiempoLimiteVotacion + 30000);
   }
 
   /**
