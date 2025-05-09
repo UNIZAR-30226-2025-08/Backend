@@ -450,7 +450,7 @@ class Partida {
           } porque no está a punto de morir.`,
         };
       }
-      limpiarTemporizadorHabilidad(); // Limpiar el temporizador
+      this.limpiarTemporizadorHabilidad(); // Limpiar el temporizador
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
         (id) => id !== idObjetivo
