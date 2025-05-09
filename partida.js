@@ -51,6 +51,7 @@ class Partida {
     this.faseInicio = null; // Timestamp (ms) de cuándo empezó la fase actual
     this.faseDuracion = null; // Duración en ms de la fase actual
     this.ultimasVictimas = []; // Lista de las últimas víctimas eliminadas
+    this.cazadorDisparoACazador = false; // Indica si un cazador ha disparado a otro cazador
   }
 
   /**
@@ -508,6 +509,11 @@ class Partida {
 
     this.agregarAColaDeEliminacion(idObjetivo); // Se elimina al final del turno
     jugador.haDisparado = true; // Marcar que el cazador ha usado su habilidad
+
+    // Si el objetivo es un cazador, actualizamos el booleano 'cazadorDisparoACazador'
+    if (objetivo.rol == "Cazador") {
+      this.cazadorDisparoACazador = true;
+    }
 
     return {
       mensaje: `El cazador ha disparado a ${objetivo.nombre}.`,

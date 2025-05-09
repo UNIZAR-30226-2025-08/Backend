@@ -1262,14 +1262,39 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Verificar y activar si es necesario las subfases opcionales de la sucesión del alguacil y la habilidad del cazador
     const verificarSubfasesOpcionales = async () => {
-      // Si el alguacil murió, activamos su sub-fase
-      if (partida.alguacilHaMuerto()) {
-        await manejarFaseAlguacil();
-      }
+      let hayCambios = true;
 
-      // Si el cazador murió, activamos su sub-fase
-      if (partida.cazadorHaMuerto()) {
-        await manejarFaseCazador();
+      while (hayCambios) {
+        hayCambios = false;
+
+        // Si el alguacil murió, activamos su sub-fase
+        if (partida.alguacilHaMuerto()) {
+          await manejarFaseAlguacil();
+          // Verificamos si quedarán más de un jugador vivo después de aplicar las eliminaciones
+          const jugadoresVivos = partida.jugadores.filter(
+            (j) => j.estaVivo
+          ).length;
+          const jugadoresEnCola = partida.colaEliminaciones.length;
+          if (jugadoresVivos - jugadoresEnCola > 1) {
+            hayCambios = true;
+          }
+        }
+
+        // Si el cazador murió, activamos su sub-fase
+        if (partida.cazadorHaMuerto()) {
+          await manejarFaseCazador();
+          // Verificamos si quedarán más de un jugador vivo después de aplicar las eliminaciones
+          const jugadoresVivos = partida.jugadores.filter(
+            (j) => j.estaVivo
+          ).length;
+          const jugadoresEnCola = partida.colaEliminaciones.length;
+          if (
+            jugadoresVivos - jugadoresEnCola > 1 ||
+            partida.cazadorDisparoACazador
+          ) {
+            hayCambios = true;
+          }
+        }
       }
     };
 
