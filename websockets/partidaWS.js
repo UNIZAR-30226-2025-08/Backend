@@ -1169,7 +1169,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase opcional 4: Habilidad del cazador
     const manejarFaseCazador = async () => {
-      return new Promise((resolve) => {
+      return new Promise(async (resolve) => {
         console.log("Sub-fase del Cazador iniciada");
 
         const cazadoresMuertos = partida.obtenerCazadoresEnColaEliminacion();
@@ -1177,42 +1177,61 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
         if (cazadoresMuertos.length === 0) {
           resolve(); // No hay cazadores muertos, no se hace nada
+          return;
         }
 
-        console.log(
-          "partida.todosCazadoresUsaronHabilidad() antes de nada: ",
-          partida.todosCazadoresUsaronHabilidad()
-        );
+        // Filtrar solo los cazadores que no han usado su habilidad y ordenarlos por ID
+        const cazadoresSinUsarHabilidad = cazadoresMuertos
+          .filter((idCazador) => {
+            const cazador = partida.jugadores.find((j) => j.id == idCazador);
+            return cazador && !cazador.haDisparado;
+          })
+          .sort((a, b) => a - b); // Ordenar por ID
 
-        // Notificar a todos los jugadores que comienza la fase de la habilidad del cazador
-        io.to(idSala).emit("habilidadCazador", {
-          mensaje: "Los cazadores tienen 30 segundos para usar su habilidad.",
-          tiempo: 30,
-          cazadoresMuertos: cazadoresMuertos,
-        });
+        if (cazadoresSinUsarHabilidad.length === 0) {
+          resolve(); // Todos los cazadores ya usaron su habilidad
+          return;
+        }
 
-        partida.iniciarHabilidadCazador();
+        // Función para manejar la habilidad de un cazador específico
+        const manejarHabilidadCazador = async (idCazador) => {
+          return new Promise((resolveCazador) => {
+            // Obtener los jugadores vivos que no están en la cola de eliminación
+            const jugadoresDisponibles =
+              partida.obtenerJugadoresVivosNoEnCola();
 
-        console.log(
-          "partida.temporizadorHabilidad recien iniciado: ",
-          partida.todosCazadoresUsaronHabilidad()
-        );
+            // Notificar a todos los jugadores que comienza la fase de la habilidad del cazador
+            io.to(idSala).emit("habilidadCazador", {
+              mensaje: "El cazador tiene 30 segundos para usar su habilidad.",
+              tiempo: 30,
+              cazadorActual: idCazador,
+              jugadoresDisponibles: jugadoresDisponibles,
+            });
 
-        const checkCazador = setInterval(async () => {
-          if (
-            !partida.temporizadorHabilidad ||
-            partida.todosCazadoresUsaronHabilidad()
-          ) {
-            console.log(
-              "partida.todosCazadoresUsaronHabilidad() al pasar turno: ",
-              partida.todosCazadoresUsaronHabilidad()
-            );
-            clearInterval(checkCazador);
-            partida.limpiarTemporizadorHabilidad();
-            console.log("Fin de la sub-fase del Cazador");
-            resolve();
-          }
-        }, 1000);
+            partida.iniciarHabilidadCazador();
+
+            const checkCazador = setInterval(async () => {
+              const cazador = partida.jugadores.find((j) => j.id == idCazador);
+              if (
+                !partida.temporizadorHabilidad ||
+                (cazador && cazador.haDisparado)
+              ) {
+                clearInterval(checkCazador);
+                partida.limpiarTemporizadorHabilidad();
+                console.log(`Fin de la habilidad del cazador ${idCazador}`);
+                resolveCazador();
+              }
+            }, 1000);
+          });
+        };
+
+        // Manejar secuencialmente cada cazador
+        for (const idCazador of cazadoresSinUsarHabilidad) {
+          await manejarHabilidadCazador(idCazador);
+        }
+
+        console.log("Fin de la sub-fase del Cazador");
+        resolve();
       });
     };
 
@@ -1233,11 +1252,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           partida.alguacilUsoHabilidad()
         );
 
+        // Obtener los jugadores vivos que no están en la cola de eliminación
+        const jugadoresDisponibles = partida.obtenerJugadoresVivosNoEnCola();
+
         // Notificar a todos los jugadores que comienza la fase de la sucesión del alguacil
         io.to(idSala).emit("habilidadAlguacil", {
           mensaje: `${alguacilMuerto.nombre} era el Alguacil. Puede elegir a quién le pasa la voz.`,
           tiempo: 20,
           idAlguacil: alguacilMuerto.id,
+          jugadoresDisponibles: jugadoresDisponibles,
         });
 
         partida.iniciarHabilidadAlguacil();
@@ -1262,36 +1285,62 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Verificar y activar si es necesario las subfases opcionales de la sucesión del alguacil y la habilidad del cazador
     const verificarSubfasesOpcionales = async () => {
-      let hayCambios = true;
+      const jugadoresVivos = partida.jugadores.filter((j) => j.estaVivo).length;
+      const jugadoresEnCola = partida.colaEliminaciones.length;
+      const jugadoresRestantes = jugadoresVivos - jugadoresEnCola;
 
-      while (hayCambios) {
-        hayCambios = false;
+      // Solo proceder si quedarán más de un jugador vivo
+      if (jugadoresRestantes <= 1) {
+        return;
+      }
 
-        // Si el alguacil murió, activamos su sub-fase
+      // Caso 1: Alguacil muerto por hombres lobo o bruja (jugadoresRestantes > 1)
+      if (partida.alguacilHaMuerto()) {
+        console.log("Caso 1: Alguacil muerto por hombres lobo o bruja");
+        await manejarFaseAlguacil();
+      }
+
+      // Caso 2: Cazador muerto por hombres lobo o bruja (jugadoresRestantes > 1)
+      if (partida.cazadorHaMuerto()) {
+        console.log("Caso 2: Cazador muerto por hombres lobo o bruja");
+        await manejarFaseCazador();
+      }
+
+      // Verificar si después de las fases anteriores hay nuevos cambios
+      const nuevosJugadoresVivos = partida.jugadores.filter(
+        (j) => j.estaVivo
+      ).length;
+      const nuevosJugadoresEnCola = partida.colaEliminaciones.length;
+      const nuevosJugadoresRestantes =
+        nuevosJugadoresVivos - nuevosJugadoresEnCola;
+
+      // Si después de las fases anteriores quedan más de un jugador, continuar el ciclo
+      if (nuevosJugadoresRestantes > 1) {
+        // Caso 3: Si el primer cazador mató al nuevo alguacil
         if (partida.alguacilHaMuerto()) {
+          console.log("Caso 3: Si el primer cazador mató al nuevo alguacil");
           await manejarFaseAlguacil();
-          // Verificamos si quedarán más de un jugador vivo después de aplicar las eliminaciones
-          const jugadoresVivos = partida.jugadores.filter(
-            (j) => j.estaVivo
-          ).length;
-          const jugadoresEnCola = partida.colaEliminaciones.length;
-          if (jugadoresVivos - jugadoresEnCola > 1) {
-            hayCambios = true;
-          }
         }
 
-        // Si el cazador murió, activamos su sub-fase
-        if (partida.cazadorHaMuerto()) {
+        // Caso 4: Si el primer cazador mató al otro cazador
+        if (partida.cazadorHaMuerto() && partida.cazadorDisparoACazador) {
+          console.log("Caso 4: Si el primer cazador mató al otro cazador");
           await manejarFaseCazador();
-          // Verificamos si quedarán más de un jugador vivo después de aplicar las eliminaciones
-          const jugadoresVivos = partida.jugadores.filter(
-            (j) => j.estaVivo
-          ).length;
-          const jugadoresEnCola = partida.colaEliminaciones.length;
-          if (
-            jugadoresVivos - jugadoresEnCola > 1 ||
-            partida.cazadorDisparoACazador
-          ) {
+        }
+
+        // Verificar si después de las fases anteriores hay nuevos cambios
+        const nuevosJugadoresVivos2 = partida.jugadores.filter(
+          (j) => j.estaVivo
+        ).length;
+        const nuevosJugadoresEnCola2 = partida.colaEliminaciones.length;
+        const nuevosJugadoresRestantes2 =
+          nuevosJugadoresVivos2 - nuevosJugadoresEnCola2;
+
+        if (nuevosJugadoresRestantes2 > 1) {
+          // Caso 5: Si el segundo cazador mató al nuevo alguacil
+          if (partida.alguacilHaMuerto()) {
+            console.log("Caso 5: Si el segundo cazador mató al nuevo alguacil");
+            await manejarFaseAlguacil();
             hayCambios = true;
           }
         }

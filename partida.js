@@ -450,7 +450,7 @@ class Partida {
           } porque no está a punto de morir.`,
         };
       }
-      this.limpiarTemporizadorHabilidad(); // Limpiar el temporizador
+
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
         (id) => id !== idObjetivo
@@ -1125,6 +1125,21 @@ class Partida {
     }
     this.limpiarTemporizadorHabilidad();
     return { mensaje: "Turno de la bruja saltado correctamente." };
+  }
+
+  /**
+   * Obtiene los jugadores vivos que no están en la cola de eliminaciones.
+   * @returns {Array<Object>} - Lista de jugadores vivos que no están en la cola de eliminaciones.
+   * @returns {string} jugadores[].id - ID del jugador.
+   * @returns {string} jugadores[].nombre - Nombre del jugador.
+   */
+  obtenerJugadoresVivosNoEnCola() {
+    return this.jugadores
+      .filter((j) => j.estaVivo && !this.colaEliminaciones.includes(j.id))
+      .map((j) => ({
+        id: j.id,
+        nombre: j.nombre,
+      }));
   }
 }
 
