@@ -38,7 +38,7 @@ class Partida {
     this.colaEliminaciones = []; // Cola de eliminación al final del turno
     this.temporizadorVotacion = null; // Temporizador para la votación
     this.temporizadorHabilidad = null; // Temporizador para la habilidad
-    this.tiempoLimiteVotacion = 60000; // Tiempo límite para la votación en milisegundos (30 segundos)
+    this.tiempoLimiteVotacion = 60000; // Tiempo límite para la votación en milisegundos (60 segundos)
     this.tiempoLimiteHabilidad = 55000; // Tiempo límite para usar habilidades en milisegundos (55 segundos)
     this.votacionAlguacilActiva = true; // Indica si hay una votación activa para elegir al alguacil
     this.votacionLobosActiva = false; // Indica si hay una votación activa para los lobos
@@ -449,7 +449,7 @@ class Partida {
           } porque no está a punto de morir.`,
         };
       }
-      //clearTimeout(this.temporizadorHabilidad); // Limpiar el temporizador
+      limpiarTemporizadorHabilidad(); // Limpiar el temporizador
       jugador.pocionCuraUsada = true;
       this.colaEliminaciones = this.colaEliminaciones.filter(
         (id) => id !== idObjetivo
@@ -612,9 +612,10 @@ class Partida {
    * @returns {string} Mensaje informativo si se ha producido un empate o
    *                   mensaje con el resultado de la elección si se ha elegido a un jugador para ser eliminado.
    * @returns {string} ID del jugador que ha sido elegido para ser eliminado o null si no hay ninguno.
+   * @returns {string} Rol del jugador que ha sido elegido para ser eliminado (si se ha logrado elegir a un jugador)
    *
-   * - Si hay un ganador: Objeto con el mensaje "X será eliminado al final del día." (donde X es el nombre del jugador elegido)
-   *    y el ID del jugador en el atributo 'jugadorAEliminar'.
+   * - Si hay un ganador: Objeto con el mensaje "X será eliminado al final del día." (donde X es el nombre del jugador elegido),
+   *    el ID del jugador en el atributo 'jugadorAEliminar' y su rol en el atributo 'rolJugadorAEliminar'.
    * - Si hay empate en la primera votación: Objeto con el mensaje "Empate, se repiten las votaciones."
    *    y null en el atributo 'jugadorAEliminar'.
    * - Si hay empate en la segunda votación: Objeto con el mensaje "Segundo empate consecutivo, nadie es eliminado."
@@ -656,6 +657,8 @@ class Partida {
           this.jugadores.find((j) => j.id == candidatos[0]).nombre
         } será eliminado al final del día.`,
         jugadorAEliminar: candidatos[0],
+        rolJugadorAEliminar: this.jugadores.find((j) => j.id == candidatos[0])
+          .rol,
       };
     } else {
       if (this.repetirVotosDia) {
@@ -680,15 +683,16 @@ class Partida {
 
   /**
    * (Método que usa partidaWS) Resuelve la votación nocturna de los lobos.
-   * Solo se elimina a un jugador si todos los lobos votan por la misma persona.
+   * Solo se elimina a un jugador si todos los hombres lobos votan por la misma persona.
    *
    * @returns {Object}
    * @returns {string} Mensaje informativo si no hay unanimidad o
    *  mensaje con el resultado de la votación si hay unanimidad.
    * @returns {string} ID del jugador que ha sido elegido para ser eliminado o null si no hay ninguno.
+   * @returns {string} Rol del jugador que ha sido elegido para ser eliminado (si hay unanimidad)
    *
-   * - Si hay unanimidad: Objeto con el mensaje "Los lobos van a atacar a X. Será eliminado al final de la noche."
-   *    y el ID del jugador en el atributo 'victima'.
+   * - Si hay unanimidad: Objeto con el mensaje "Los lobos van a atacar a X. Será eliminado al final de la noche.",
+   *    el ID del jugador en el atributo 'victima' y su rol en el atributo 'rolVictima'.
    * - Si no hay acuerdo: Objeto con el mensaje "Los lobos no se pusieron de acuerdo, no hay víctima esta noche."
    *    y null en el atributo 'victima'.
    */
@@ -728,6 +732,7 @@ class Partida {
           this.jugadores.find((j) => j.id == victimaElegida).nombre
         }. Será eliminado al final de la noche.`,
         victima: victimaElegida,
+        rolVictima: this.jugadores.find((j) => j.id == victimaElegida).rol,
       };
     } else {
       this.votacionLobosActiva = false; // Desactivar la votación
@@ -807,8 +812,16 @@ class Partida {
    * - Si ha habido empate : mensaje 'Empate, no hay ganadores.' y ganador 'empate'
    */
   aplicarEliminaciones() {
-    // Guardamos las últimas víctimas antes de eliminarlas
-    this.ultimasVictimas = [...this.colaEliminaciones];
+    // Guardamos las últimas víctimas antes de eliminarlas con su información completa (nombre, roles)
+    this.ultimasVictimas = this.colaEliminaciones.map((idJugador) => {
+      const jugador = this.jugadores.find((j) => j.id == idJugador);
+      return {
+        id: jugador.id,
+        nombre: jugador.nombre,
+        rol: jugador.rol,
+        esAlguacil: jugador.esAlguacil,
+      };
+    });
 
     // Eliminamos a los jugadores de la cola de eliminaciones
     this.colaEliminaciones.forEach((idJugador) => {

@@ -1317,6 +1317,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                   io.to(idSala).emit("resultadoVotosDia", {
                     mensaje: resultadoVotosDia2.mensaje,
                     jugadorAEliminar: resultadoVotosDia2.jugadorAEliminar,
+                    rolJugadorAEliminar: resultadoVotosDia2.rolJugadorAEliminar,
                   });
                 }
 
@@ -1340,6 +1341,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             io.to(idSala).emit("resultadoVotosDia", {
               mensaje: resultadoVotosDia.mensaje,
               jugadorAEliminar: resultadoVotosDia.jugadorAEliminar,
+              rolJugadorAEliminar: resultadoVotosDia.rolJugadorAEliminar,
             });
 
             // Llamar a la función verificarSubfasesOpcionales antes de pasar al turno de noche
