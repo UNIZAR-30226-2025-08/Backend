@@ -38,7 +38,7 @@ class Partida {
     this.colaEliminaciones = []; // Cola de eliminación al final del turno
     this.temporizadorVotacion = null; // Temporizador para la votación
     this.temporizadorHabilidad = null; // Temporizador para la habilidad
-    this.tiempoLimiteVotacion = 30000; // Tiempo límite para la votación en milisegundos (30 segundos)
+    this.tiempoLimiteVotacion = 60000; // Tiempo límite para la votación en milisegundos (30 segundos)
     this.tiempoLimiteHabilidad = 55000; // Tiempo límite para usar habilidades en milisegundos (55 segundos)
     this.votacionAlguacilActiva = true; // Indica si hay una votación activa para elegir al alguacil
     this.votacionLobosActiva = false; // Indica si hay una votación activa para los lobos
@@ -947,7 +947,7 @@ class Partida {
     this.temporizadorVotacion = setTimeout(() => {
       this.votacionActiva = false;
       this.temporizadorVotacion = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteVotacion + 30000);
+    }, this.tiempoLimiteVotacion);
   }
 
   /**
