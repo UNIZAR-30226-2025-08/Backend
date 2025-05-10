@@ -1135,7 +1135,11 @@ class Partida {
    */
   obtenerJugadoresVivosNoEnCola() {
     return this.jugadores
-      .filter((j) => j.estaVivo && !this.colaEliminaciones.includes(j.id))
+      .filter(
+        (j) =>
+          j.estaVivo &&
+          !this.colaEliminaciones.some((id) => String(id) === String(j.id))
+      )
       .map((j) => ({
         id: j.id,
         nombre: j.nombre,
