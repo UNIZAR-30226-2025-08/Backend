@@ -966,18 +966,21 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         ganador: resultado.ganador,
       });
 
-      // Eliminar la partida de Redis
-      await eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
-
-      // Eliminar la partida de la memoria
-      delete partidas[partida.idPartida];
-
       // Finalizar la partida en la base de datos
       await PartidaDAO.finalizarPartida(
         partida.idPartida,
         "terminada",
         resultado.ganador
       );
+
+      // Esperar 10 segundos antes de eliminar la sala
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+
+      // Eliminar la partida de Redis
+      await eliminarPartidaDeRedis(partida.idPartida); // Eliminar de Redis
+
+      // Eliminar la partida de la memoria
+      delete partidas[partida.idPartida];
 
       // Eliminar la sala asociada
       const {

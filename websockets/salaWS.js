@@ -567,7 +567,7 @@ const manejarDesconexionSalas = async (socket, io) => {
               `Sala ${idSala} eliminada por desconexión del último jugador tras 5 segundos`
             );
           }
-        }, 50000); // Esperar 50 segundos antes de eliminar la sala
+        }, 10000); // Esperar 10 segundos antes de eliminar la sala
       } else {
         await guardarSalasEnRedis(); // Guardar cambios si la sala sigue existiendo
       }
