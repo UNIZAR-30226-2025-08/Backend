@@ -169,7 +169,7 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {string} datos.idPartida - ID de la partida donde está el usuario.
    * @param {string} datos.idSala - ID de la sala asociada a la partida.
    * @param {string} datos.rol - Rol del usuario dentro de la partida.
-   * @param {string} datos.idUsuario - ID del usuario solicitante.
+   * @param {number|string} datos.idUsuario - ID del usuario solicitante.
    * @param {string} datos.nombreUsuario - Nombre del usuario solicitante.
    * @param {Array&lt;Object>} datos.jugadores - Lista de jugadores en la partida (con su id, nombre y avatar).
    * @param {string} datos.jugadores[].id - ID del jugador.
@@ -218,7 +218,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la partida que el jugador desea volver a unirse.
    * @param {string} datos.idPartida - ID de la partida a unirse.
-   * @param {string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
+   * @param {number|string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
    *
    * @emits error - Si la partida no se encuentra.
    */
@@ -311,7 +311,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la partida a iniciar.
    * @param {string} datos.idSala - ID de la sala donde se iniciará la partida.
-   * @param {string} datos.idLider - ID del lider que intenta iniciar la partida.
+   * @param {number|string} datos.idLider - ID del lider que intenta iniciar la partida.
    *
    * @emits error - Si la sala no se encuentra o el supuesto lider no tiene permisos.
    * @param {string} mensaje - Mensaje de error
@@ -483,8 +483,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del voto.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que vota.
-   * @param {number} datos.idObjetivo - ID del jugador objetivo del voto.
+   * @param {number|string} datos.idJugador - ID del jugador que vota.
+   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del voto.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoRegistrado - Si el voto se registra correctamente.
@@ -496,12 +496,12 @@ const manejarConexionPartidas = (socket, io) => {
     if (!partida) return;
     idSala = partida.idSala;
     if (partida.turno === "dia") {
-      partida.vota(idJugador, idObjetivo);
+      partida.vota(String(idJugador), String(idObjetivo));
     } else {
       console.log(
         "`[Backend] Recibido votacion Lobos de idJugador: ${idJugador} para idObjetivo: ${idObjetivo}`);"
       );
-      partida.votaNoche(idJugador, idObjetivo);
+      partida.votaNoche(String(idJugador), String(idObjetivo));
     }
 
     // Guardar cambios en Redis después de registrar un voto
@@ -514,8 +514,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del voto.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {string} datos.idJugador - ID del jugador que vota.
-   * @param {string} datos.idObjetivo - ID del jugador objetivo del voto.
+   * @param {number|string} datos.idJugador - ID del jugador que vota.
+   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del voto.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoAlguacilRegistrado - Si el voto se registra correctamente.
@@ -532,7 +532,7 @@ const manejarConexionPartidas = (socket, io) => {
     );
 
     if (partida.votacionAlguacilActiva === true) {
-      partida.votaAlguacil(idJugador, idObjetivo);
+      partida.votaAlguacil(String(idJugador), String(idObjetivo));
       console.log(
         `[Backend] votosAlguacil actuales: ${JSON.stringify(
           partida.votosAlguacil
@@ -570,7 +570,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del mensaje.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que envía el mensaje.
+   * @param {number|string} datos.idJugador - ID del jugador que envía el mensaje.
    * @param {string} datos.mensaje - Contenido del mensaje.
    *
    * @emits error - Si la partida no se encuentra.
@@ -585,12 +585,12 @@ const manejarConexionPartidas = (socket, io) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
 
-    if (!partida.jugadorVivo(idJugador)) return;
+    if (!partida.jugadorVivo(String(idJugador))) return;
 
     if (partida.turno === "noche") {
       // Enviar mensaje privado entre hombres lobos
       const preparacionMensajes = partida.prepararMensajesChatNoche(
-        idJugador,
+        String(idJugador),
         mensaje
       );
       console.log("preparacionMensajes", preparacionMensajes);
@@ -606,12 +606,12 @@ const manejarConexionPartidas = (socket, io) => {
       );
     } else {
       idSala = partida.idSala;
-      const nombreJugador = partida.obtenerNombreJugador(idJugador);
+      const nombreJugador = partida.obtenerNombreJugador(String(idJugador));
       console.log(`Mensaje enviado al resto ${mensaje}`);
       console.log(`Mensaje enviado al resto ${nombreJugador}`);
 
       // Enviar mensaje público
-      partida.agregarMensajeChatDia(idJugador, mensaje);
+      partida.agregarMensajeChatDia(String(idJugador), mensaje);
       io.to(idSala).emit("mensajeChat", {
         mensaje: mensaje,
         nombre: nombreJugador,
@@ -629,8 +629,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del mensaje.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador (supuesto vidente) que quiere revelar el rol de otro jugador.
-   * @param {number} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
+   * @param {number|string} datos.idJugador - ID del jugador (supuesto vidente) que quiere revelar el rol de otro jugador.
+   * @param {number|string} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits visionJugador - Si la revelación se realiza correctamente.
@@ -645,7 +645,10 @@ const manejarConexionPartidas = (socket, io) => {
         return;
       }
 
-      const resultado = partida.videnteRevela(idJugador, idObjetivo);
+      const resultado = partida.videnteRevela(
+        String(idJugador),
+        String(idObjetivo)
+      );
       socket.emit("visionJugador", {
         mensaje: resultado.mensaje,
         rol: resultado.rol,
@@ -666,7 +669,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador bruja.
+   * @param {number|string} datos.idJugador - ID del jugador bruja.
    *
    * @emits error - Si la partida no se encuentra.
    *
@@ -680,7 +683,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.verVictimaElegidaLobos(idJugador);
+      const resultado = partida.verVictimaElegidaLobos(String(idJugador));
 
       socket.emit("visionElegidaLobos", {
         victima: resultado.victima,
@@ -703,9 +706,9 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que usa la poción.
+   * @param {number|string} datos.idJugador - ID del jugador que usa la poción.
    * @param {string} datos.tipo - Tipo de poción ('curar' o 'eliminar').
-   * @param {number} datos.idObjetivo - ID del jugador objetivo de la poción.
+   * @param {number|string} datos.idObjetivo - ID del jugador objetivo de la poción.
    *
    * @emits error - Si se produce un error al usar la poción.
    * @emits usaPocionBruja - Si la poción se usa correctamente.
@@ -718,7 +721,11 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.usaPocionBruja(idJugador, tipo, idObjetivo);
+      const resultado = partida.usaPocionBruja(
+        String(idJugador),
+        tipo,
+        String(idObjetivo)
+      );
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -742,7 +749,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {string} datos.idJugador - ID del jugador bruja.
+   * @param {number|string} datos.idJugador - ID del jugador bruja.
    *
    * @emits error - Si la partida no se encuentra o el jugador no es bruja o no está vivo.
    * @emits pasarTurnoBruja - Si la bruja salta su turno correctamente.
@@ -755,7 +762,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.pasarTurnoBruja(idJugador);
+      const resultado = partida.pasarTurnoBruja(String(idJugador));
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -780,8 +787,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador cazador.
-   * @param {number} datos.idObjetivo - ID del jugador objetivo del cazador.
+   * @param {number|string} datos.idJugador - ID del jugador cazador.
+   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del cazador.
    *
    * @emits error - Si se produce un error al disparar.
    * @emits cazadorDispara - Si el cazador dispara correctamente.
@@ -794,7 +801,10 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.cazadorDispara(idJugador, idObjetivo);
+      const resultado = partida.cazadorDispara(
+        String(idJugador),
+        String(idObjetivo)
+      );
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -819,8 +829,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number} datos.idJugador - ID del jugador que elige al sucesor.
-   * @param {number} datos.idObjetivo - ID del jugador que será el nuevo alguacil.
+   * @param {number|string} datos.idJugador - ID del jugador que elige al sucesor.
+   * @param {number|string} datos.idObjetivo - ID del jugador que será el nuevo alguacil.
    *
    * @emits error - Si se produce un error al elegir al sucesor.
    * @param {String} mensaje - Mensaje de error si no puede elegir al sucesor.
@@ -836,7 +846,10 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.elegirSucesor(idJugador, idObjetivo);
+      const resultado = partida.elegirSucesor(
+        String(idJugador),
+        String(idObjetivo)
+      );
       if (resultado.alguacil === null) {
         socket.emit("error", resultado.mensaje);
         return;
@@ -900,7 +913,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {string} datos.idJugador - ID del jugador a actualizar.
+   * @param {number|string} datos.idJugador - ID del jugador a actualizar.
    * @param {string} datos.socketId - SocketId del jugador a actualizar.
    *
    * @emits error - Si la partida no se encuentra.
@@ -916,7 +929,7 @@ const manejarConexionPartidas = (socket, io) => {
       Object.setPrototypeOf(partida, Partida.prototype);
     }
 
-    partida.actualizarSocketId(idJugador, socketId);
+    partida.actualizarSocketId(String(idJugador), socketId);
     guardarPartidasEnRedis();
   });
 };
@@ -1501,7 +1514,7 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 13:24:52 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 15:28:58 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
