@@ -1002,6 +1002,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   const finalizarPartidaSiCorresponde = async (resultado) => {
     // La partida ha terminado, notificar el resultado
     if (resultado.ganador) {
+      console.log(" [Backend-Partida] FINALIZANDO PARTIDA");
       io.to(idSala).emit("partidaFinalizada", {
         mensaje: resultado.mensaje,
         ganador: resultado.ganador,
@@ -1028,7 +1029,9 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       await eliminarSalaDeRedis(idSala);
       await eliminarSalaDeMemoria(idSala);
 
-      console.log(`Fin de partida. Ganador: ${resultado.ganador}`);
+      console.log(
+        `[Backend-Partida] Fin de partida. Ganador: ${resultado.ganador}`
+      );
       return true;
     }
     return false;
@@ -1037,6 +1040,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   // Fase de votación del alguacil
   const manejarVotacionAlguacil = async () => {
     // Fase 2: Iniciar votaciones para elegir alguacil
+    console.log(" [Backend-Partida] INICIO VOTACIONES ALGUACIL");
     io.to(idSala).emit("iniciarVotacionAlguacil", {
       mensaje: "Inician las votaciones para elegir al alguacil.",
       tiempo: 30,
@@ -1053,6 +1057,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         const resultadoAlguacil = partida.elegirAlguacil();
 
         if (resultadoAlguacil.mensaje.includes("Empate")) {
+          console.log(" [Backend-Partida] 1ER EMPATE VOTACIONES ALGUACIL");
           // Notificar del primer empate y reiniciar la votación
           io.to(idSala).emit("empateVotacionAlguacil", {
             mensaje: resultadoAlguacil.mensaje,
@@ -1068,11 +1073,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               clearInterval(checkSegundaVotacionAlguacil);
               const resultadoAlguacil2 = partida.elegirAlguacil();
               if (resultadoAlguacil2.mensaje.includes("Segundo")) {
+                console.log(" [Backend-Partida] 2º EMPATE VOTACIONES ALGUACIL");
                 // Notificar del segundo empate. No se elige a ningún jugador como alguacil.
                 io.to(idSala).emit("segundoEmpateVotacionAlguacil", {
                   mensaje: resultadoAlguacil2.mensaje,
                 });
               } else {
+                console.log(
+                  " [Backend-Partida] ALGUACIL ELEGIDO TRAS 1ER EMPATE"
+                );
                 // Notificar quien es el alguacil elegido
                 io.to(idSala).emit("alguacilElegido", {
                   mensaje: resultadoAlguacil2.mensaje,
@@ -1084,6 +1093,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             }
           }, 1000);
         } else {
+          console.log(" [Backend-Partida] ALGUACIL ELEGIDO (SIN EMPATES)");
           // Notificar quien es el alguacil elegido
           io.to(idSala).emit("alguacilElegido", {
             mensaje: resultadoAlguacil.mensaje,
@@ -1098,13 +1108,14 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
   // Ciclo principal de la partida. Alterna los turnos de noche y día hasta que haya un ganador
   const iniciarCicloPartida = async () => {
-    console.log("Partida iniciada");
+    console.log(" [Backend-Partida] NOCHE COMIENZA");
     // Fase 3: Noche
     io.to(idSala).emit("nocheComienza", { mensaje: "La noche ha comenzado." });
 
     const vidente = partida.hayRolVivo("Vidente");
 
     if (vidente) {
+      console.log(" [Backend-Partida] HABILIDAD VIDENTE");
       // Sub-fase 1: Habilidad de la vidente
       io.to(idSala).emit("habilidadVidente", {
         mensaje: "La vidente tiene 25 segundos para usar su habilidad.",
@@ -1123,6 +1134,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 2: Hombres lobos
     const manejarFaseHombresLobos = () => {
+      console.log(" [Backend-Partida] FASE LOBOS");
       console.log("Fase Lobos iniciada");
       io.to(idSala).emit("turnoHombresLobos", {
         mensaje:
@@ -1159,6 +1171,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               }
             );
           }
+          console.log(" [Backend-Partida] FIN FASE LOBOS");
           manejarFaseBruja();
         }
       }, 1000);
@@ -1166,6 +1179,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 3: Habilidad de la bruja
     const manejarFaseBruja = () => {
+      console.log(" [Backend-Partida] FASE BRUJA");
       const bruja = partida.hayRolVivo("Bruja");
       if (bruja) {
         console.log("Fase Bruja iniciada");
@@ -1213,10 +1227,12 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           }
         }
       }, 1000);
+      console.log(" [Backend-Partida] FIN FASE BRUJA");
     };
 
     // Sub-fase opcional 4: Habilidad del cazador
     const manejarFaseCazador = async () => {
+      console.log(" [Backend-Partida] FASE CAZADOR");
       return new Promise(async (resolve) => {
         console.log("Sub-fase del Cazador iniciada");
 
@@ -1243,6 +1259,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
         // Función para manejar la habilidad de un cazador específico
         const manejarHabilidadCazador = async (idCazador) => {
+          console.log(" [Backend-Partida] MANEJANDO HABILIDAD CAZADOR");
           return new Promise((resolveCazador) => {
             // Obtener los jugadores vivos que no están en la cola de eliminación
             const jugadoresDisponibles =
@@ -1286,6 +1303,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     // Sub-fase opcional 5: Sucesion del alguacil
     const manejarFaseAlguacil = async () => {
       return new Promise((resolve) => {
+        console.log(" [Backend-Partida] FASE ALGUACIL");
         console.log("Sub-fase de la sucesión del Alguacil iniciada");
 
         const alguacilMuerto = partida.obtenerAlguacilMuerto();
@@ -1324,7 +1342,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             );
             clearInterval(checkAlguacil);
             partida.limpiarTemporizadorHabilidad();
-            console.log("Fin de la sub-fase del Alguacil");
+            console.log(" [Backend-Partida] FIN FASE ALGUACIL");
             resolve();
           }
         }, 1000);
@@ -1333,6 +1351,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Verificar y activar si es necesario las subfases opcionales de la sucesión del alguacil y la habilidad del cazador
     const verificarSubfasesOpcionales = async () => {
+      console.log(" [Backend-Partida] VERIFICANDO FASES OPCIONALES");
       const jugadoresVivos = partida.jugadores.filter((j) => j.estaVivo).length;
       const jugadoresEnCola = partida.colaEliminaciones.length;
       const jugadoresRestantes = jugadoresVivos - jugadoresEnCola;
@@ -1342,15 +1361,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         return;
       }
 
-      // Caso 1: Alguacil muerto por hombres lobo o bruja (jugadoresRestantes > 1)
+      // Caso 1: Alguacil muerto por votaciones (jugadoresRestantes > 1)
       if (partida.alguacilHaMuerto()) {
-        console.log("Caso 1: Alguacil muerto por hombres lobo o bruja");
+        console.log("Caso 1: Alguacil muerto por votaciones");
         await manejarFaseAlguacil();
       }
 
-      // Caso 2: Cazador muerto por hombres lobo o bruja (jugadoresRestantes > 1)
+      // Caso 2: Cazador muerto por votaciones (jugadoresRestantes > 1)
       if (partida.cazadorHaMuerto()) {
-        console.log("Caso 2: Cazador muerto por hombres lobo o bruja");
+        console.log("Caso 2: Cazador muerto por votaciones");
         await manejarFaseCazador();
       }
 
@@ -1397,6 +1416,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Fase 4: Día
     const manejarFaseDia = async () => {
+      console.log(" [Backend-Partida] COMIENZA EL DIA");
       io.to(idSala).emit("diaComienza", {
         mensaje:
           "Es de día, los jugadores tienen 1 minuto para decidir quién será eliminado.",
@@ -1416,6 +1436,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           const resultadoVotosDia = partida.resolverVotosDia();
           await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
           if (resultadoVotosDia.mensaje.includes("Empate")) {
+            console.log(" [Backend-Partida] 1ER EMPATE VOTACIONES DIA");
             // Notificar del primer empate y reiniciar la votación
             io.to(idSala).emit("empateVotacionDia", {
               mensaje: resultadoVotosDia.mensaje,
@@ -1430,11 +1451,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
 
                 if (resultadoVotosDia2.mensaje.includes("Segundo")) {
+                  console.log(" [Backend-Partida] 2º EMPATE VOTACIONES DIA");
                   // Notificar del segundo empate. No se elige a ningún jugador para ser eliminado.
                   io.to(idSala).emit("segundoEmpateVotacionDia", {
                     mensaje: resultadoVotosDia2.mensaje,
                   });
                 } else {
+                  console.log(
+                    " [Backend-Partida] VOTACIONES DIA HECHAS, TRAS 1ER EMPATE"
+                  );
                   // Notificar quien es el jugador a eliminar
                   io.to(idSala).emit("resultadoVotosDia", {
                     mensaje: resultadoVotosDia2.mensaje,
@@ -1459,6 +1484,9 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               }
             }, 1000);
           } else {
+            console.log(
+              " [Backend-Partida] VOTACIONES DIA HECHAS, SIN EMPATES"
+            );
             // Notificar quien es el jugador a eliminar
             io.to(idSala).emit("resultadoVotosDia", {
               mensaje: resultadoVotosDia.mensaje,
@@ -1484,6 +1512,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     };
   };
 
+  console.log(" [Backend-Partida] ESPERA INICIAL");
   // Fase 1: Esperar 30 segundos antes de iniciar las votaciones de alguacil
   io.to(idSala).emit("esperaInicial", {
     mensaje: "La partida comenzará en 30 segundos",
@@ -1514,7 +1543,7 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 15:28:58 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 16:31:09 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
