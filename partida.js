@@ -986,7 +986,7 @@ class Partida {
         }
       });
       this.temporizadorHabilidad = null; // Reiniciar el temporizador
-    }, this.tiempoLimiteHabilidad + 5000); // !!! Sino no da tiempo
+    }, this.tiempoLimiteHabilidad + 5000);
   }
 
   /**

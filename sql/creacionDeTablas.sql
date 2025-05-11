@@ -11,14 +11,12 @@ DROP TABLE IF EXISTS "Usuario";
 DROP TYPE IF EXISTS tipoPartida;
 DROP TYPE IF EXISTS estadoPartida;
 DROP TYPE IF EXISTS bandoGanador;
-DROP TYPE IF EXISTS resultadoPartida;
 DROP TYPE IF EXISTS roles;
 
 -- Tipos de enumumerados
 CREATE TYPE tipoPartida AS ENUM ('publica', 'privada');
 CREATE TYPE estadoPartida AS ENUM ('en_curso', 'terminada');
 CREATE TYPE bandoGanador AS ENUM ('lobos', 'aldeanos', 'empate');
-CREATE TYPE resultadoPartida AS ENUM ('ganada', 'perdida', 'empate');
 CREATE TYPE roles AS ENUM ('lobo', 'aldeano', 'vidente', 'bruja', 'cazador');
 
 -- Tabla Usuario

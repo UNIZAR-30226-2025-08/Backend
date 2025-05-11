@@ -53,6 +53,18 @@ async function eliminarSalaDeRedis(idSala) {
   }
 }
 
+// Función para eliminar una sala de memoria
+async function eliminarSalaDeMemoria(idSala) {
+  try {
+    if (salas[idSala]) {
+      delete salas[idSala];
+      console.log(`Sala ${idSala} eliminada de memoria`);
+    }
+  } catch (error) {
+    console.error("Error al eliminar sala de memoria:", error);
+  }
+}
+
 /**
  * Sale de todas las salas en las que está un jugador excepto la sala especificada.
  * @param {string} idJugador - ID del jugador.
@@ -582,4 +594,6 @@ module.exports = {
   guardarSalasEnRedis,
   salas,
   getSalas,
+  eliminarSalaDeRedis,
+  eliminarSalaDeMemoria,
 };
