@@ -169,7 +169,7 @@ const manejarConexionPartidas = (socket, io) => {
    * @param {string} datos.idPartida - ID de la partida donde está el usuario.
    * @param {string} datos.idSala - ID de la sala asociada a la partida.
    * @param {string} datos.rol - Rol del usuario dentro de la partida.
-   * @param {number|string} datos.idUsuario - ID del usuario solicitante.
+   * @param {string} datos.idUsuario - ID del usuario solicitante.
    * @param {string} datos.nombreUsuario - Nombre del usuario solicitante.
    * @param {Array&lt;Object>} datos.jugadores - Lista de jugadores en la partida (con su id, nombre y avatar).
    * @param {string} datos.jugadores[].id - ID del jugador.
@@ -218,7 +218,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la partida que el jugador desea volver a unirse.
    * @param {string} datos.idPartida - ID de la partida a unirse.
-   * @param {number|string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
+   * @param {string} datos.idUsuario - ID del usuario que desea volver a unirse a la partida.
    *
    * @emits error - Si la partida no se encuentra.
    */
@@ -311,7 +311,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la partida a iniciar.
    * @param {string} datos.idSala - ID de la sala donde se iniciará la partida.
-   * @param {number|string} datos.idLider - ID del lider que intenta iniciar la partida.
+   * @param {string} datos.idLider - ID del lider que intenta iniciar la partida.
    *
    * @emits error - Si la sala no se encuentra o el supuesto lider no tiene permisos.
    * @param {string} mensaje - Mensaje de error
@@ -483,8 +483,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del voto.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador que vota.
-   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del voto.
+   * @param {number} datos.idJugador - ID del jugador que vota.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo del voto.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoRegistrado - Si el voto se registra correctamente.
@@ -496,12 +496,12 @@ const manejarConexionPartidas = (socket, io) => {
     if (!partida) return;
     idSala = partida.idSala;
     if (partida.turno === "dia") {
-      partida.vota(String(idJugador), String(idObjetivo));
+      partida.vota(idJugador, idObjetivo);
     } else {
       console.log(
         "`[Backend] Recibido votacion Lobos de idJugador: ${idJugador} para idObjetivo: ${idObjetivo}`);"
       );
-      partida.votaNoche(String(idJugador), String(idObjetivo));
+      partida.votaNoche(idJugador, idObjetivo);
     }
 
     // Guardar cambios en Redis después de registrar un voto
@@ -514,8 +514,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del voto.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador que vota.
-   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del voto.
+   * @param {string} datos.idJugador - ID del jugador que vota.
+   * @param {string} datos.idObjetivo - ID del jugador objetivo del voto.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits votoAlguacilRegistrado - Si el voto se registra correctamente.
@@ -532,7 +532,7 @@ const manejarConexionPartidas = (socket, io) => {
     );
 
     if (partida.votacionAlguacilActiva === true) {
-      partida.votaAlguacil(String(idJugador), String(idObjetivo));
+      partida.votaAlguacil(idJugador, idObjetivo);
       console.log(
         `[Backend] votosAlguacil actuales: ${JSON.stringify(
           partida.votosAlguacil
@@ -570,7 +570,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del mensaje.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador que envía el mensaje.
+   * @param {number} datos.idJugador - ID del jugador que envía el mensaje.
    * @param {string} datos.mensaje - Contenido del mensaje.
    *
    * @emits error - Si la partida no se encuentra.
@@ -585,12 +585,12 @@ const manejarConexionPartidas = (socket, io) => {
     const partida = obtenerPartida(socket, idPartida);
     if (!partida) return;
 
-    if (!partida.jugadorVivo(String(idJugador))) return;
+    if (!partida.jugadorVivo(idJugador)) return;
 
     if (partida.turno === "noche") {
       // Enviar mensaje privado entre hombres lobos
       const preparacionMensajes = partida.prepararMensajesChatNoche(
-        String(idJugador),
+        idJugador,
         mensaje
       );
       console.log("preparacionMensajes", preparacionMensajes);
@@ -606,12 +606,12 @@ const manejarConexionPartidas = (socket, io) => {
       );
     } else {
       idSala = partida.idSala;
-      const nombreJugador = partida.obtenerNombreJugador(String(idJugador));
+      const nombreJugador = partida.obtenerNombreJugador(idJugador);
       console.log(`Mensaje enviado al resto ${mensaje}`);
       console.log(`Mensaje enviado al resto ${nombreJugador}`);
 
       // Enviar mensaje público
-      partida.agregarMensajeChatDia(String(idJugador), mensaje);
+      partida.agregarMensajeChatDia(idJugador, mensaje);
       io.to(idSala).emit("mensajeChat", {
         mensaje: mensaje,
         nombre: nombreJugador,
@@ -629,8 +629,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos del mensaje.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador (supuesto vidente) que quiere revelar el rol de otro jugador.
-   * @param {number|string} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
+   * @param {number} datos.idJugador - ID del jugador (supuesto vidente) que quiere revelar el rol de otro jugador.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo elegido por el supuesto vidente.
    *
    * @emits error - Si la partida no se encuentra.
    * @emits visionJugador - Si la revelación se realiza correctamente.
@@ -645,10 +645,7 @@ const manejarConexionPartidas = (socket, io) => {
         return;
       }
 
-      const resultado = partida.videnteRevela(
-        String(idJugador),
-        String(idObjetivo)
-      );
+      const resultado = partida.videnteRevela(idJugador, idObjetivo);
       socket.emit("visionJugador", {
         mensaje: resultado.mensaje,
         rol: resultado.rol,
@@ -669,7 +666,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador bruja.
+   * @param {number} datos.idJugador - ID del jugador bruja.
    *
    * @emits error - Si la partida no se encuentra.
    *
@@ -683,7 +680,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.verVictimaElegidaLobos(String(idJugador));
+      const resultado = partida.verVictimaElegidaLobos(idJugador);
 
       socket.emit("visionElegidaLobos", {
         victima: resultado.victima,
@@ -706,9 +703,9 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador que usa la poción.
+   * @param {number} datos.idJugador - ID del jugador que usa la poción.
    * @param {string} datos.tipo - Tipo de poción ('curar' o 'eliminar').
-   * @param {number|string} datos.idObjetivo - ID del jugador objetivo de la poción.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo de la poción.
    *
    * @emits error - Si se produce un error al usar la poción.
    * @emits usaPocionBruja - Si la poción se usa correctamente.
@@ -721,11 +718,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.usaPocionBruja(
-        String(idJugador),
-        tipo,
-        String(idObjetivo)
-      );
+      const resultado = partida.usaPocionBruja(idJugador, tipo, idObjetivo);
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -749,7 +742,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador bruja.
+   * @param {string} datos.idJugador - ID del jugador bruja.
    *
    * @emits error - Si la partida no se encuentra o el jugador no es bruja o no está vivo.
    * @emits pasarTurnoBruja - Si la bruja salta su turno correctamente.
@@ -762,7 +755,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.pasarTurnoBruja(String(idJugador));
+      const resultado = partida.pasarTurnoBruja(idJugador);
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -787,8 +780,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador cazador.
-   * @param {number|string} datos.idObjetivo - ID del jugador objetivo del cazador.
+   * @param {number} datos.idJugador - ID del jugador cazador.
+   * @param {number} datos.idObjetivo - ID del jugador objetivo del cazador.
    *
    * @emits error - Si se produce un error al disparar.
    * @emits cazadorDispara - Si el cazador dispara correctamente.
@@ -801,10 +794,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.cazadorDispara(
-        String(idJugador),
-        String(idObjetivo)
-      );
+      const resultado = partida.cazadorDispara(idJugador, idObjetivo);
       if (resultado.error) {
         socket.emit("error", resultado.error);
         return;
@@ -829,8 +819,8 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador que elige al sucesor.
-   * @param {number|string} datos.idObjetivo - ID del jugador que será el nuevo alguacil.
+   * @param {number} datos.idJugador - ID del jugador que elige al sucesor.
+   * @param {number} datos.idObjetivo - ID del jugador que será el nuevo alguacil.
    *
    * @emits error - Si se produce un error al elegir al sucesor.
    * @param {String} mensaje - Mensaje de error si no puede elegir al sucesor.
@@ -846,10 +836,7 @@ const manejarConexionPartidas = (socket, io) => {
       const partida = obtenerPartida(socket, idPartida);
       if (!partida) return;
 
-      const resultado = partida.elegirSucesor(
-        String(idJugador),
-        String(idObjetivo)
-      );
+      const resultado = partida.elegirSucesor(idJugador, idObjetivo);
       if (resultado.alguacil === null) {
         socket.emit("error", resultado.mensaje);
         return;
@@ -913,7 +900,7 @@ const manejarConexionPartidas = (socket, io) => {
    *
    * @param {Object} datos - Datos de la acción.
    * @param {string} datos.idPartida - ID de la partida en curso.
-   * @param {number|string} datos.idJugador - ID del jugador a actualizar.
+   * @param {string} datos.idJugador - ID del jugador a actualizar.
    * @param {string} datos.socketId - SocketId del jugador a actualizar.
    *
    * @emits error - Si la partida no se encuentra.
@@ -929,7 +916,7 @@ const manejarConexionPartidas = (socket, io) => {
       Object.setPrototypeOf(partida, Partida.prototype);
     }
 
-    partida.actualizarSocketId(String(idJugador), socketId);
+    partida.actualizarSocketId(idJugador, socketId);
     guardarPartidasEnRedis();
   });
 };
@@ -1002,7 +989,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   const finalizarPartidaSiCorresponde = async (resultado) => {
     // La partida ha terminado, notificar el resultado
     if (resultado.ganador) {
-      console.log(" [Backend-Partida] FINALIZANDO PARTIDA");
       io.to(idSala).emit("partidaFinalizada", {
         mensaje: resultado.mensaje,
         ganador: resultado.ganador,
@@ -1029,9 +1015,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
       await eliminarSalaDeRedis(idSala);
       await eliminarSalaDeMemoria(idSala);
 
-      console.log(
-        `[Backend-Partida] Fin de partida. Ganador: ${resultado.ganador}`
-      );
+      console.log(`Fin de partida. Ganador: ${resultado.ganador}`);
       return true;
     }
     return false;
@@ -1040,7 +1024,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
   // Fase de votación del alguacil
   const manejarVotacionAlguacil = async () => {
     // Fase 2: Iniciar votaciones para elegir alguacil
-    console.log(" [Backend-Partida] INICIO VOTACIONES ALGUACIL");
     io.to(idSala).emit("iniciarVotacionAlguacil", {
       mensaje: "Inician las votaciones para elegir al alguacil.",
       tiempo: 30,
@@ -1057,7 +1040,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         const resultadoAlguacil = partida.elegirAlguacil();
 
         if (resultadoAlguacil.mensaje.includes("Empate")) {
-          console.log(" [Backend-Partida] 1ER EMPATE VOTACIONES ALGUACIL");
           // Notificar del primer empate y reiniciar la votación
           io.to(idSala).emit("empateVotacionAlguacil", {
             mensaje: resultadoAlguacil.mensaje,
@@ -1073,15 +1055,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               clearInterval(checkSegundaVotacionAlguacil);
               const resultadoAlguacil2 = partida.elegirAlguacil();
               if (resultadoAlguacil2.mensaje.includes("Segundo")) {
-                console.log(" [Backend-Partida] 2º EMPATE VOTACIONES ALGUACIL");
                 // Notificar del segundo empate. No se elige a ningún jugador como alguacil.
                 io.to(idSala).emit("segundoEmpateVotacionAlguacil", {
                   mensaje: resultadoAlguacil2.mensaje,
                 });
               } else {
-                console.log(
-                  " [Backend-Partida] ALGUACIL ELEGIDO TRAS 1ER EMPATE"
-                );
                 // Notificar quien es el alguacil elegido
                 io.to(idSala).emit("alguacilElegido", {
                   mensaje: resultadoAlguacil2.mensaje,
@@ -1093,7 +1071,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             }
           }, 1000);
         } else {
-          console.log(" [Backend-Partida] ALGUACIL ELEGIDO (SIN EMPATES)");
           // Notificar quien es el alguacil elegido
           io.to(idSala).emit("alguacilElegido", {
             mensaje: resultadoAlguacil.mensaje,
@@ -1108,14 +1085,13 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
   // Ciclo principal de la partida. Alterna los turnos de noche y día hasta que haya un ganador
   const iniciarCicloPartida = async () => {
-    console.log(" [Backend-Partida] NOCHE COMIENZA");
+    console.log("Partida iniciada");
     // Fase 3: Noche
     io.to(idSala).emit("nocheComienza", { mensaje: "La noche ha comenzado." });
 
     const vidente = partida.hayRolVivo("Vidente");
 
     if (vidente) {
-      console.log(" [Backend-Partida] HABILIDAD VIDENTE");
       // Sub-fase 1: Habilidad de la vidente
       io.to(idSala).emit("habilidadVidente", {
         mensaje: "La vidente tiene 25 segundos para usar su habilidad.",
@@ -1134,7 +1110,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 2: Hombres lobos
     const manejarFaseHombresLobos = () => {
-      console.log(" [Backend-Partida] FASE LOBOS");
       console.log("Fase Lobos iniciada");
       io.to(idSala).emit("turnoHombresLobos", {
         mensaje:
@@ -1171,7 +1146,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               }
             );
           }
-          console.log(" [Backend-Partida] FIN FASE LOBOS");
           manejarFaseBruja();
         }
       }, 1000);
@@ -1179,7 +1153,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Sub-fase 3: Habilidad de la bruja
     const manejarFaseBruja = () => {
-      console.log(" [Backend-Partida] FASE BRUJA");
       const bruja = partida.hayRolVivo("Bruja");
       if (bruja) {
         console.log("Fase Bruja iniciada");
@@ -1227,12 +1200,10 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           }
         }
       }, 1000);
-      console.log(" [Backend-Partida] FIN FASE BRUJA");
     };
 
     // Sub-fase opcional 4: Habilidad del cazador
     const manejarFaseCazador = async () => {
-      console.log(" [Backend-Partida] FASE CAZADOR");
       return new Promise(async (resolve) => {
         console.log("Sub-fase del Cazador iniciada");
 
@@ -1259,7 +1230,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
         // Función para manejar la habilidad de un cazador específico
         const manejarHabilidadCazador = async (idCazador) => {
-          console.log(" [Backend-Partida] MANEJANDO HABILIDAD CAZADOR");
           return new Promise((resolveCazador) => {
             // Obtener los jugadores vivos que no están en la cola de eliminación
             const jugadoresDisponibles =
@@ -1303,7 +1273,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     // Sub-fase opcional 5: Sucesion del alguacil
     const manejarFaseAlguacil = async () => {
       return new Promise((resolve) => {
-        console.log(" [Backend-Partida] FASE ALGUACIL");
         console.log("Sub-fase de la sucesión del Alguacil iniciada");
 
         const alguacilMuerto = partida.obtenerAlguacilMuerto();
@@ -1342,7 +1311,7 @@ const manejarFasesPartida = async (partida, idSala, io) => {
             );
             clearInterval(checkAlguacil);
             partida.limpiarTemporizadorHabilidad();
-            console.log(" [Backend-Partida] FIN FASE ALGUACIL");
+            console.log("Fin de la sub-fase del Alguacil");
             resolve();
           }
         }, 1000);
@@ -1351,7 +1320,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Verificar y activar si es necesario las subfases opcionales de la sucesión del alguacil y la habilidad del cazador
     const verificarSubfasesOpcionales = async () => {
-      console.log(" [Backend-Partida] VERIFICANDO FASES OPCIONALES");
       const jugadoresVivos = partida.jugadores.filter((j) => j.estaVivo).length;
       const jugadoresEnCola = partida.colaEliminaciones.length;
       const jugadoresRestantes = jugadoresVivos - jugadoresEnCola;
@@ -1361,15 +1329,15 @@ const manejarFasesPartida = async (partida, idSala, io) => {
         return;
       }
 
-      // Caso 1: Alguacil muerto por votaciones (jugadoresRestantes > 1)
+      // Caso 1: Alguacil muerto por hombres lobo o bruja (jugadoresRestantes > 1)
       if (partida.alguacilHaMuerto()) {
-        console.log("Caso 1: Alguacil muerto por votaciones");
+        console.log("Caso 1: Alguacil muerto por hombres lobo o bruja");
         await manejarFaseAlguacil();
       }
 
-      // Caso 2: Cazador muerto por votaciones (jugadoresRestantes > 1)
+      // Caso 2: Cazador muerto por hombres lobo o bruja (jugadoresRestantes > 1)
       if (partida.cazadorHaMuerto()) {
-        console.log("Caso 2: Cazador muerto por votaciones");
+        console.log("Caso 2: Cazador muerto por hombres lobo o bruja");
         await manejarFaseCazador();
       }
 
@@ -1416,7 +1384,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
 
     // Fase 4: Día
     const manejarFaseDia = async () => {
-      console.log(" [Backend-Partida] COMIENZA EL DIA");
       io.to(idSala).emit("diaComienza", {
         mensaje:
           "Es de día, los jugadores tienen 1 minuto para decidir quién será eliminado.",
@@ -1436,7 +1403,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
           const resultadoVotosDia = partida.resolverVotosDia();
           await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
           if (resultadoVotosDia.mensaje.includes("Empate")) {
-            console.log(" [Backend-Partida] 1ER EMPATE VOTACIONES DIA");
             // Notificar del primer empate y reiniciar la votación
             io.to(idSala).emit("empateVotacionDia", {
               mensaje: resultadoVotosDia.mensaje,
@@ -1451,15 +1417,11 @@ const manejarFasesPartida = async (partida, idSala, io) => {
                 await guardarPartidasEnRedis(); // Guardar cambios en Redis después de resolver los votos del día
 
                 if (resultadoVotosDia2.mensaje.includes("Segundo")) {
-                  console.log(" [Backend-Partida] 2º EMPATE VOTACIONES DIA");
                   // Notificar del segundo empate. No se elige a ningún jugador para ser eliminado.
                   io.to(idSala).emit("segundoEmpateVotacionDia", {
                     mensaje: resultadoVotosDia2.mensaje,
                   });
                 } else {
-                  console.log(
-                    " [Backend-Partida] VOTACIONES DIA HECHAS, TRAS 1ER EMPATE"
-                  );
                   // Notificar quien es el jugador a eliminar
                   io.to(idSala).emit("resultadoVotosDia", {
                     mensaje: resultadoVotosDia2.mensaje,
@@ -1484,9 +1446,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
               }
             }, 1000);
           } else {
-            console.log(
-              " [Backend-Partida] VOTACIONES DIA HECHAS, SIN EMPATES"
-            );
             // Notificar quien es el jugador a eliminar
             io.to(idSala).emit("resultadoVotosDia", {
               mensaje: resultadoVotosDia.mensaje,
@@ -1512,7 +1471,6 @@ const manejarFasesPartida = async (partida, idSala, io) => {
     };
   };
 
-  console.log(" [Backend-Partida] ESPERA INICIAL");
   // Fase 1: Esperar 30 segundos antes de iniciar las votaciones de alguacil
   io.to(idSala).emit("esperaInicial", {
     mensaje: "La partida comenzará en 30 segundos",
@@ -1543,7 +1501,7 @@ module.exports = { manejarConexionPartidas, manejarDesconexionPartidas };
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 16:31:09 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun May 11 2025 16:47:43 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
